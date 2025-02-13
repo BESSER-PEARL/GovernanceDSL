@@ -69,18 +69,23 @@ class BUMLGenerationListener(govdslListener):
         project_obj: Object = Object(name="Project Object", classifier=Project, slots=[project_obj_name]) # WARNING: The name of the object is hardcoded. This is because we only have one project. If we have multiple projects, we need to change this to the ID. We do this because the project is accessed in the enter functions of each related objects.
         self.object_instances[project_obj.name] = project_obj
     
-    def enterRoleID(self, ctx:govdslParser.RoleIDContext): # TODO: Go back to roles
+    def enterRoles(self, ctx:govdslParser.RolesContext): 
 
-        
-        role_obj_name: AttributeLink = AttributeLink(attribute=Role_name, value=DataValue(classifier=StringType, value=ctx.ID().getText()))
-        role_obj: Object = Object(name=ctx.ID().getText(), classifier=Role, slots=[role_obj_name])
-        self.object_instances[role_obj.name] = role_obj
+        roles = self.find_descendant_nodes_by_type(node=ctx,
+                                                target_type=govdslParser.RoleIDContext)
+
+        # We grab all descendants from Roles because we need to define all the role objects. 
+        # For instantiating objects we cannot do it in enterRoleID since it is called from other rules (which will be associations)
+        for r in roles: 
+            role_obj_name: AttributeLink = AttributeLink(attribute=Role_name, value=DataValue(classifier=StringType, value=r.ID().getText()))
+            role_obj: Object = Object(name=r.ID().getText(), classifier=Role, slots=[role_obj_name])
+            self.object_instances[role_obj.name] = role_obj
 
 
-        project_link_end: LinkEnd = LinkEnd(name="project_end", association_end=project_from_role, object=self.object_instances["Project Object"]) # WARNING: See enterProject warning.
-        role_link_end: LinkEnd = LinkEnd(name="role_end", association_end=roles_from_project, object=role_obj)
-        role_project_link: Link = Link(name="role_project_link", association=Role_Project, connections=[project_link_end,role_link_end]) # I am naming the links with a number to avoid duplicates. Is it required?
-        self.links.append(role_project_link)
+            project_link_end: LinkEnd = LinkEnd(name="project_end", association_end=project_from_role, object=self.object_instances["Project Object"]) # WARNING: See enterProject warning.
+            role_link_end: LinkEnd = LinkEnd(name="role_end", association_end=roles_from_project, object=role_obj)
+            role_project_link: Link = Link(name="role_project_link", association=Role_Project, connections=[project_link_end,role_link_end]) # I am naming the links with a number to avoid duplicates. Is it required?
+            self.links.append(role_project_link)
 
     def enterDeadlines(self, ctx:govdslParser.DeadlinesContext):
 
@@ -109,7 +114,7 @@ class BUMLGenerationListener(govdslListener):
         for r in rules:
             rule_obj_name: AttributeLink = AttributeLink(attribute=Rule_name, value=DataValue(classifier=StringType, value=r.ruleID().ID().getText()))
             rule_obj_task: AttributeLink = AttributeLink(attribute=Rule_task, value=DataValue(classifier=StringType, value=r.appliedTo().getText())) # TODO: Change it to enumeration. Define an enumeration in the domain model.
-            if r.ruleType().getText() == "Majority":
+            if r.ruleType().getText() == "Majority": # TODO: We check the ruleType here. Should we do it in the grammar?
                 rule_obj_minVotes: AttributeLink = AttributeLink(attribute=Majority_minVotes, value=DataValue(classifier=IntegerType, value=r.ruleContent.minVotes.INT()))
                 rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Majority, slots=[rule_obj_name, rule_obj_task, rule_obj_minVotes])
             else:

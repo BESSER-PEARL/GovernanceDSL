@@ -11,13 +11,13 @@ deadlineID          : ID ;
 rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
 ruleID              : ID ;
-ruleContent         : appliedTo people minVotes? 'deadline' deadlineID ('default' ruleID)? ;
-                    // | 'phases' '{'  phase+ '}' ;
-// phase               : ATTR_ID  ;
+ruleContent         : appliedTo people minVotes? 'deadline' deadlineID default? ;// | 'phases' '{'  phase+ '}' ;
+// phase               : ruleID  ;
 appliedTo           : 'applied to' taskID ;
 taskID              : 'Issue' | 'Pull request' ;
 people              : 'people' roleID (',' roleID)* ;
 minVotes            : 'minVotes' INT ; 
+default             : ('default' ruleID) ;
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 ruleType            : 'Majority' | 'LeaderDriven' | 'Ratio' ; // | 'Phased' |  ;
 

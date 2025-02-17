@@ -1,8 +1,7 @@
 import warnings
-from besser.BUML.metamodel.structural import DomainModel, Class, Multiplicity, Property, \
-    BinaryAssociation, Generalization, Enumeration, EnumerationLiteral, Method, Parameter, \
-    Method, StringType, IntegerType, FloatType, BooleanType, TimeType, DateType, DateTimeType, \
-    TimeDeltaType, Constraint
+from besser.BUML.metamodel.structural import (
+    StringType, IntegerType, FloatType, TimeDeltaType
+)
 from besser.BUML.metamodel.object import (
     AttributeLink, Object, DataValue, LinkEnd, Link, ObjectModel
 )
@@ -28,7 +27,7 @@ class BUMLGenerationListener(govdslListener):
         super().__init__()
         self.__buml_object_model = None
         # self.__buml_model = read structural/import
-        self.links = [] # TODO: Refactor using setters
+        self.links = [] # TODO: Refactor using setters; is it needed? Since names can be repeated...
         self.object_instances = {}
 
     

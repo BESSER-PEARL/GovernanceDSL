@@ -5,7 +5,7 @@ Project myProject {
         my2Deadline : 1 days
     Rules :
         myMajorityRule : Majority {
-            applied to Issue
+            applied to Pull request
             people Committers
             minVotes 0
             deadline myDeadline

@@ -6,7 +6,6 @@ from besser.BUML.metamodel.structural import (
     TimeType, DateType, DateTimeType, TimeDeltaType,
     Constraint
 )
-from besser.BUML.metamodel.object import *
 import datetime
 
 #######################################
@@ -33,6 +32,8 @@ Project = Class(name="Project")
 Majority = Class(name="Majority")
 RatioMajority = Class(name="RatioMajority")
 LeaderDriven = Class(name="LeaderDriven")
+Phased = Class(name="Phased")
+
 
 # Role class attributes and methods
 Role_name: Property = Property(name="name", type=StringType)
@@ -64,6 +65,7 @@ RatioMajority.attributes={RatioMajority_ratio}
 
 
 # Relationships
+
 # Modified from the generated code TODO: Check if definitions are correct, some of them are overwritten, should we change the name?
 project_from_role = Property(name="project", type=Project, multiplicity=Multiplicity(1, 1), is_composite=True)
 roles_from_project = Property(name="roles", type=Role, multiplicity=Multiplicity(1, 9999))
@@ -87,10 +89,10 @@ Rule_Project: BinaryAssociation = BinaryAssociation(
 )
 
 default = Property(name="default", type=Rule, multiplicity=Multiplicity(1, 1))
-leaderDrivenRules = Property(name="leaderDrivenRules", type=LeaderDriven, multiplicity=Multiplicity(0, 9999))
+leaderDriven_rules = Property(name="leaderDrivenRules", type=LeaderDriven, multiplicity=Multiplicity(0, 9999))
 LeaderDriven_Rule: BinaryAssociation = BinaryAssociation(
     name="LeaderDriven_Rule",
-    ends={default, leaderDrivenRules}
+    ends={default, leaderDriven_rules}
 )
 
 deadlines = Property(name="deadlines", type=Deadline, multiplicity=Multiplicity(0, 9999))
@@ -100,22 +102,34 @@ Deadline_Project: BinaryAssociation = BinaryAssociation(
     ends={deadlines, project_from_deadline}
 )
 
-deadline = Property(name="deadline", type=Deadline, multiplicity=Multiplicity(1, 1))
+deadline_from_rule = Property(name="deadline", type=Deadline, multiplicity=Multiplicity(1, 1))
 rules_from_deadline = Property(name="rules", type=Rule, multiplicity=Multiplicity(0, 9999))
 Rule_Deadline: BinaryAssociation = BinaryAssociation(
     name="Rule_Deadline",
-    ends={deadline, rules_from_deadline}
+    ends={deadline_from_rule, rules_from_deadline}
+)
+
+phases = Property(name="phases", type=Rule, multiplicity=Multiplicity(1, 9999))
+phases_from_rule = Property(name="", type=Phased, multiplicity=Multiplicity(0, 9999))
+Phased_Rule: BinaryAssociation = BinaryAssociation(
+    name="Phased_Rule",
+    ends={
+        phases,
+        phases_from_rule
+    }
 )
 
 # Generalizations
 gen_RatioMajority_Majority = Generalization(general=Majority, specific=RatioMajority)
 gen_Majority_Rule = Generalization(general=Rule, specific=Majority)
 gen_LeaderDriven_Rule = Generalization(general=Rule, specific=LeaderDriven)
+gen_Phased_Rule = Generalization(general=Rule, specific=Phased)
+
 
 # Domain Model
 domain_model = DomainModel(
     name="Class Diagram",
-    types={Role, Rule, Deadline, Project, Majority, RatioMajority, LeaderDriven, TaskType},
-    associations={Role_Project, Rule_Role, Rule_Project, LeaderDriven_Rule, Deadline_Project, Rule_Deadline},
-    generalizations={gen_RatioMajority_Majority, gen_Majority_Rule, gen_LeaderDriven_Rule}
+    types={Role, Rule, Deadline, Project, Majority, RatioMajority, LeaderDriven, Phased, TaskType},
+    associations={Role_Project, Rule_Role, Rule_Project, LeaderDriven_Rule, Deadline_Project, Rule_Deadline, Phased_Rule},
+    generalizations={gen_RatioMajority_Majority, gen_Majority_Rule, gen_LeaderDriven_Rule, gen_Phased_Rule}
 )

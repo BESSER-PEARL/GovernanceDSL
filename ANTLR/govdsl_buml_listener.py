@@ -4,17 +4,20 @@ from besser.BUML.metamodel.structural import DomainModel, Class, Multiplicity, P
     Method, StringType, IntegerType, FloatType, BooleanType, TimeType, DateType, DateTimeType, \
     TimeDeltaType, Constraint
 from besser.BUML.metamodel.object import (
-    AttributeLink, Object, DataValue, LinkEnd, Link
+    AttributeLink, Object, DataValue, LinkEnd, Link, ObjectModel
 )
-from .structuralModelDSL import (
+from structuralModelDSL import (
     Role, Rule, Deadline, Project, Majority, RatioMajority, LeaderDriven,
     Role_Project, roles_from_project, project_from_role, Deadline_Project, project_from_deadline,
     Rule_Project, rules_from_project, project_from_rule,
     Role_name, Rule_name, Rule_task, Deadline_timeStamp, Deadline_name, Project_name,
-    Majority_minVotes, RatioMajority_ratio
+    Majority_minVotes, RatioMajority_ratio, rules_from_role, people, Rule_Role,
+    rules_from_deadline, deadline_from_rule, Rule_Deadline, TaskType, default,
+    leaderDriven_rules, LeaderDriven_Rule, Phased, phases_from_rule, Phased_Rule,
 )
-from .govdslParser import govdslParser
-from .govdslListener import govdslListener
+from govdslParser import govdslParser
+from govdslListener import govdslListener
+from datetime import timedelta
 
 class BUMLGenerationListener(govdslListener):
     """
@@ -22,15 +25,16 @@ class BUMLGenerationListener(govdslListener):
        representing a govDSL textual notation
     """
     def __init__(self):
+        super().__init__()
         self.__buml_object_model = None
         # self.__buml_model = read structural/import
         self.links = [] # TODO: Refactor using setters
         self.object_instances = {}
 
     
-    def get_buml_model(self):
-        """DomainModel: Retrieves the B-UML model instance."""
-        return self.__buml_model
+    # def get_buml_model(self):
+    #     """DomainModel: Retrieves the B-UML model instance."""
+    #     return self.__buml_model
     
     def get_buml_object_model(self):
         """ObjectModel: Retrieves the B-UML object model instance."""
@@ -60,9 +64,50 @@ class BUMLGenerationListener(govdslListener):
 
         return matching_nodes
     
+    def find_people_from_rule(self, rule: govdslParser.RuleContext) -> list[str]:
+        """
+        Finds all roles associated with a rule.
+
+        Args:
+            rule: The rule node to search for associated roles.
+        
+        Returns:
+            A list of role IDs associated with the rule.
+        """
+        people_roles_list = self.find_descendant_nodes_by_type(node=rule,
+                                            target_type=govdslParser.RoleIDContext)
+        people_list = []
+        for p in people_roles_list:
+            people_list.append(p.ID().getText())
+        return people_list
+    
+    def deadline_to_timedelta(self, amount:int, time_unit:str) -> timedelta:
+        """
+        Converts a deadline to a timedelta object.
+
+        Args:
+            amount: The amount of time to convert.
+            time_unit: The unit of time to convert (e.g., days, weeks, etc.).
+
+        Returns:
+            A timedelta representation from datetime library.
+        """
+        match  time_unit:
+            case "days":
+                return timedelta(days=amount)
+            case "weeks":
+                return timedelta(weeks=amount)
+            case "months":
+                return timedelta(weeks=amount*4) # Timedelta do not support above weeks (months, years). dateutil.relativedelta.relativedelta could be also used
+            case "years":
+                return timedelta(weeks=amount*52) # Approximation
+            case _:
+                warnings.warn(f"Unsupported time unit: {time_unit}. Defaulting to days.")
+                return timedelta(days=amount)
+    
+
     def enterProject(self, ctx:govdslParser.ProjectContext):
-
-
+        
         # Project object attributes
         project_obj_name: AttributeLink = AttributeLink(attribute=Project_name, value=DataValue(classifier=StringType, value=ctx.ID().getText()))
         # Project object
@@ -93,9 +138,9 @@ class BUMLGenerationListener(govdslListener):
                                                 target_type=govdslParser.DeadlineContext)
         i = 0
         for d in deadlines:
-            deadline_obj_name: AttributeLink = AttributeLink(attribute=Deadline_name, value=DataValue(classifier=StringType, value=d.deadlineID().ID().getText())) # TODO: IVAN: Can we access attributes like this? Also, is name necessary since object has a name attribute?
-            deadline_time = str(d.INT()) + " " + d.timeUnit().getText() # TODO: Format as timeDelta
-            deadline_obj_time: AttributeLink = AttributeLink(attribute=Deadline_timeStamp, value=DataValue(classifier=StringType, value=deadline_time))
+            deadline_obj_name: AttributeLink = AttributeLink(attribute=Deadline_name, value=DataValue(classifier=StringType, value=d.deadlineID().ID().getText()))
+            deadline_time = self.deadline_to_timedelta(amount=int(d.INT().getText()), time_unit=d.timeUnit().getText())
+            deadline_obj_time: AttributeLink = AttributeLink(attribute=Deadline_timeStamp, value=DataValue(classifier=TimeDeltaType, value=deadline_time))
             deadline_obj: Object = Object(name=d.deadlineID().ID().getText(), classifier=Deadline, slots=[deadline_obj_name, deadline_obj_time])
             self.object_instances[deadline_obj.name] = deadline_obj
 
@@ -113,25 +158,78 @@ class BUMLGenerationListener(govdslListener):
         i = 0
         for r in rules:
             rule_obj_name: AttributeLink = AttributeLink(attribute=Rule_name, value=DataValue(classifier=StringType, value=r.ruleID().ID().getText()))
-            rule_obj_task: AttributeLink = AttributeLink(attribute=Rule_task, value=DataValue(classifier=StringType, value=r.appliedTo().getText())) # TODO: Change it to enumeration. Define an enumeration in the domain model.
-            if r.ruleType().getText() == "Majority": # TODO: We check the ruleType here. Should we do it in the grammar?
-                rule_obj_minVotes: AttributeLink = AttributeLink(attribute=Majority_minVotes, value=DataValue(classifier=IntegerType, value=r.ruleContent.minVotes.INT()))
-                rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Majority, slots=[rule_obj_name, rule_obj_task, rule_obj_minVotes])
-            else:
-                rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Rule, slots=[rule_obj_name, rule_obj_task])
-            self.object_instances[rule_obj.name] = rule_obj # TODO: Is this good practice? Should we add it in each if/else block?
+            rule_obj_task: AttributeLink = AttributeLink(attribute=Rule_task, value=DataValue(classifier=TaskType, value=r.ruleContent().appliedTo().taskID().getText())) # TODO: Change it to enumeration. There is no validation on the type. Now it is saved as Pull request, but it should be TaskType.PULL_REQUEST
+            rule_obj: Object = Object(name=None, classifier=None, slots=None)
+            match r.ruleType().getText():
+                case "Majority":
+                    rule_obj_minVotes: AttributeLink = AttributeLink(attribute=Majority_minVotes, value=DataValue(classifier=IntegerType, value=int(r.ruleContent().minVotes().INT().getText())))
+                    rule_obj.name = r.ruleID().ID().getText()
+                    rule_obj.classifier = Majority
+                    rule_obj.slots = [rule_obj_name, rule_obj_task, rule_obj_minVotes]
+                    # rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Majority, slots=[rule_obj_name, rule_obj_task, rule_obj_minVotes])
+                case "RatioMajority":
+                    rule_obj_minVotes: AttributeLink = AttributeLink(attribute=Majority_minVotes, value=DataValue(classifier=IntegerType, value=int(r.ruleContent().minVotes().INT().getText())))
+                    rule_obj_ratio: AttributeLink = AttributeLink(attribute=RatioMajority_ratio, value=DataValue(classifier=FloatType, value=float(r.ruleContent().ratio().FLOAT().getText())))
+                    rule_obj.name = r.ruleID().ID().getText()
+                    rule_obj.classifier = RatioMajority
+                    rule_obj.slots = [rule_obj_name, rule_obj_task, rule_obj_minVotes, rule_obj_ratio]
+                    # rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=RatioMajority, slots=[rule_obj_name, rule_obj_task, rule_obj_minVotes, rule_obj_ratio])
+                case "LeaderDriven":
+                    rule_obj.name = r.ruleID().ID().getText()
+                    rule_obj.classifier = LeaderDriven
+                    rule_obj.slots = [rule_obj_name, rule_obj_task]
+                    # rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=LeaderDriven, slots=[rule_obj_name, rule_obj_task])
+
+                    default_link_end: LinkEnd = LinkEnd(name="default_end", association_end=default, object=self.object_instances[r.ruleContent().default().ruleID().ID().getText()]) 
+                    rule_link_end: LinkEnd = LinkEnd(name="rule_end", association_end=leaderDriven_rules, object=rule_obj)
+                    rule_project_link: Link = Link(name="leaderDriven_default_link", association=LeaderDriven_Rule, connections=[rule_link_end,default_link_end])
+                    self.links.append(rule_project_link)
+                case "Phased":
+                    rule_obj.name = r.ruleID().ID().getText()
+                    rule_obj.classifier = Phased
+                    rule_obj.slots = [rule_obj_name, rule_obj_task]
+                    # rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Phased, slots=[rule_obj_name, rule_obj_task])
+
+                    phases = self.find_descendant_nodes_by_type(node=r,
+                                                target_type=govdslParser.PhasesContext)
+                    
+                    for p in phases:
+                        phased_link_end: LinkEnd = LinkEnd(name="phased_end", association_end=phases_from_rule, object=self.object_instances[p.ruleID().ID().getText()]) 
+                        rule_link_end: LinkEnd = LinkEnd(name="rule_end", association_end=phases, object=rule_obj)
+                        rule_project_link: Link = Link(name="phased_phases_link", association=Phased_Rule, connections=[rule_link_end,phased_link_end])
+                        self.links.append(rule_project_link)
+
+                case _: # Since Rule class is not abstract we could create a default rule object. To change in the model?
+                    rule_obj: Object = Object(name=r.ruleID().ID().getText(), classifier=Rule, slots=[rule_obj_name, rule_obj_task])
+            
+            self.object_instances[rule_obj.name] = rule_obj 
 
             project_link_end: LinkEnd = LinkEnd(name="project_end", association_end=project_from_rule, object=self.object_instances["Project Object"]) # WARNING: See enterProject warning.
-            rule_link_end: LinkEnd = LinkEnd(name="majority_end", association_end=rules_from_project, object=rule_obj)
-            rule_project_link: Link = Link(name="majority_project_link" + str(i), association=Rule_Project, connections=[rule_link_end,project_link_end])
+            rule_link_end: LinkEnd = LinkEnd(name="rule_end", association_end=rules_from_project, object=rule_obj)
+            rule_project_link: Link = Link(name="rule_project_link" + str(i), association=Rule_Project, connections=[rule_link_end,project_link_end])
             self.links.append(rule_project_link)
+
+            # WARNING: We can set the links here if, and only if, the roles and deadlines are defined before the rules (as in the example)
+            people_from_rule = self.find_people_from_rule(r)
+            j = 0
+            for p in people_from_rule:
+                role_link_end: LinkEnd = LinkEnd(name="role_end", association_end=people, object=self.object_instances[p])
+                rule_link_end: LinkEnd = LinkEnd(name="rule_end", association_end=rules_from_role, object=rule_obj)
+                role_rule_link: Link = Link(name="role_rule_link" + str(j), association=Rule_Role, connections=[role_link_end,rule_link_end])
+                self.links.append(role_rule_link)
+                j += 1
+            
+            # TODO: Naming cannot go like this. We need to find a way to name the links properly. If we have multiple rules, we will have multiple links with the same name.
+            deadline_link_end: LinkEnd = LinkEnd(name="deadline_end", association_end=deadline_from_rule, object=self.object_instances[r.ruleContent().deadlineID().ID().getText()]) 
+            rule_link_end: LinkEnd = LinkEnd(name="rule_end", association_end=rules_from_deadline, object=rule_obj)
+            deadline_rule_link: Link = Link(name="deadline_rule_link", association=Rule_Deadline, connections=[deadline_link_end,rule_link_end])
+            self.links.append(deadline_rule_link)
+
             i += 1
 
-        def exitProject(self, ctx:govdslParser.ProjectContext):
-            
-            roles = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.RolesContext)
-            deadlines = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.DeadlinesContext)
-            rules = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.RulesContext)
+        
+
+    def exitProject(self, ctx:govdslParser.ProjectContext):
+        
+        # We can now create the object model
+        self.__buml_object_model = ObjectModel(name="Object Model", instances=list(self.object_instances.values()), links=self.links)

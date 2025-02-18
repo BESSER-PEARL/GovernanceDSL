@@ -11,10 +11,14 @@ deadlineID          : ID ;
 rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
 ruleID              : ID ;
-ruleContent         : appliedTo people minVotes? ratio? 'deadline' deadlineID default? phases? ; // TODO: Add phase phases?;
-appliedTo           : 'applied to' taskID ;
-taskID              : 'Issue' | 'Pull request' ;
+ruleContent         : appliedTo? stage? people? rangeType? minVotes? ratio? 'deadline' deadlineID default? phases? ; // TODO: Propose alternative?
+appliedTo           : 'applied to' collaborationID ;
+collaborationID     : 'Issue' | 'Pull request' | 'All';
+stage               : 'when' stageID ;
+stageID             : 'Task Review' | 'Patch Review' | 'Release' | 'All' ;
 people              : 'people' roleID (',' roleID)* ;
+rangeType           : 'range' rangeID ;
+rangeID             : 'Present' | 'Qualified' ;
 minVotes            : 'minVotes' INT ; 
 default             : ('default' ruleID) ;
 ratio               : 'ratio' FLOAT ;

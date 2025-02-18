@@ -1,0 +1,14 @@
+Project TestProject {
+    Roles : Committers
+    Deadlines :
+        reviewDeadline : 7 days
+    Rules :
+        majorityRule : Majority {
+            applied to Pull request
+            when Task Review
+            people Committers
+            range Present
+            minVotes 2
+            deadline reviewDeadline
+        }
+}

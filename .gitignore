@@ -1,2 +1,15 @@
-.antlr/
 __pycache__/
+
+# package
+/dist/
+buml.egg-info/
+
+# Sphinx documentation
+docs/_build/
+
+# Build
+build
+# ANTLR
+**/.antlr/**
+*.tokens
+*.interp

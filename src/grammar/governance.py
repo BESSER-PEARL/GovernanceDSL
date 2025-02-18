@@ -1,6 +1,6 @@
 from besser.BUML.metamodel.structural import NamedElement
 from enum import Enum
-import datetime
+from datetime import timedelta
 
 class CollaborationType(Enum):
     PULL_REQUEST = "PULL_REQUEST"
@@ -18,40 +18,6 @@ class RangeType(Enum):
     QUALIFIED = "QUALIFIED"
 
 
-
-class Project(NamedElement):
-    def __init__(self, name: str, roles: set[Role], rules: set[Rule], deadlines: set[Deadline]):
-        super().__init__(name)
-        self.roles: set[Role] = roles
-        self.rules: set[Rule] = rules
-        self.deadlines: set[Deadline] = deadlines
-    
-    @property
-    def roles(self) -> set[Role]:
-        return self.__roles
-    
-    @roles.setter
-    def roles(self, roles: set[Role]):
-        self.__roles = roles
-
-    @property
-    def rules(self) -> set[Rule]:
-        return self.__rules
-    
-    @rules.setter
-    def rules(self, rules: set[Rule]):
-        self.__rules = rules
-
-    @property
-    def deadlines(self) -> set[Deadline]:
-        return self.__deadlines
-    
-    @deadlines.setter
-    def deadlines(self, deadlines: set[Deadline]):
-        self.__deadlines = deadlines
-
-    def __repr__(self) -> str:
-        return f'Project({self.name},{self.roles},{self.rules},{self.deadlines})'
     
 class Role(NamedElement):
     def __init__(self, name: str):
@@ -63,31 +29,40 @@ class Role(NamedElement):
         return f'Role({self.name})'
     
 class Deadline(NamedElement):
-    def __init__(self, name: str):
+    def __init__(self, name: str, ts: timedelta): # TODO: Check how to manage ts
         super().__init__(name)
+        self.ts: timedelta = ts
+
+    @property
+    def ts(self) -> timedelta:
+        return self.__ts
+    
+    @ts.setter
+    def ts(self, ts: timedelta):
+        self.__ts = ts
     
     def __repr__(self) -> str:
         return f'Deadline({self.name})'
 
 class Timer(Deadline):
-    def __init__(self, name: str, timestamp: int):
-        super().__init__(name)
+    def __init__(self, name: str, ts: timedelta, timestamp: int):
+        super().__init__(name, ts)
         self.timestamp: int = timestamp
     
     def __repr__(self) -> str:
         return f'Timer({self.name},{self.timestamp})'
     
 class Condition(Deadline):
-    def __init__(self, name: str, expression: str):
-        super().__init__(name)
+    def __init__(self, name: str, ts: timedelta, expression: str):
+        super().__init__(name, ts)
         self.expression: str = expression
     
     def __repr__(self) -> str:
         return f'Condition({self.name},{self.expression})'
     
 class WaitForVote(Deadline):
-    def __init__(self, name: str, roles: set[Role]):
-        super().__init__(name)
+    def __init__(self, name: str, ts: timedelta, roles: set[Role]):
+        super().__init__(name, ts)
         self.roles: set[Role] = roles
     
     def __repr__(self) -> str:
@@ -150,6 +125,13 @@ class LeaderDriven(Rule):
         super().__init__(name, applied_to, stage, query_filter, deadline, people)
         self.default: Rule = default
     
+    @classmethod
+    def from_rule(cls, rule: Rule, default: Rule):
+        leader_driven = cls(name=rule.name, applied_to=rule.applied_to, stage=rule.stage,
+                          query_filter=rule.query_filter, deadline=rule.deadline,
+                          people=rule.people, default=default)
+        return leader_driven
+    
     @property
     def default(self) -> Rule:
         return self.__default
@@ -167,6 +149,13 @@ class Majority(Rule):
         self.range_type: RangeType = range_type
         self.min_votes: int = min_votes
     
+    @classmethod
+    def from_rule(cls, rule: Rule, range_type: RangeType, min_votes: int):
+        majority = cls(name=rule.name, applied_to=rule.applied_to, stage=rule.stage,
+                      query_filter=rule.query_filter, deadline=rule.deadline, 
+                      people=rule.people, range_type=range_type, min_votes=min_votes)
+        return majority
+    
     @property
     def range_type(self) -> RangeType:
         return self.__range_type
@@ -176,7 +165,7 @@ class Majority(Rule):
         self.__range_type = range_type
 
     @property
-    def min_votse(self) -> int:
+    def min_votes(self) -> int:
         return self.__min_votes
 
     @min_votes.setter
@@ -187,9 +176,16 @@ class Majority(Rule):
         return f'Majority({self.name},{self.applied_to},{self.stage},{self.query_filter},{self.deadline},{self.people},{self.range_type},{self.min_votes})'
     
 class RatioMajority(Majority):
-    def __init__(self, name: str, applied_to: CollaborationType, stage: Stage, query_filter: str, deadline: Deadline, people: set[Role], min_votes: int, ratio: float):
+    def __init__(self, name: str, applied_to: CollaborationType, stage: Stage, query_filter: str, deadline: Deadline, people: set[Role], range_type: RangeType,min_votes: int, ratio: float):
         super().__init__(name, applied_to, stage, query_filter, deadline, people, RangeType.QUALIFIED, min_votes)
         self.ratio: float = ratio
+    
+    @classmethod
+    def from_rule(cls, rule: Rule, range_type: RangeType, min_votes: int, ratio: float):
+        ratio_majority = cls(name=rule.name, applied_to=rule.applied_to, stage=rule.stage,
+                            query_filter=rule.query_filter, deadline=rule.deadline,
+                            people=rule.people, range_type=range_type, min_votes=min_votes, ratio=ratio)
+        return ratio_majority
     
     @property
     def ratio(self) -> float:
@@ -203,17 +199,58 @@ class RatioMajority(Majority):
         return f'RatioMajority({self.name},{self.applied_to},{self.stage},{self.query_filter},{self.deadline},{self.people},{self.min_votes},{self.ratio})'
 
 class Phased(Rule):
-    def __init__(self, name: str, applied_to: CollaborationType, stage: Stage, query_filter: str, deadline: Deadline, people: set[Role], phases: list[Rule]):
+    def __init__(self, name: str, applied_to: CollaborationType, stage: Stage, query_filter: str, deadline: Deadline, people: set[Role], phases: set[Rule]):
         super().__init__(name, applied_to, stage, query_filter, deadline, people)
-        self.phases: list[Rule] = phases
+        self.phases: set[Rule] = phases
+    
+    @classmethod
+    def from_rule(cls, rule: Rule, phases: set[Rule]):
+        phased = cls(name=rule.name, applied_to=rule.applied_to, stage=rule.stage,
+                    query_filter=rule.query_filter, deadline=rule.deadline,
+                    people=rule.people, phases=phases)
+        return phased
     
     @property
-    def phases(self) -> list[Rule]:
+    def phases(self) -> set[Rule]:
         return self.__phases
 
     @phases.setter
-    def phases(self, phases: list[Rule]):
+    def phases(self, phases: set[Rule]):
         self.__phases = phases
     
     def __repr__(self) -> str:
         return f'Phased({self.name},{self.applied_to},{self.stage},{self.query_filter},{self.deadline},{self.people},{self.phases})'
+
+class Project(NamedElement):
+    def __init__(self, name: str, roles: set[Role], rules: set[Rule], deadlines: set[Deadline]):
+        super().__init__(name)
+        self.roles: set[Role] = roles
+        self.rules: set[Rule] = rules
+        self.deadlines: set[Deadline] = deadlines
+    
+    @property
+    def roles(self) -> set[Role]:
+        return self.__roles
+    
+    @roles.setter
+    def roles(self, roles: set[Role]):
+        self.__roles = roles
+
+    @property
+    def rules(self) -> set[Rule]:
+        return self.__rules
+    
+    @rules.setter
+    def rules(self, rules: set[Rule]):
+        self.__rules = rules
+
+    @property
+    def deadlines(self) -> set[Deadline]:
+        return self.__deadlines
+    
+    @deadlines.setter
+    def deadlines(self, deadlines: set[Deadline]):
+        self.__deadlines = deadlines
+
+    def __repr__(self) -> str:
+        return f'Project({self.name},{self.roles},{self.rules},{self.deadlines})'

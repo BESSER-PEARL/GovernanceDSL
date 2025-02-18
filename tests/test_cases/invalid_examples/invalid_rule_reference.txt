@@ -1,0 +1,12 @@
+Project TestProject {
+    Roles : Leaders
+    Deadlines :
+        reviewDeadline : 3 days
+    Rules :
+        leaderRule : LeaderDriven {
+            applied to Pull request
+            when Task Review
+            deadline reviewDeadline
+            default nonExistentRule
+        }
+}

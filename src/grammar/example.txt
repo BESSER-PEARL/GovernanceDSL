@@ -1,0 +1,15 @@
+Project myProject {
+    Roles : Committers, Contributors
+    Deadlines :
+        myDeadline : 7 days
+        my2Deadline : 1 days
+    Rules :
+        myMajorityRule : Majority {
+            applied to Pull request
+            when Task Review
+            people Committers
+            range Present
+            minVotes 0
+            deadline myDeadline
+        }
+}

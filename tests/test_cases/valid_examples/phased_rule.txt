@@ -1,0 +1,29 @@
+Project TestProject {
+    Roles : Reviewers, QA
+    Deadlines :
+        reviewDeadline : 3 days
+        qaDeadline : 2 days
+    Rules :
+        reviewPhase : Majority {
+            applied to Pull request
+            when Task Review
+            people Reviewers
+            range Present
+            minVotes 2
+            deadline reviewDeadline
+        }
+        qaPhase : Majority {
+            applied to Pull request
+            when Task Review
+            people QA
+            range Present
+            minVotes 1
+            deadline qaDeadline
+        }
+        phasedRule : Phased {
+            phases {
+                reviewPhase
+                qaPhase
+            }
+        }
+}

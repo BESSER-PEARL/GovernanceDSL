@@ -18,7 +18,7 @@ from govdslParser import govdslParser
 from govdslListener import govdslListener
 from datetime import timedelta
 
-class BUMLGenerationListener(govdslListener):
+class ModelCreationListener(govdslListener):
     """
        This listener class generates a B-UML object model from a parse-tree 
        representing a govDSL textual notation

@@ -1,1 +1,0 @@
-I want to edit the existing functions in this file so that they print "Enter/exit", the name of the attribute (it is in their name), and the ctx.gettext, before the pass command. Modify all functions that start with enter or exit. Do not stop until all functions are modified

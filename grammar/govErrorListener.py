@@ -1,7 +1,7 @@
 import sys
 from antlr4 import *
-from govdslParser import govdslParser
-from govdslListener import govdslListener
+from .govdslParser import govdslParser
+from .govdslListener import govdslListener
 from antlr4.error.ErrorListener import *
 import io
 

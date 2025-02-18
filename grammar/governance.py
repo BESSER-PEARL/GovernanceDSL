@@ -199,16 +199,9 @@ class RatioMajority(Majority):
         return f'RatioMajority({self.name},{self.applied_to},{self.stage},{self.query_filter},{self.deadline},{self.people},{self.min_votes},{self.ratio})'
 
 class Phased(Rule):
-    def __init__(self, name: str, applied_to: CollaborationType, stage: Stage, query_filter: str, deadline: Deadline, people: set[Role], phases: set[Rule]):
-        super().__init__(name, applied_to, stage, query_filter, deadline, people)
+    def __init__(self, name: str, phases: set[Rule]):
+        super().__init__(name, applied_to=None, stage=None, query_filter=None, deadline=None, people=None)
         self.phases: set[Rule] = phases
-    
-    @classmethod
-    def from_rule(cls, rule: Rule, phases: set[Rule]):
-        phased = cls(name=rule.name, applied_to=rule.applied_to, stage=rule.stage,
-                    query_filter=rule.query_filter, deadline=rule.deadline,
-                    people=rule.people, phases=phases)
-        return phased
     
     @property
     def phases(self) -> set[Rule]:

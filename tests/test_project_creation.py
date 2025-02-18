@@ -2,12 +2,13 @@ import unittest
 from antlr4 import *
 from pathlib import Path
 import io
+from datetime import timedelta
 
 from grammar.govdslLexer import govdslLexer
 from grammar.govdslParser import govdslParser
 from grammar.ProjectCreationListener import ProjectCreationListener
 from grammar.govErrorListener import govErrorListener
-from metamodel.governance import (
+from grammar.governance import (
     Project, Rule, Majority, RatioMajority, 
     LeaderDriven, Phased, Role, Deadline,
     CollaborationType, Stage, RangeType
@@ -61,7 +62,7 @@ class TestProjectCreation(unittest.TestCase):
             deadline = next(iter(project.deadlines))
             self.assertIsInstance(deadline, Deadline)
             self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.timeStamp, "7 days")
+            self.assertEqual(deadline.ts, timedelta(days=7))
             
             # Test rules
             self.assertEqual(len(project.rules), 1)

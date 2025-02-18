@@ -165,7 +165,7 @@ class Majority(Rule):
         self.__range_type = range_type
 
     @property
-    def min_votse(self) -> int:
+    def min_votes(self) -> int:
         return self.__min_votes
 
     @min_votes.setter

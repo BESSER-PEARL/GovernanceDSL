@@ -11,7 +11,7 @@ deadlineID          : ID ;
 rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
 ruleID              : ID ;
-ruleContent         : appliedTo? stage? people? rangeType? minVotes? ratio? 'deadline' deadlineID default? phases? ; // TODO: Propose alternative?
+ruleContent         : appliedTo? stage? people? rangeType? minVotes? ratio? ('deadline' deadlineID)? default? phases? ; // TODO: Propose alternative?
 appliedTo           : 'applied to' collaborationID ;
 collaborationID     : 'Issue' | 'Pull request' | 'All';
 stage               : 'when' stageID ;

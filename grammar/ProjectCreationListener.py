@@ -1,10 +1,10 @@
 import warnings
-from govdslParser import govdslParser
-from govdslListener import govdslListener
+from .govdslParser import govdslParser
+from .govdslListener import govdslListener
 from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
 )
-from governance import (
+from .governance import (
     Project, Role, Deadline, Rule, Majority, RatioMajority, LeaderDriven, Phased,
     CollaborationType, Stage, RangeType
 )
@@ -108,53 +108,64 @@ class ProjectCreationListener(govdslListener):
                                                 target_type=govdslParser.RuleContext)
         
         for r in rules:
-            # Create base Rule instance with common attributes
             rule_name = r.ruleID().ID().getText()
-            deadline_name = r.ruleContent().deadlineID().ID().getText()
-            applied_to = CollaborationType[r.ruleContent().appliedTo().collaborationID().getText().replace(" ", "_").upper()]
-            try:
-                people = {self.__roles[role.ID().getText()] for role in self.find_descendant_nodes_by_type(node=r.ruleContent(), target_type=govdslParser.RoleIDContext)}
-            except KeyError as e:
-                # TODO: Define Exception type
-                raise Exception(f"Role '{e.args[0]}' not defined.")
-            
-            if deadline_name not in self.__deadlines:
-                raise Exception(f"Deadline '{deadline_name}' not defined.")
-            deadline = self.__deadlines[deadline_name]
-
-            stage = Stage(r.ruleContent().stage().stageID().getText().replace(" ", "_").upper())
-            
-            base_rule = Rule(name=rule_name, applied_to=applied_to, stage=stage,
-                            query_filter="", deadline=deadline, people=people) # TODO: Manage query filter
-        
-            # Transform base rule into specific rule type
-            match r.ruleType().getText():
-                case "Majority":
-                    min_votes = int(r.ruleContent().minVotes().INT().getText())
-                    range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
-                    rule = Majority.from_rule(base_rule, min_votes=min_votes, range_type=range_type)
-                case "RatioMajority":
-                    min_votes = int(r.ruleContent().minVotes().INT().getText())
-                    range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
-                    ratio = float(r.ruleContent().ratio().FLOAT().getText())
-                    rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)
-                case "LeaderDriven":
-                    default_name = r.ruleContent().default().ruleID().ID().getText()
-                    if default_name not in self.__rules:
-                        raise Exception(f"Rule '{default_name}' not defined.")
-                    default_rule = self.__rules[default_name]
-                    rule = LeaderDriven.from_rule(base_rule, default=default_rule)
-                case "Phased":
-                    phases_id = self.find_descendant_nodes_by_type(node=r,
+            rule_type = r.ruleType().getText()
+            if rule_type == "Phased":
+                phases_id = self.find_descendant_nodes_by_type(node=r.ruleContent().phases(),
                                                 target_type=govdslParser.RuleIDContext)
-                    phases = set()
-                    for p_id in phases_id:
-                        phase_rule_name = p_id.ID().getText()
-                        if phase_rule_name not in self.__rules:
-                            raise Exception(f"Rule '{phase_rule_name}' not defined.")
-                        phase_rule = self.__rules[phase_rule_name]
-                        phases.add(phase_rule)
-                    rule = Phased.from_rule(base_rule, phases=phases)
-                case _: 
-                    raise Exception(f"Unsupported rule type: {r.ruleType().getText()}")
-            self.__rules[rule_name] = rule
+                if len(phases_id) < 2:
+                    raise Exception(f"Phased rule '{rule_name}' must have at least two phases.")
+                phases = set()
+                for p_id in phases_id:
+                    phase_rule_name = p_id.ID().getText()
+                    if phase_rule_name not in self.__rules:
+                        raise Exception(f"Rule '{phase_rule_name}' not defined.")
+                    phase_rule = self.__rules[phase_rule_name]
+                    phases.add(phase_rule)
+                rule = Phased(name=rule_name, phases=phases)
+                self.__rules[rule_name] = rule
+            else:
+                # Create base Rule instance with common attributes
+                deadline_name = r.ruleContent().deadlineID().ID().getText()
+                applied_to = CollaborationType[r.ruleContent().appliedTo().collaborationID().getText().replace(" ", "_").upper()]
+                try:
+                    people = {self.__roles[role.ID().getText()] for role in self.find_descendant_nodes_by_type(node=r.ruleContent(), target_type=govdslParser.RoleIDContext)}
+                except KeyError as e:
+                    # TODO: Define Exception type
+                    raise Exception(f"Role '{e.args[0]}' not defined.")
+                
+                if deadline_name not in self.__deadlines:
+                    raise Exception(f"Deadline '{deadline_name}' not defined.")
+                deadline = self.__deadlines[deadline_name]
+
+                stage = Stage(r.ruleContent().stage().stageID().getText().replace(" ", "_").upper())
+                
+                base_rule = Rule(name=rule_name, applied_to=applied_to, stage=stage,
+                                query_filter="", deadline=deadline, people=people) # TODO: Manage query filter
+        
+                # Transform base rule into specific rule type
+                match r.ruleType().getText():
+                    case "Majority":
+                        min_votes = int(r.ruleContent().minVotes().INT().getText())
+                        range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
+                        rule = Majority.from_rule(base_rule, min_votes=min_votes, range_type=range_type)
+                    case "Ratio":
+                        min_votes = int(r.ruleContent().minVotes().INT().getText())
+                        range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
+                        ratio = float(r.ruleContent().ratio().FLOAT().getText())
+                        rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)
+                    case "LeaderDriven":
+                        default_name = r.ruleContent().default().ruleID().ID().getText()
+                        if default_name not in self.__rules:
+                            raise Exception(f"Rule '{default_name}' not defined.")
+                        default_rule = self.__rules[default_name]
+                        rule = LeaderDriven.from_rule(base_rule, default=default_rule)
+                    case _: 
+                        raise Exception(f"Unsupported rule type: {r.ruleType().getText()}")
+                self.__rules[rule_name] = rule
+
+    def exitProject(self, ctx:govdslParser.ProjectContext):
+        
+        self.__project.roles = set(self.__roles.values())
+        self.__project.deadlines = set(self.__deadlines.values())
+        self.__project.rules = set(self.__rules.values())

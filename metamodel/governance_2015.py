@@ -22,14 +22,13 @@ class RangeType(Enum):
 class Role(NamedElement):
     def __init__(self, name: str):
         super().__init__(name)
-        # self.parent: Any = parent # Needed?
     
 
     def __repr__(self) -> str:
         return f'Role({self.name})'
     
 class Deadline(NamedElement):
-    def __init__(self, name: str, ts: timedelta): # TODO: Check how to manage ts
+    def __init__(self, name: str, ts: timedelta): 
         super().__init__(name)
         self.ts: timedelta = ts
 

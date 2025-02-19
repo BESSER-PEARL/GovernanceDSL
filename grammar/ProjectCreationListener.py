@@ -1,16 +1,16 @@
 import warnings
 from utils.exceptions import InvalidVotesException
 from datetime import timedelta
-
-from .govdslParser import govdslParser
-from .govdslListener import govdslListener
 from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
 )
-from .governance import (
+from metamodel.governance_2015 import (
     Project, Role, Deadline, Rule, Majority, RatioMajority, LeaderDriven, Phased,
     CollaborationType, Stage, RangeType
 )
+from .govdslParser import govdslParser
+from .govdslListener import govdslListener
+
 
 class ProjectCreationListener(govdslListener):
     """

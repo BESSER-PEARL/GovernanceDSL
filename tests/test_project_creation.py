@@ -11,7 +11,7 @@ from grammar.govdslParser import govdslParser
 from grammar.ProjectCreationListener import ProjectCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import InvalidVotesException
-from grammar.governance import (
+from metamodel.governance_2015 import (
     Project, Majority, RatioMajority, 
     LeaderDriven, Phased, Role, Deadline,
     CollaborationType, Stage, RangeType
@@ -126,7 +126,7 @@ class TestProjectCreation(unittest.TestCase):
             project = listener.get_project()
             
             self.assertIsInstance(project, Project)
-            rule = next(iter(project.rules))
+            rule = next((r for r in project.rules if r.name == "leaderRule"), None)
             self.assertIsInstance(rule, LeaderDriven)
             self.assertIsNotNone(rule.default)
             

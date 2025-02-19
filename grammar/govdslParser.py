@@ -98,7 +98,7 @@ class govdslParser ( Parser ):
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "<INVALID>", "<INVALID>", "ID", "ATTR_ID", "INT", 
+                      "<INVALID>", "<INVALID>", "ID", "ATTR_ID", "SIGNED_INT", 
                       "FLOAT", "WS" ]
 
     RULE_project = 0
@@ -168,7 +168,7 @@ class govdslParser ( Parser ):
     T__32=33
     ID=34
     ATTR_ID=35
-    INT=36
+    SIGNED_INT=36
     FLOAT=37
     WS=38
 
@@ -493,8 +493,8 @@ class govdslParser ( Parser ):
             return self.getTypedRuleContext(govdslParser.DeadlineIDContext,0)
 
 
-        def INT(self):
-            return self.getToken(govdslParser.INT, 0)
+        def SIGNED_INT(self):
+            return self.getToken(govdslParser.SIGNED_INT, 0)
 
         def timeUnit(self):
             return self.getTypedRuleContext(govdslParser.TimeUnitContext,0)
@@ -525,7 +525,7 @@ class govdslParser ( Parser ):
             self.state = 85
             self.match(govdslParser.T__4)
             self.state = 86
-            self.match(govdslParser.INT)
+            self.match(govdslParser.SIGNED_INT)
             self.state = 87
             self.timeUnit()
         except RecognitionException as re:
@@ -1220,8 +1220,8 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def INT(self):
-            return self.getToken(govdslParser.INT, 0)
+        def SIGNED_INT(self):
+            return self.getToken(govdslParser.SIGNED_INT, 0)
 
         def getRuleIndex(self):
             return govdslParser.RULE_minVotes
@@ -1246,7 +1246,7 @@ class govdslParser ( Parser ):
             self.state = 159
             self.match(govdslParser.T__21)
             self.state = 160
-            self.match(govdslParser.INT)
+            self.match(govdslParser.SIGNED_INT)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

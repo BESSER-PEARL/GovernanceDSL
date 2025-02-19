@@ -1,4 +1,7 @@
 import warnings
+from utils.exceptions import InvalidVotesException
+from datetime import timedelta
+
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
 from besser.BUML.metamodel.structural import (
@@ -8,7 +11,6 @@ from .governance import (
     Project, Role, Deadline, Rule, Majority, RatioMajority, LeaderDriven, Phased,
     CollaborationType, Stage, RangeType
 )
-from datetime import timedelta
 
 class ProjectCreationListener(govdslListener):
     """
@@ -95,7 +97,7 @@ class ProjectCreationListener(govdslListener):
                                                 target_type=govdslParser.DeadlineContext)
 
         for d in deadlines:
-            deadline_time = self.deadline_to_timedelta(amount=int(d.INT().getText()), time_unit=d.timeUnit().getText())
+            deadline_time = self.deadline_to_timedelta(amount=int(d.SIGNED_INT().getText()), time_unit=d.timeUnit().getText())
             deadline = Deadline(name=d.deadlineID().ID().getText(), ts=deadline_time)
             self.__deadlines[d.deadlineID().ID().getText()] = deadline
         self.__project.deadlines = set(self.__deadlines.values())
@@ -146,11 +148,15 @@ class ProjectCreationListener(govdslListener):
                 # Transform base rule into specific rule type
                 match r.ruleType().getText():
                     case "Majority":
-                        min_votes = int(r.ruleContent().minVotes().INT().getText())
+                        min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
+                        if min_votes < 0:
+                            raise InvalidVotesException(min_votes)
                         range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
                         rule = Majority.from_rule(base_rule, min_votes=min_votes, range_type=range_type)
                     case "Ratio":
-                        min_votes = int(r.ruleContent().minVotes().INT().getText())
+                        min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
+                        if min_votes < 0:
+                            raise InvalidVotesException(min_votes)
                         range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
                         ratio = float(r.ruleContent().ratio().FLOAT().getText())
                         rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)

@@ -128,7 +128,8 @@ class TestProjectCreation(unittest.TestCase):
             project = listener.get_project()
             
             self.assertIsInstance(project, Project)
-            rule = next(iter(project.rules))
+            rule = next((r for r in project.rules if r.name == "phasedRule"), None)
+            self.assertIsNotNone(rule)
             self.assertIsInstance(rule, Phased)
             self.assertTrue(len(rule.phases) > 0)
             

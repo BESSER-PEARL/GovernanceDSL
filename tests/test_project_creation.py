@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from grammar.govdslLexer import govdslLexer
 from grammar.govdslParser import govdslParser
-from grammar.ProjectCreationListener import ProjectCreationListener
+from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import InvalidVotesException
 from metamodel.governance_2015 import (
@@ -17,7 +17,7 @@ from metamodel.governance_2015 import (
     CollaborationType, Stage, RangeType
 )
 
-class TestProjectCreation(unittest.TestCase):
+class TestPolicyCreation(unittest.TestCase):
     def setUp(self):
         self.test_cases_path = Path(__file__).parent / "test_cases"
     
@@ -49,7 +49,7 @@ class TestProjectCreation(unittest.TestCase):
             tree = parser.project()
             self.assertIsNotNone(tree)
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
             project = listener.get_project()
@@ -97,7 +97,7 @@ class TestProjectCreation(unittest.TestCase):
             parser = self.setup_parser(text)
             tree = parser.project()
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
             project = listener.get_project()
@@ -120,7 +120,7 @@ class TestProjectCreation(unittest.TestCase):
             parser = self.setup_parser(text)
             tree = parser.project()
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
             project = listener.get_project()
@@ -142,7 +142,7 @@ class TestProjectCreation(unittest.TestCase):
             parser = self.setup_parser(text)
             tree = parser.project()
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
             project = listener.get_project()
@@ -164,7 +164,7 @@ class TestProjectCreation(unittest.TestCase):
             parser = self.setup_parser(text)
             tree = parser.project()
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             
             with self.assertRaises(Exception):
@@ -179,7 +179,7 @@ class TestProjectCreation(unittest.TestCase):
             parser = self.setup_parser(text)
             tree = parser.project()
             
-            listener = ProjectCreationListener()
+            listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             
             with self.assertRaises(InvalidVotesException):

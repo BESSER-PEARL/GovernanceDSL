@@ -1,5 +1,5 @@
 import warnings
-from utils.exceptions import InvalidVotesException
+from utils.exceptions import InvalidVotesException, InsufficientPhasesException, UndefinedRuleException, UndefinedDeadlineException, UnsupportedRuleTypeException
 from datetime import timedelta
 from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
@@ -12,7 +12,7 @@ from .govdslParser import govdslParser
 from .govdslListener import govdslListener
 
 
-class ProjectCreationListener(govdslListener):
+class PolicyCreationListener(govdslListener):
     """
        This listener class generates a governance object model from a parsed DSL file.
     """
@@ -63,6 +63,8 @@ class ProjectCreationListener(govdslListener):
         Returns:
             A timedelta representation from datetime library.
         """
+        if amount < 0:
+            raise InvalidVotesException(amount)
         match  time_unit:
             case "days":
                 return timedelta(days=amount)
@@ -116,12 +118,12 @@ class ProjectCreationListener(govdslListener):
                 phases_id = self.find_descendant_nodes_by_type(node=r.ruleContent().phases(),
                                                 target_type=govdslParser.RuleIDContext)
                 if len(phases_id) < 2:
-                    raise Exception(f"Phased rule '{rule_name}' must have at least two phases.")
+                    raise InsufficientPhasesException(rule_name)
                 phases = set()
                 for p_id in phases_id:
                     phase_rule_name = p_id.ID().getText()
                     if phase_rule_name not in self.__rules:
-                        raise Exception(f"Rule '{phase_rule_name}' not defined.")
+                        raise UndefinedRuleException(phase_rule_name)
                     phase_rule = self.__rules[phase_rule_name]
                     phases.add(phase_rule)
                 rule = Phased(name=rule_name, phases=phases)
@@ -133,11 +135,10 @@ class ProjectCreationListener(govdslListener):
                 try:
                     people = {self.__roles[role.ID().getText()] for role in self.find_descendant_nodes_by_type(node=r.ruleContent(), target_type=govdslParser.RoleIDContext)}
                 except KeyError as e:
-                    # TODO: Define Exception type
-                    raise Exception(f"Role '{e.args[0]}' not defined.")
-                
+                    raise UndefinedRuleException(e.args[0]) from e
+
                 if deadline_name not in self.__deadlines:
-                    raise Exception(f"Deadline '{deadline_name}' not defined.")
+                    raise UndefinedDeadlineException(deadline_name)
                 deadline = self.__deadlines[deadline_name]
 
                 stage = Stage(r.ruleContent().stage().stageID().getText().replace(" ", "_").upper())
@@ -163,11 +164,11 @@ class ProjectCreationListener(govdslListener):
                     case "LeaderDriven":
                         default_name = r.ruleContent().default().ruleID().ID().getText()
                         if default_name not in self.__rules:
-                            raise Exception(f"Rule '{default_name}' not defined.")
+                            raise UndefinedRuleException(default_name)
                         default_rule = self.__rules[default_name]
                         rule = LeaderDriven.from_rule(base_rule, default=default_rule)
                     case _: 
-                        raise Exception(f"Unsupported rule type: {r.ruleType().getText()}")
+                        raise UnsupportedRuleTypeException(r.ruleType().getText())
                 self.__rules[rule_name] = rule
 
     def exitProject(self, ctx:govdslParser.ProjectContext):

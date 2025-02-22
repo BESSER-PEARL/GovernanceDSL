@@ -10,65 +10,74 @@ else:
 
 def serializedATN():
     return [
-        4,1,37,182,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,36,210,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
-        7,20,2,21,7,21,2,22,7,22,2,23,7,23,1,0,1,0,1,0,1,0,5,0,53,8,0,10,
-        0,12,0,56,9,0,1,0,1,0,1,0,1,1,1,1,1,1,3,1,64,8,1,1,2,1,2,1,2,1,2,
-        1,2,5,2,71,8,2,10,2,12,2,74,9,2,1,3,1,3,1,4,1,4,1,4,4,4,81,8,4,11,
-        4,12,4,82,1,5,1,5,1,5,1,5,1,5,1,6,1,6,1,7,1,7,1,7,4,7,95,8,7,11,
-        7,12,7,96,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,9,1,9,1,10,3,10,109,8,10,
-        1,10,3,10,112,8,10,1,10,3,10,115,8,10,1,10,3,10,118,8,10,1,10,3,
-        10,121,8,10,1,10,3,10,124,8,10,1,10,1,10,3,10,128,8,10,1,10,3,10,
-        131,8,10,1,10,3,10,134,8,10,1,11,1,11,1,11,1,12,1,12,1,13,1,13,1,
-        13,1,14,1,14,1,15,1,15,1,15,1,15,5,15,150,8,15,10,15,12,15,153,9,
-        15,1,16,1,16,1,16,1,17,1,17,1,18,1,18,1,18,1,19,1,19,1,19,1,20,1,
-        20,1,20,1,21,1,21,1,21,4,21,172,8,21,11,21,12,21,173,1,21,1,21,1,
-        22,1,22,1,23,1,23,1,23,0,0,24,0,2,4,6,8,10,12,14,16,18,20,22,24,
-        26,28,30,32,34,36,38,40,42,44,46,0,5,1,0,11,13,2,0,13,13,15,17,1,
-        0,20,21,1,0,26,29,1,0,30,33,174,0,48,1,0,0,0,2,63,1,0,0,0,4,65,1,
-        0,0,0,6,75,1,0,0,0,8,77,1,0,0,0,10,84,1,0,0,0,12,89,1,0,0,0,14,91,
-        1,0,0,0,16,98,1,0,0,0,18,105,1,0,0,0,20,108,1,0,0,0,22,135,1,0,0,
-        0,24,138,1,0,0,0,26,140,1,0,0,0,28,143,1,0,0,0,30,145,1,0,0,0,32,
-        154,1,0,0,0,34,157,1,0,0,0,36,159,1,0,0,0,38,162,1,0,0,0,40,165,
-        1,0,0,0,42,168,1,0,0,0,44,177,1,0,0,0,46,179,1,0,0,0,48,49,5,1,0,
-        0,49,50,5,34,0,0,50,54,5,2,0,0,51,53,3,2,1,0,52,51,1,0,0,0,53,56,
-        1,0,0,0,54,52,1,0,0,0,54,55,1,0,0,0,55,57,1,0,0,0,56,54,1,0,0,0,
-        57,58,5,3,0,0,58,59,5,0,0,1,59,1,1,0,0,0,60,64,3,4,2,0,61,64,3,8,
-        4,0,62,64,3,14,7,0,63,60,1,0,0,0,63,61,1,0,0,0,63,62,1,0,0,0,64,
-        3,1,0,0,0,65,66,5,4,0,0,66,67,5,5,0,0,67,72,3,6,3,0,68,69,5,6,0,
-        0,69,71,3,6,3,0,70,68,1,0,0,0,71,74,1,0,0,0,72,70,1,0,0,0,72,73,
-        1,0,0,0,73,5,1,0,0,0,74,72,1,0,0,0,75,76,5,34,0,0,76,7,1,0,0,0,77,
-        78,5,7,0,0,78,80,5,5,0,0,79,81,3,10,5,0,80,79,1,0,0,0,81,82,1,0,
-        0,0,82,80,1,0,0,0,82,83,1,0,0,0,83,9,1,0,0,0,84,85,3,12,6,0,85,86,
-        5,5,0,0,86,87,5,35,0,0,87,88,3,44,22,0,88,11,1,0,0,0,89,90,5,34,
-        0,0,90,13,1,0,0,0,91,92,5,8,0,0,92,94,5,5,0,0,93,95,3,16,8,0,94,
-        93,1,0,0,0,95,96,1,0,0,0,96,94,1,0,0,0,96,97,1,0,0,0,97,15,1,0,0,
-        0,98,99,3,18,9,0,99,100,5,5,0,0,100,101,3,46,23,0,101,102,5,2,0,
-        0,102,103,3,20,10,0,103,104,5,3,0,0,104,17,1,0,0,0,105,106,5,34,
-        0,0,106,19,1,0,0,0,107,109,3,22,11,0,108,107,1,0,0,0,108,109,1,0,
-        0,0,109,111,1,0,0,0,110,112,3,26,13,0,111,110,1,0,0,0,111,112,1,
-        0,0,0,112,114,1,0,0,0,113,115,3,30,15,0,114,113,1,0,0,0,114,115,
-        1,0,0,0,115,117,1,0,0,0,116,118,3,32,16,0,117,116,1,0,0,0,117,118,
-        1,0,0,0,118,120,1,0,0,0,119,121,3,36,18,0,120,119,1,0,0,0,120,121,
-        1,0,0,0,121,123,1,0,0,0,122,124,3,40,20,0,123,122,1,0,0,0,123,124,
-        1,0,0,0,124,127,1,0,0,0,125,126,5,9,0,0,126,128,3,12,6,0,127,125,
-        1,0,0,0,127,128,1,0,0,0,128,130,1,0,0,0,129,131,3,38,19,0,130,129,
-        1,0,0,0,130,131,1,0,0,0,131,133,1,0,0,0,132,134,3,42,21,0,133,132,
-        1,0,0,0,133,134,1,0,0,0,134,21,1,0,0,0,135,136,5,10,0,0,136,137,
-        3,24,12,0,137,23,1,0,0,0,138,139,7,0,0,0,139,25,1,0,0,0,140,141,
-        5,14,0,0,141,142,3,28,14,0,142,27,1,0,0,0,143,144,7,1,0,0,144,29,
-        1,0,0,0,145,146,5,18,0,0,146,151,3,6,3,0,147,148,5,6,0,0,148,150,
-        3,6,3,0,149,147,1,0,0,0,150,153,1,0,0,0,151,149,1,0,0,0,151,152,
-        1,0,0,0,152,31,1,0,0,0,153,151,1,0,0,0,154,155,5,19,0,0,155,156,
-        3,34,17,0,156,33,1,0,0,0,157,158,7,2,0,0,158,35,1,0,0,0,159,160,
-        5,22,0,0,160,161,5,35,0,0,161,37,1,0,0,0,162,163,5,23,0,0,163,164,
-        3,18,9,0,164,39,1,0,0,0,165,166,5,24,0,0,166,167,5,36,0,0,167,41,
-        1,0,0,0,168,169,5,25,0,0,169,171,5,2,0,0,170,172,3,18,9,0,171,170,
-        1,0,0,0,172,173,1,0,0,0,173,171,1,0,0,0,173,174,1,0,0,0,174,175,
-        1,0,0,0,175,176,5,3,0,0,176,43,1,0,0,0,177,178,7,3,0,0,178,45,1,
-        0,0,0,179,180,7,4,0,0,180,47,1,0,0,0,16,54,63,72,82,96,108,111,114,
-        117,120,123,127,130,133,151,173
+        7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,1,0,1,0,1,0,1,0,5,0,
+        55,8,0,10,0,12,0,58,9,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,3,1,67,8,1,1,
+        2,1,2,1,2,1,2,5,2,73,8,2,10,2,12,2,76,9,2,1,2,1,2,1,3,1,3,1,3,1,
+        3,1,3,5,3,85,8,3,10,3,12,3,88,9,3,1,3,1,3,1,4,1,4,1,4,1,4,1,5,1,
+        5,1,5,1,5,3,5,100,8,5,1,6,1,6,1,6,1,6,1,6,5,6,107,8,6,10,6,12,6,
+        110,9,6,1,7,1,7,1,8,1,8,1,8,1,8,1,8,5,8,119,8,8,10,8,12,8,122,9,
+        8,1,9,1,9,1,9,4,9,127,8,9,11,9,12,9,128,1,10,1,10,1,10,1,10,1,10,
+        1,11,1,11,1,12,1,12,1,12,4,12,141,8,12,11,12,12,12,142,1,13,1,13,
+        1,13,1,13,1,13,1,13,1,13,1,14,1,14,1,15,1,15,1,16,3,16,157,8,16,
+        1,16,3,16,160,8,16,1,16,3,16,163,8,16,1,16,3,16,166,8,16,1,16,3,
+        16,169,8,16,1,16,1,16,3,16,173,8,16,1,16,3,16,176,8,16,1,16,3,16,
+        179,8,16,1,17,1,17,1,17,1,18,1,18,1,18,1,19,1,19,1,19,1,20,1,20,
+        1,21,1,21,1,21,1,22,1,22,1,22,1,23,1,23,1,23,1,24,1,24,1,24,4,24,
+        204,8,24,11,24,12,24,205,1,24,1,24,1,24,0,0,25,0,2,4,6,8,10,12,14,
+        16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,0,3,1,0,13,16,
+        1,0,18,21,1,0,26,27,204,0,50,1,0,0,0,2,66,1,0,0,0,4,68,1,0,0,0,6,
+        79,1,0,0,0,8,91,1,0,0,0,10,99,1,0,0,0,12,101,1,0,0,0,14,111,1,0,
+        0,0,16,113,1,0,0,0,18,123,1,0,0,0,20,130,1,0,0,0,22,135,1,0,0,0,
+        24,137,1,0,0,0,26,144,1,0,0,0,28,151,1,0,0,0,30,153,1,0,0,0,32,156,
+        1,0,0,0,34,180,1,0,0,0,36,183,1,0,0,0,38,186,1,0,0,0,40,189,1,0,
+        0,0,42,191,1,0,0,0,44,194,1,0,0,0,46,197,1,0,0,0,48,200,1,0,0,0,
+        50,51,5,1,0,0,51,52,5,32,0,0,52,56,5,2,0,0,53,55,3,2,1,0,54,53,1,
+        0,0,0,55,58,1,0,0,0,56,54,1,0,0,0,56,57,1,0,0,0,57,59,1,0,0,0,58,
+        56,1,0,0,0,59,60,5,3,0,0,60,61,5,0,0,1,61,1,1,0,0,0,62,67,3,4,2,
+        0,63,67,3,10,5,0,64,67,3,18,9,0,65,67,3,24,12,0,66,62,1,0,0,0,66,
+        63,1,0,0,0,66,64,1,0,0,0,66,65,1,0,0,0,67,3,1,0,0,0,68,69,5,4,0,
+        0,69,70,5,32,0,0,70,74,5,2,0,0,71,73,3,6,3,0,72,71,1,0,0,0,73,76,
+        1,0,0,0,74,72,1,0,0,0,74,75,1,0,0,0,75,77,1,0,0,0,76,74,1,0,0,0,
+        77,78,5,3,0,0,78,5,1,0,0,0,79,80,5,32,0,0,80,81,5,5,0,0,81,82,5,
+        6,0,0,82,86,5,2,0,0,83,85,3,8,4,0,84,83,1,0,0,0,85,88,1,0,0,0,86,
+        84,1,0,0,0,86,87,1,0,0,0,87,89,1,0,0,0,88,86,1,0,0,0,89,90,5,3,0,
+        0,90,7,1,0,0,0,91,92,5,32,0,0,92,93,5,5,0,0,93,94,5,7,0,0,94,9,1,
+        0,0,0,95,96,5,8,0,0,96,97,5,5,0,0,97,100,3,12,6,0,98,100,3,16,8,
+        0,99,95,1,0,0,0,99,98,1,0,0,0,100,11,1,0,0,0,101,102,5,9,0,0,102,
+        103,5,5,0,0,103,108,3,14,7,0,104,105,5,10,0,0,105,107,3,14,7,0,106,
+        104,1,0,0,0,107,110,1,0,0,0,108,106,1,0,0,0,108,109,1,0,0,0,109,
+        13,1,0,0,0,110,108,1,0,0,0,111,112,5,32,0,0,112,15,1,0,0,0,113,114,
+        5,11,0,0,114,115,5,5,0,0,115,120,3,14,7,0,116,117,5,10,0,0,117,119,
+        3,14,7,0,118,116,1,0,0,0,119,122,1,0,0,0,120,118,1,0,0,0,120,121,
+        1,0,0,0,121,17,1,0,0,0,122,120,1,0,0,0,123,124,5,12,0,0,124,126,
+        5,5,0,0,125,127,3,20,10,0,126,125,1,0,0,0,127,128,1,0,0,0,128,126,
+        1,0,0,0,128,129,1,0,0,0,129,19,1,0,0,0,130,131,5,32,0,0,131,132,
+        5,5,0,0,132,133,5,33,0,0,133,134,3,22,11,0,134,21,1,0,0,0,135,136,
+        7,0,0,0,136,23,1,0,0,0,137,138,5,17,0,0,138,140,5,5,0,0,139,141,
+        3,26,13,0,140,139,1,0,0,0,141,142,1,0,0,0,142,140,1,0,0,0,142,143,
+        1,0,0,0,143,25,1,0,0,0,144,145,3,28,14,0,145,146,5,5,0,0,146,147,
+        3,30,15,0,147,148,5,2,0,0,148,149,3,32,16,0,149,150,5,3,0,0,150,
+        27,1,0,0,0,151,152,5,32,0,0,152,29,1,0,0,0,153,154,7,1,0,0,154,31,
+        1,0,0,0,155,157,3,34,17,0,156,155,1,0,0,0,156,157,1,0,0,0,157,159,
+        1,0,0,0,158,160,3,36,18,0,159,158,1,0,0,0,159,160,1,0,0,0,160,162,
+        1,0,0,0,161,163,3,38,19,0,162,161,1,0,0,0,162,163,1,0,0,0,163,165,
+        1,0,0,0,164,166,3,42,21,0,165,164,1,0,0,0,165,166,1,0,0,0,166,168,
+        1,0,0,0,167,169,3,44,22,0,168,167,1,0,0,0,168,169,1,0,0,0,169,172,
+        1,0,0,0,170,171,5,22,0,0,171,173,5,32,0,0,172,170,1,0,0,0,172,173,
+        1,0,0,0,173,175,1,0,0,0,174,176,3,46,23,0,175,174,1,0,0,0,175,176,
+        1,0,0,0,176,178,1,0,0,0,177,179,3,48,24,0,178,177,1,0,0,0,178,179,
+        1,0,0,0,179,33,1,0,0,0,180,181,5,23,0,0,181,182,5,32,0,0,182,35,
+        1,0,0,0,183,184,5,24,0,0,184,185,5,36,0,0,185,37,1,0,0,0,186,187,
+        5,25,0,0,187,188,3,40,20,0,188,39,1,0,0,0,189,190,7,2,0,0,190,41,
+        1,0,0,0,191,192,5,28,0,0,192,193,5,33,0,0,193,43,1,0,0,0,194,195,
+        5,29,0,0,195,196,5,34,0,0,196,45,1,0,0,0,197,198,5,30,0,0,198,199,
+        3,28,14,0,199,47,1,0,0,0,200,201,5,31,0,0,201,203,5,2,0,0,202,204,
+        3,28,14,0,203,202,1,0,0,0,204,205,1,0,0,0,205,203,1,0,0,0,205,206,
+        1,0,0,0,206,207,1,0,0,0,207,208,5,3,0,0,208,49,1,0,0,0,18,56,66,
+        74,86,99,108,120,128,142,156,159,162,165,168,172,175,178,205
     ]
 
 class govdslParser ( Parser ):
@@ -81,14 +90,13 @@ class govdslParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "'Project'", "'{'", "'}'", "'Roles'", 
-                     "':'", "','", "'Deadlines'", "'Rules'", "'deadline'", 
-                     "'applied to'", "'Issue'", "'Pull request'", "'All'", 
-                     "'when'", "'Task Review'", "'Patch Review'", "'Release'", 
+    literalNames = [ "<INVALID>", "'Policy'", "'{'", "'}'", "'Project'", 
+                     "':'", "'Activity'", "'Task'", "'Participants'", "'Roles'", 
+                     "','", "'Individual'", "'Conditions'", "'days'", "'weeks'", 
+                     "'months'", "'years'", "'Rules'", "'Majority'", "'LeaderDriven'", 
+                     "'Ratio'", "'Phased'", "'deadline'", "'applied to'", 
                      "'people'", "'range'", "'Present'", "'Qualified'", 
-                     "'minVotes'", "'default'", "'ratio'", "'phases'", "'days'", 
-                     "'weeks'", "'months'", "'years'", "'Majority'", "'LeaderDriven'", 
-                     "'Ratio'", "'Phased'" ]
+                     "'minVotes'", "'ratio'", "'default'", "'phases'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
@@ -98,39 +106,40 @@ class govdslParser ( Parser ):
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "<INVALID>", "<INVALID>", "ID", "SIGNED_INT", "FLOAT", 
-                      "WS" ]
+                      "ID", "SIGNED_INT", "FLOAT", "WS", "IDSet" ]
 
-    RULE_project = 0
+    RULE_policy = 0
     RULE_attributes = 1
-    RULE_roles = 2
-    RULE_roleID = 3
-    RULE_deadlines = 4
-    RULE_deadline = 5
-    RULE_deadlineID = 6
-    RULE_rules = 7
-    RULE_rule = 8
-    RULE_ruleID = 9
-    RULE_ruleContent = 10
-    RULE_appliedTo = 11
-    RULE_collaborationID = 12
-    RULE_stage = 13
-    RULE_stageID = 14
-    RULE_people = 15
-    RULE_rangeType = 16
-    RULE_rangeID = 17
-    RULE_minVotes = 18
-    RULE_default = 19
-    RULE_ratio = 20
-    RULE_phases = 21
-    RULE_timeUnit = 22
-    RULE_ruleType = 23
+    RULE_project = 2
+    RULE_activity = 3
+    RULE_task = 4
+    RULE_participants = 5
+    RULE_roles = 6
+    RULE_participantID = 7
+    RULE_individuals = 8
+    RULE_conditions = 9
+    RULE_deadline = 10
+    RULE_timeUnit = 11
+    RULE_rules = 12
+    RULE_rule = 13
+    RULE_ruleID = 14
+    RULE_ruleType = 15
+    RULE_ruleContent = 16
+    RULE_appliedTo = 17
+    RULE_people = 18
+    RULE_rangeType = 19
+    RULE_rangeID = 20
+    RULE_minVotes = 21
+    RULE_ratio = 22
+    RULE_default = 23
+    RULE_phases = 24
 
-    ruleNames =  [ "project", "attributes", "roles", "roleID", "deadlines", 
-                   "deadline", "deadlineID", "rules", "rule", "ruleID", 
-                   "ruleContent", "appliedTo", "collaborationID", "stage", 
-                   "stageID", "people", "rangeType", "rangeID", "minVotes", 
-                   "default", "ratio", "phases", "timeUnit", "ruleType" ]
+    ruleNames =  [ "policy", "attributes", "project", "activity", "task", 
+                   "participants", "roles", "participantID", "individuals", 
+                   "conditions", "deadline", "timeUnit", "rules", "rule", 
+                   "ruleID", "ruleType", "ruleContent", "appliedTo", "people", 
+                   "rangeType", "rangeID", "minVotes", "ratio", "default", 
+                   "phases" ]
 
     EOF = Token.EOF
     T__0=1
@@ -164,12 +173,11 @@ class govdslParser ( Parser ):
     T__28=29
     T__29=30
     T__30=31
-    T__31=32
-    T__32=33
-    ID=34
-    SIGNED_INT=35
-    FLOAT=36
-    WS=37
+    ID=32
+    SIGNED_INT=33
+    FLOAT=34
+    WS=35
+    IDSet=36
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -180,7 +188,7 @@ class govdslParser ( Parser ):
 
 
 
-    class ProjectContext(ParserRuleContext):
+    class PolicyContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -201,45 +209,45 @@ class govdslParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return govdslParser.RULE_project
+            return govdslParser.RULE_policy
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterProject" ):
-                listener.enterProject(self)
+            if hasattr( listener, "enterPolicy" ):
+                listener.enterPolicy(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitProject" ):
-                listener.exitProject(self)
+            if hasattr( listener, "exitPolicy" ):
+                listener.exitPolicy(self)
 
 
 
 
-    def project(self):
+    def policy(self):
 
-        localctx = govdslParser.ProjectContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 0, self.RULE_project)
+        localctx = govdslParser.PolicyContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 0, self.RULE_policy)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 48
-            self.match(govdslParser.T__0)
-            self.state = 49
-            self.match(govdslParser.ID)
             self.state = 50
+            self.match(govdslParser.T__0)
+            self.state = 51
+            self.match(govdslParser.ID)
+            self.state = 52
             self.match(govdslParser.T__1)
-            self.state = 54
+            self.state = 56
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 400) != 0):
-                self.state = 51
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 137488) != 0):
+                self.state = 53
                 self.attributes()
-                self.state = 56
+                self.state = 58
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 57
+            self.state = 59
             self.match(govdslParser.T__2)
-            self.state = 58
+            self.state = 60
             self.match(govdslParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -257,12 +265,16 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def roles(self):
-            return self.getTypedRuleContext(govdslParser.RolesContext,0)
+        def project(self):
+            return self.getTypedRuleContext(govdslParser.ProjectContext,0)
 
 
-        def deadlines(self):
-            return self.getTypedRuleContext(govdslParser.DeadlinesContext,0)
+        def participants(self):
+            return self.getTypedRuleContext(govdslParser.ParticipantsContext,0)
+
+
+        def conditions(self):
+            return self.getTypedRuleContext(govdslParser.ConditionsContext,0)
 
 
         def rules(self):
@@ -288,23 +300,268 @@ class govdslParser ( Parser ):
         localctx = govdslParser.AttributesContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_attributes)
         try:
-            self.state = 63
+            self.state = 66
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [4]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 60
+                self.state = 62
+                self.project()
+                pass
+            elif token in [8, 11]:
+                self.enterOuterAlt(localctx, 2)
+                self.state = 63
+                self.participants()
+                pass
+            elif token in [12]:
+                self.enterOuterAlt(localctx, 3)
+                self.state = 64
+                self.conditions()
+                pass
+            elif token in [17]:
+                self.enterOuterAlt(localctx, 4)
+                self.state = 65
+                self.rules()
+                pass
+            else:
+                raise NoViableAltException(self)
+
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class ProjectContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
+
+        def activity(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(govdslParser.ActivityContext)
+            else:
+                return self.getTypedRuleContext(govdslParser.ActivityContext,i)
+
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_project
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterProject" ):
+                listener.enterProject(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitProject" ):
+                listener.exitProject(self)
+
+
+
+
+    def project(self):
+
+        localctx = govdslParser.ProjectContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 4, self.RULE_project)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 68
+            self.match(govdslParser.T__3)
+            self.state = 69
+            self.match(govdslParser.ID)
+            self.state = 70
+            self.match(govdslParser.T__1)
+            self.state = 74
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==32:
+                self.state = 71
+                self.activity()
+                self.state = 76
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 77
+            self.match(govdslParser.T__2)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class ActivityContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
+
+        def task(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(govdslParser.TaskContext)
+            else:
+                return self.getTypedRuleContext(govdslParser.TaskContext,i)
+
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_activity
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterActivity" ):
+                listener.enterActivity(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitActivity" ):
+                listener.exitActivity(self)
+
+
+
+
+    def activity(self):
+
+        localctx = govdslParser.ActivityContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 6, self.RULE_activity)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 79
+            self.match(govdslParser.ID)
+            self.state = 80
+            self.match(govdslParser.T__4)
+            self.state = 81
+            self.match(govdslParser.T__5)
+            self.state = 82
+            self.match(govdslParser.T__1)
+            self.state = 86
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==32:
+                self.state = 83
+                self.task()
+                self.state = 88
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 89
+            self.match(govdslParser.T__2)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class TaskContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_task
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterTask" ):
+                listener.enterTask(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitTask" ):
+                listener.exitTask(self)
+
+
+
+
+    def task(self):
+
+        localctx = govdslParser.TaskContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 8, self.RULE_task)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 91
+            self.match(govdslParser.ID)
+            self.state = 92
+            self.match(govdslParser.T__4)
+            self.state = 93
+            self.match(govdslParser.T__6)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class ParticipantsContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def roles(self):
+            return self.getTypedRuleContext(govdslParser.RolesContext,0)
+
+
+        def individuals(self):
+            return self.getTypedRuleContext(govdslParser.IndividualsContext,0)
+
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_participants
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterParticipants" ):
+                listener.enterParticipants(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitParticipants" ):
+                listener.exitParticipants(self)
+
+
+
+
+    def participants(self):
+
+        localctx = govdslParser.ParticipantsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 10, self.RULE_participants)
+        try:
+            self.state = 99
+            self._errHandler.sync(self)
+            token = self._input.LA(1)
+            if token in [8]:
+                self.enterOuterAlt(localctx, 1)
+                self.state = 95
+                self.match(govdslParser.T__7)
+                self.state = 96
+                self.match(govdslParser.T__4)
+                self.state = 97
                 self.roles()
                 pass
-            elif token in [7]:
+            elif token in [11]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 61
-                self.deadlines()
-                pass
-            elif token in [8]:
-                self.enterOuterAlt(localctx, 3)
-                self.state = 62
-                self.rules()
+                self.state = 98
+                self.individuals()
                 pass
             else:
                 raise NoViableAltException(self)
@@ -325,11 +582,11 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def roleID(self, i:int=None):
+        def participantID(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(govdslParser.RoleIDContext)
+                return self.getTypedRuleContexts(govdslParser.ParticipantIDContext)
             else:
-                return self.getTypedRuleContext(govdslParser.RoleIDContext,i)
+                return self.getTypedRuleContext(govdslParser.ParticipantIDContext,i)
 
 
         def getRuleIndex(self):
@@ -349,25 +606,25 @@ class govdslParser ( Parser ):
     def roles(self):
 
         localctx = govdslParser.RolesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_roles)
+        self.enterRule(localctx, 12, self.RULE_roles)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 65
-            self.match(govdslParser.T__3)
-            self.state = 66
+            self.state = 101
+            self.match(govdslParser.T__8)
+            self.state = 102
             self.match(govdslParser.T__4)
-            self.state = 67
-            self.roleID()
-            self.state = 72
+            self.state = 103
+            self.participantID()
+            self.state = 108
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==6:
-                self.state = 68
-                self.match(govdslParser.T__5)
-                self.state = 69
-                self.roleID()
-                self.state = 74
+            while _la==10:
+                self.state = 104
+                self.match(govdslParser.T__9)
+                self.state = 105
+                self.participantID()
+                self.state = 110
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -380,7 +637,7 @@ class govdslParser ( Parser ):
         return localctx
 
 
-    class RoleIDContext(ParserRuleContext):
+    class ParticipantIDContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -391,26 +648,26 @@ class govdslParser ( Parser ):
             return self.getToken(govdslParser.ID, 0)
 
         def getRuleIndex(self):
-            return govdslParser.RULE_roleID
+            return govdslParser.RULE_participantID
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterRoleID" ):
-                listener.enterRoleID(self)
+            if hasattr( listener, "enterParticipantID" ):
+                listener.enterParticipantID(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitRoleID" ):
-                listener.exitRoleID(self)
+            if hasattr( listener, "exitParticipantID" ):
+                listener.exitParticipantID(self)
 
 
 
 
-    def roleID(self):
+    def participantID(self):
 
-        localctx = govdslParser.RoleIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_roleID)
+        localctx = govdslParser.ParticipantIDContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 14, self.RULE_participantID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 75
+            self.state = 111
             self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -421,7 +678,69 @@ class govdslParser ( Parser ):
         return localctx
 
 
-    class DeadlinesContext(ParserRuleContext):
+    class IndividualsContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def participantID(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(govdslParser.ParticipantIDContext)
+            else:
+                return self.getTypedRuleContext(govdslParser.ParticipantIDContext,i)
+
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_individuals
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterIndividuals" ):
+                listener.enterIndividuals(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitIndividuals" ):
+                listener.exitIndividuals(self)
+
+
+
+
+    def individuals(self):
+
+        localctx = govdslParser.IndividualsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 16, self.RULE_individuals)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 113
+            self.match(govdslParser.T__10)
+            self.state = 114
+            self.match(govdslParser.T__4)
+            self.state = 115
+            self.participantID()
+            self.state = 120
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==10:
+                self.state = 116
+                self.match(govdslParser.T__9)
+                self.state = 117
+                self.participantID()
+                self.state = 122
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class ConditionsContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -436,40 +755,40 @@ class govdslParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return govdslParser.RULE_deadlines
+            return govdslParser.RULE_conditions
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDeadlines" ):
-                listener.enterDeadlines(self)
+            if hasattr( listener, "enterConditions" ):
+                listener.enterConditions(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDeadlines" ):
-                listener.exitDeadlines(self)
+            if hasattr( listener, "exitConditions" ):
+                listener.exitConditions(self)
 
 
 
 
-    def deadlines(self):
+    def conditions(self):
 
-        localctx = govdslParser.DeadlinesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_deadlines)
+        localctx = govdslParser.ConditionsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 18, self.RULE_conditions)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 77
-            self.match(govdslParser.T__6)
-            self.state = 78
+            self.state = 123
+            self.match(govdslParser.T__11)
+            self.state = 124
             self.match(govdslParser.T__4)
-            self.state = 80 
+            self.state = 126 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 79
+                self.state = 125
                 self.deadline()
-                self.state = 82 
+                self.state = 128 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==34):
+                if not (_la==32):
                     break
 
         except RecognitionException as re:
@@ -488,9 +807,8 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def deadlineID(self):
-            return self.getTypedRuleContext(govdslParser.DeadlineIDContext,0)
-
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
 
         def SIGNED_INT(self):
             return self.getToken(govdslParser.SIGNED_INT, 0)
@@ -516,16 +834,16 @@ class govdslParser ( Parser ):
     def deadline(self):
 
         localctx = govdslParser.DeadlineContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_deadline)
+        self.enterRule(localctx, 20, self.RULE_deadline)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 84
-            self.deadlineID()
-            self.state = 85
+            self.state = 130
+            self.match(govdslParser.ID)
+            self.state = 131
             self.match(govdslParser.T__4)
-            self.state = 86
+            self.state = 132
             self.match(govdslParser.SIGNED_INT)
-            self.state = 87
+            self.state = 133
             self.timeUnit()
         except RecognitionException as re:
             localctx.exception = re
@@ -536,38 +854,42 @@ class govdslParser ( Parser ):
         return localctx
 
 
-    class DeadlineIDContext(ParserRuleContext):
+    class TimeUnitContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def ID(self):
-            return self.getToken(govdslParser.ID, 0)
 
         def getRuleIndex(self):
-            return govdslParser.RULE_deadlineID
+            return govdslParser.RULE_timeUnit
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterDeadlineID" ):
-                listener.enterDeadlineID(self)
+            if hasattr( listener, "enterTimeUnit" ):
+                listener.enterTimeUnit(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitDeadlineID" ):
-                listener.exitDeadlineID(self)
+            if hasattr( listener, "exitTimeUnit" ):
+                listener.exitTimeUnit(self)
 
 
 
 
-    def deadlineID(self):
+    def timeUnit(self):
 
-        localctx = govdslParser.DeadlineIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_deadlineID)
+        localctx = govdslParser.TimeUnitContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 22, self.RULE_timeUnit)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 89
-            self.match(govdslParser.ID)
+            self.state = 135
+            _la = self._input.LA(1)
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 122880) != 0)):
+                self._errHandler.recoverInline(self)
+            else:
+                self._errHandler.reportMatch(self)
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -608,24 +930,24 @@ class govdslParser ( Parser ):
     def rules(self):
 
         localctx = govdslParser.RulesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_rules)
+        self.enterRule(localctx, 24, self.RULE_rules)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 91
-            self.match(govdslParser.T__7)
-            self.state = 92
+            self.state = 137
+            self.match(govdslParser.T__16)
+            self.state = 138
             self.match(govdslParser.T__4)
-            self.state = 94 
+            self.state = 140 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 93
+                self.state = 139
                 self.rule_()
-                self.state = 96 
+                self.state = 142 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==34):
+                if not (_la==32):
                     break
 
         except RecognitionException as re:
@@ -673,20 +995,20 @@ class govdslParser ( Parser ):
     def rule_(self):
 
         localctx = govdslParser.RuleContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 16, self.RULE_rule)
+        self.enterRule(localctx, 26, self.RULE_rule)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 98
+            self.state = 144
             self.ruleID()
-            self.state = 99
+            self.state = 145
             self.match(govdslParser.T__4)
-            self.state = 100
+            self.state = 146
             self.ruleType()
-            self.state = 101
+            self.state = 147
             self.match(govdslParser.T__1)
-            self.state = 102
+            self.state = 148
             self.ruleContent()
-            self.state = 103
+            self.state = 149
             self.match(govdslParser.T__2)
         except RecognitionException as re:
             localctx.exception = re
@@ -724,11 +1046,56 @@ class govdslParser ( Parser ):
     def ruleID(self):
 
         localctx = govdslParser.RuleIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 18, self.RULE_ruleID)
+        self.enterRule(localctx, 28, self.RULE_ruleID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 105
+            self.state = 151
             self.match(govdslParser.ID)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class RuleTypeContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_ruleType
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterRuleType" ):
+                listener.enterRuleType(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitRuleType" ):
+                listener.exitRuleType(self)
+
+
+
+
+    def ruleType(self):
+
+        localctx = govdslParser.RuleTypeContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 30, self.RULE_ruleType)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 153
+            _la = self._input.LA(1)
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 3932160) != 0)):
+                self._errHandler.recoverInline(self)
+            else:
+                self._errHandler.reportMatch(self)
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -749,10 +1116,6 @@ class govdslParser ( Parser ):
             return self.getTypedRuleContext(govdslParser.AppliedToContext,0)
 
 
-        def stage(self):
-            return self.getTypedRuleContext(govdslParser.StageContext,0)
-
-
         def people(self):
             return self.getTypedRuleContext(govdslParser.PeopleContext,0)
 
@@ -769,9 +1132,8 @@ class govdslParser ( Parser ):
             return self.getTypedRuleContext(govdslParser.RatioContext,0)
 
 
-        def deadlineID(self):
-            return self.getTypedRuleContext(govdslParser.DeadlineIDContext,0)
-
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
 
         def default(self):
             return self.getTypedRuleContext(govdslParser.DefaultContext,0)
@@ -798,81 +1160,73 @@ class govdslParser ( Parser ):
     def ruleContent(self):
 
         localctx = govdslParser.RuleContentContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 20, self.RULE_ruleContent)
+        self.enterRule(localctx, 32, self.RULE_ruleContent)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 108
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==10:
-                self.state = 107
-                self.appliedTo()
-
-
-            self.state = 111
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==14:
-                self.state = 110
-                self.stage()
-
-
-            self.state = 114
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==18:
-                self.state = 113
-                self.people()
-
-
-            self.state = 117
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==19:
-                self.state = 116
-                self.rangeType()
-
-
-            self.state = 120
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==22:
-                self.state = 119
-                self.minVotes()
-
-
-            self.state = 123
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==24:
-                self.state = 122
-                self.ratio()
-
-
-            self.state = 127
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==9:
-                self.state = 125
-                self.match(govdslParser.T__8)
-                self.state = 126
-                self.deadlineID()
-
-
-            self.state = 130
+            self.state = 156
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==23:
-                self.state = 129
-                self.default()
+                self.state = 155
+                self.appliedTo()
 
 
-            self.state = 133
+            self.state = 159
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==24:
+                self.state = 158
+                self.people()
+
+
+            self.state = 162
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==25:
-                self.state = 132
+                self.state = 161
+                self.rangeType()
+
+
+            self.state = 165
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==28:
+                self.state = 164
+                self.minVotes()
+
+
+            self.state = 168
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==29:
+                self.state = 167
+                self.ratio()
+
+
+            self.state = 172
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==22:
+                self.state = 170
+                self.match(govdslParser.T__21)
+                self.state = 171
+                self.match(govdslParser.ID)
+
+
+            self.state = 175
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==30:
+                self.state = 174
+                self.default()
+
+
+            self.state = 178
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==31:
+                self.state = 177
                 self.phases()
 
 
@@ -892,9 +1246,8 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def collaborationID(self):
-            return self.getTypedRuleContext(govdslParser.CollaborationIDContext,0)
-
+        def ID(self):
+            return self.getToken(govdslParser.ID, 0)
 
         def getRuleIndex(self):
             return govdslParser.RULE_appliedTo
@@ -913,147 +1266,13 @@ class govdslParser ( Parser ):
     def appliedTo(self):
 
         localctx = govdslParser.AppliedToContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_appliedTo)
+        self.enterRule(localctx, 34, self.RULE_appliedTo)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 135
-            self.match(govdslParser.T__9)
-            self.state = 136
-            self.collaborationID()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class CollaborationIDContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_collaborationID
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterCollaborationID" ):
-                listener.enterCollaborationID(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitCollaborationID" ):
-                listener.exitCollaborationID(self)
-
-
-
-
-    def collaborationID(self):
-
-        localctx = govdslParser.CollaborationIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_collaborationID)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 138
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 14336) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class StageContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def stageID(self):
-            return self.getTypedRuleContext(govdslParser.StageIDContext,0)
-
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_stage
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStage" ):
-                listener.enterStage(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStage" ):
-                listener.exitStage(self)
-
-
-
-
-    def stage(self):
-
-        localctx = govdslParser.StageContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_stage)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 140
-            self.match(govdslParser.T__13)
-            self.state = 141
-            self.stageID()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class StageIDContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_stageID
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterStageID" ):
-                listener.enterStageID(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitStageID" ):
-                listener.exitStageID(self)
-
-
-
-
-    def stageID(self):
-
-        localctx = govdslParser.StageIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_stageID)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 143
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 237568) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
+            self.state = 180
+            self.match(govdslParser.T__22)
+            self.state = 181
+            self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1070,12 +1289,8 @@ class govdslParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def roleID(self, i:int=None):
-            if i is None:
-                return self.getTypedRuleContexts(govdslParser.RoleIDContext)
-            else:
-                return self.getTypedRuleContext(govdslParser.RoleIDContext,i)
-
+        def IDSet(self):
+            return self.getToken(govdslParser.IDSet, 0)
 
         def getRuleIndex(self):
             return govdslParser.RULE_people
@@ -1094,26 +1309,13 @@ class govdslParser ( Parser ):
     def people(self):
 
         localctx = govdslParser.PeopleContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_people)
-        self._la = 0 # Token type
+        self.enterRule(localctx, 36, self.RULE_people)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 145
-            self.match(govdslParser.T__17)
-            self.state = 146
-            self.roleID()
-            self.state = 151
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==6:
-                self.state = 147
-                self.match(govdslParser.T__5)
-                self.state = 148
-                self.roleID()
-                self.state = 153
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-
+            self.state = 183
+            self.match(govdslParser.T__23)
+            self.state = 184
+            self.match(govdslParser.IDSet)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1151,12 +1353,12 @@ class govdslParser ( Parser ):
     def rangeType(self):
 
         localctx = govdslParser.RangeTypeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_rangeType)
+        self.enterRule(localctx, 38, self.RULE_rangeType)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 154
-            self.match(govdslParser.T__18)
-            self.state = 155
+            self.state = 186
+            self.match(govdslParser.T__24)
+            self.state = 187
             self.rangeID()
         except RecognitionException as re:
             localctx.exception = re
@@ -1192,13 +1394,13 @@ class govdslParser ( Parser ):
     def rangeID(self):
 
         localctx = govdslParser.RangeIDContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_rangeID)
+        self.enterRule(localctx, 40, self.RULE_rangeID)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 157
+            self.state = 189
             _la = self._input.LA(1)
-            if not(_la==20 or _la==21):
+            if not(_la==26 or _la==27):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -1239,13 +1441,56 @@ class govdslParser ( Parser ):
     def minVotes(self):
 
         localctx = govdslParser.MinVotesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_minVotes)
+        self.enterRule(localctx, 42, self.RULE_minVotes)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 159
-            self.match(govdslParser.T__21)
-            self.state = 160
+            self.state = 191
+            self.match(govdslParser.T__27)
+            self.state = 192
             self.match(govdslParser.SIGNED_INT)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class RatioContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def FLOAT(self):
+            return self.getToken(govdslParser.FLOAT, 0)
+
+        def getRuleIndex(self):
+            return govdslParser.RULE_ratio
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterRatio" ):
+                listener.enterRatio(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitRatio" ):
+                listener.exitRatio(self)
+
+
+
+
+    def ratio(self):
+
+        localctx = govdslParser.RatioContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 44, self.RULE_ratio)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 194
+            self.match(govdslParser.T__28)
+            self.state = 195
+            self.match(govdslParser.FLOAT)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1283,56 +1528,13 @@ class govdslParser ( Parser ):
     def default(self):
 
         localctx = govdslParser.DefaultContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_default)
+        self.enterRule(localctx, 46, self.RULE_default)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 162
-            self.match(govdslParser.T__22)
-            self.state = 163
+            self.state = 197
+            self.match(govdslParser.T__29)
+            self.state = 198
             self.ruleID()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class RatioContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def FLOAT(self):
-            return self.getToken(govdslParser.FLOAT, 0)
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_ratio
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterRatio" ):
-                listener.enterRatio(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitRatio" ):
-                listener.exitRatio(self)
-
-
-
-
-    def ratio(self):
-
-        localctx = govdslParser.RatioContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 40, self.RULE_ratio)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 165
-            self.match(govdslParser.T__23)
-            self.state = 166
-            self.match(govdslParser.FLOAT)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1373,118 +1575,28 @@ class govdslParser ( Parser ):
     def phases(self):
 
         localctx = govdslParser.PhasesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 42, self.RULE_phases)
+        self.enterRule(localctx, 48, self.RULE_phases)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 168
-            self.match(govdslParser.T__24)
-            self.state = 169
+            self.state = 200
+            self.match(govdslParser.T__30)
+            self.state = 201
             self.match(govdslParser.T__1)
-            self.state = 171 
+            self.state = 203 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 170
+                self.state = 202
                 self.ruleID()
-                self.state = 173 
+                self.state = 205 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==34):
+                if not (_la==32):
                     break
 
-            self.state = 175
+            self.state = 207
             self.match(govdslParser.T__2)
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class TimeUnitContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_timeUnit
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterTimeUnit" ):
-                listener.enterTimeUnit(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitTimeUnit" ):
-                listener.exitTimeUnit(self)
-
-
-
-
-    def timeUnit(self):
-
-        localctx = govdslParser.TimeUnitContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 44, self.RULE_timeUnit)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 177
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 1006632960) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-
-    class RuleTypeContext(ParserRuleContext):
-        __slots__ = 'parser'
-
-        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-
-        def getRuleIndex(self):
-            return govdslParser.RULE_ruleType
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterRuleType" ):
-                listener.enterRuleType(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitRuleType" ):
-                listener.exitRuleType(self)
-
-
-
-
-    def ruleType(self):
-
-        localctx = govdslParser.RuleTypeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_ruleType)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 179
-            _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 16106127360) != 0)):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

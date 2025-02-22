@@ -47,3 +47,13 @@ class UnsupportedRuleTypeException(Exception):
 
     def __str__(self):
         return f'{self.rule_type} -> {self.message}'
+
+class UndefinedParticipantException(Exception):
+    """Exception raised when a referenced participant is not defined."""
+    def __init__(self, participant_name, message="Participant not defined."):
+        self.participant_name = participant_name
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.participant_name} -> {self.message}'

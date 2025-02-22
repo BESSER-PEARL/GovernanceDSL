@@ -61,10 +61,10 @@ class Deadline(Condition):
         self.__ts = ts
 
 class Rule(NamedElement):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
+    def __init__(self, name: str, conditions: set[Condition], people: set[Participant]):
         super().__init__(name)
-        self.conditions = []
-        self.participants = []
+        self.conditions = conditions
+        self.people = people
     
     @property
     def conditions(self) -> set[Condition]:
@@ -75,12 +75,14 @@ class Rule(NamedElement):
         self.__conditions = conditions
 
     @property
-    def participants(self) -> set[Participant]:
-        return self.__participants
+    def people(self) -> set[Participant]:
+        return self.__people
     
-    @participants.setter
-    def participants(self, participants: set[Participant]):
-        self.__participants = participants
+    @people.setter
+    def people(self, people: set[Participant]):
+        if not people:  # Only check for None or empty
+            raise ValueError("Rule must have at least one participant")
+        self.__people = people
 
 class MajorityRule(Rule):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], min_votes: int):
@@ -98,15 +100,36 @@ class MajorityRule(Rule):
 
 # Policy
 class Policy(NamedElement):
-    def __init__(self, name: str, rules: set[Rule], scope: Scope):
+    """A Policy must have at least one rule and one scope."""
+    def __init__(self, name: str, rules: set[Rule], scopes: set[Scope]):
         super().__init__(name)
-        self.rules = []
-        self.scope = None
+        self.rules = rules
+        self.scope = scopes
+
+    @property
+    def rules(self) -> set[Rule]:
+        return self.__rules
+    
+    @rules.setter
+    def rules(self, rules: set[Rule]):
+        if not rules:  # Only check for None or empty
+            raise ValueError("Policy must have at least one rule")
+        self.__rules = rules
+    
+    @property
+    def scope(self) -> set[Scope]:
+        return self.__scope
+    
+    @scope.setter
+    def scope(self, scope: set[Scope]):
+        if not scope:  # Only check for None or empty
+            raise ValueError("Policy must have at least one scope")
+        self.__scope = scope
 
 class PhasedPolicy(NamedElement):
     def __init__(self, name: str, policies: set[Policy]):
         super().__init__(name)
-        self.policies = []
+        self.policies = policies
     
     @property
     def policies(self) -> set[Policy]:
@@ -114,4 +137,6 @@ class PhasedPolicy(NamedElement):
     
     @policies.setter
     def policies(self, policies: set[Policy]):
+        if not policies:  # Only check for None or empty
+            raise ValueError("PhasedPolicy must have at least one policy")
         self.__policies = policies

@@ -1,0 +1,19 @@
+Policy myPolicy {
+    myProject : Project {
+        myActivity : Activity {
+            myTask : Task
+        }
+    }
+    Participants:
+        Roles : Committers, Contributors
+        Individual : test123
+    Conditions:
+        myDeadline Deadline  : 2 days
+    Rules:
+        myMajRule : Majority {
+             applied to myTask
+             people Committers
+             minVotes 0
+             deadline myDeadline
+        }
+}

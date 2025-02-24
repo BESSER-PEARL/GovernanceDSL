@@ -1,14 +1,18 @@
-Project TestProject {
-    Roles : Committers
-    Deadlines :
+Policy TestPolicy {
+    TestProject : Project {
+        TestActivity : Activity {
+            TestTask : Task
+        }
+    }
+    Participants:
+        Roles : Committers
+    Conditions:
         reviewDeadline : 7 days
-    Rules :
+    Rules:
         majorityRule : Majority {
-            applied to Pull request
-            when Task Review
             people Committers
-            range Present
             minVotes 2
             deadline reviewDeadline
         }
+    Scope: TestActivity
 }

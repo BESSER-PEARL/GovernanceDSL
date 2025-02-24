@@ -5,14 +5,15 @@ from utils.exceptions import (
     UndefinedRuleException, 
     UndefinedDeadlineException, 
     UnsupportedRuleTypeException,
-    UndefinedParticipantException
+    UndefinedParticipantException,
+    UndefinedScopeException
 )
 from datetime import timedelta
 from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
 )
 from metamodel.governance import (
-    Policy, Project, Activity, Task, Role, Individual, Deadline, Rule
+    Policy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -28,11 +29,11 @@ class PolicyCreationListener(govdslListener):
         self.__project = None
         self.__project_activities = {}
         self.__scopes = {}
+        self.__policy_scopes = {}
         self.__participants = {}
         self.__conditions = {}
         self.__rules = {}
 
-    
     def get_policy(self):
         """Policy: Retrieves the Policy instance."""
         return self.__policy
@@ -97,11 +98,18 @@ class PolicyCreationListener(govdslListener):
             task_name = t.ID().getText()
             task = Task(name=task_name)
             activity_tasks.add(task)
+            self.__scopes[task_name] = task
 
         activity_name = ctx.ID().getText()
-        activity = Activity(name=activity_name, tasks=activity_tasks)
+        activity = Activity(name=activity_name) # TODO: relationship with tasks, tasks=activity_tasks)
         self.__project_activities[activity_name] = activity
+        self.__scopes[activity_name] = activity
     
+    def exitProject(self, ctx:govdslParser.ProjectContext):
+        
+        self.__project = Project(name=ctx.ID().getText()) # TODO: relationship with activities, activities=set(self.__project_activities.values())
+        self.__scopes[ctx.ID().getText()] = self.__project
+        
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 
         roles = self.find_descendant_nodes_by_type(node=ctx,
@@ -109,7 +117,7 @@ class PolicyCreationListener(govdslListener):
         for r in roles:
             role = Role(name=r.ID().getText())
             self.__participants[r.ID().getText()] = role # WARNING: This might generate conflict if there is a role with the same name as a individual
-
+    
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
         
         individuals = self.find_descendant_nodes_by_type(node=ctx,
@@ -117,7 +125,7 @@ class PolicyCreationListener(govdslListener):
         for i in individuals:
             individual = Individual(name=i.ID().getText())
             self.__participants[i.ID().getText()] = individual
-
+            
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
 
         deadline_time = self.deadline_to_timedelta(amount=int(ctx.SIGNED_INT().getText()), time_unit=ctx.timeUnit().getText())
@@ -143,8 +151,8 @@ class PolicyCreationListener(govdslListener):
         #     self.__rules[rule_name] = rule
         # else:
             # Create base Rule instance with common attributes
+        # TODO: For now, we just try with one deadline. But in future we will have a set of conditions.
         deadline_name = ctx.ruleContent().deadlineID().ID().getText()
-        applied_to = ctx.ruleContent().appliedTo().ID() # TODO: Check type? CollaborationType[r.ruleContent().appliedTo().collaborationID().getText().replace(" ", "_").upper()]
         try:
             people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
         except KeyError as e:
@@ -156,35 +164,43 @@ class PolicyCreationListener(govdslListener):
             raise UndefinedDeadlineException(deadline_name) from e
 
         # stage = Stage(r.ruleContent().stage().stageID().getText().replace(" ", "_").upper()) TODO: For now we do not populate attributes
-        
-        base_rule = Rule(name=rule_name, applied_to=applied_to, stage=None,
-                        query_filter="", deadline=deadline, people=people) # TODO: Manage query filter
+        conditions = set()
+        conditions.add(deadline)
+        base_rule = Rule(name=rule_name, conditions=conditions, participants=people)
 
         # Transform base rule into specific rule type
-        match r.ruleType().getText():
+        match rule_type:
             case "Majority":
-                min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
-                if min_votes < 0:
-                    raise InvalidVotesException(min_votes)
-                range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
-                rule = Majority.from_rule(base_rule, min_votes=min_votes, range_type=range_type)
-            case "Ratio":
-                min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
-                if min_votes < 0:
-                    raise InvalidVotesException(min_votes)
-                range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
-                ratio = float(r.ruleContent().ratio().FLOAT().getText())
-                rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)
-            case "LeaderDriven":
-                default_name = r.ruleContent().default().ruleID().ID().getText()
-                if default_name not in self.__rules:
-                    raise UndefinedRuleException(default_name)
-                default_rule = self.__rules[default_name]
-                rule = LeaderDriven.from_rule(base_rule, default=default_rule)
+                min_votes = int(ctx.ruleContent().minVotes().SIGNED_INT().getText())
+                rule = MajorityRule.from_rule(base_rule, min_votes=min_votes)
+            # TODO: Fill up other rule types
+            # case "Ratio":
+            #     min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
+            #     if min_votes < 0:
+            #         raise InvalidVotesException(min_votes)
+            #     range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
+            #     ratio = float(r.ruleContent().ratio().FLOAT().getText())
+            #     rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)
+            # case "LeaderDriven":
+            #     default_name = r.ruleContent().default().ruleID().ID().getText()
+            #     if default_name not in self.__rules:
+            #         raise UndefinedRuleException(default_name)
+            #     default_rule = self.__rules[default_name]
+            #     rule = LeaderDriven.from_rule(base_rule, default=default_rule)
             case _: 
-                raise UnsupportedRuleTypeException(r.ruleType().getText())
+                raise UnsupportedRuleTypeException(ctx.ruleType().getText())
+        print("Saving Rule: ", rule)
         self.__rules[rule_name] = rule
 
-    def exitProject(self, ctx:govdslParser.ProjectContext):
-        
-        self.__project.activities = set(self.__project_activities.values())
+    def enterScope(self, ctx:govdslParser.ScopeContext):
+
+        scope_name = ctx.ID().getText()
+        try:
+            scope = self.__scopes[scope_name]
+        except KeyError as e:
+            raise UndefinedScopeException(scope_name) from e
+        self.__policy_scopes[ctx.ID().getText()] = scope
+
+    def exitPolicy(self, ctx:govdslParser.PolicyContext):
+
+        self.__policy = Policy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))

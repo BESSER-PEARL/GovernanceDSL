@@ -11,9 +11,9 @@ Policy myPolicy {
         myDeadline Deadline  : 2 days
     Rules:
         myMajRule : Majority {
-             applied to myTask
              people Committers
              minVotes 0
              deadline myDeadline
         }
+    Scope: myActivity
 }

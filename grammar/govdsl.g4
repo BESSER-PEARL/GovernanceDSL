@@ -2,9 +2,9 @@ grammar govdsl;
 
 // Parser rules
 policy              : 'Policy' ID '{'   attributes*  '}' EOF;
-attributes          : project | participants | conditions | rules ;
+attributes          : project | participants | conditions | rules | scope ;
 // Project group
-project             : 'Project' ID '{'   activity*  '}' ;
+project             : ID ':' 'Project' '{'   activity*  '}' ;
 activity            : ID ':' 'Activity' '{'  task*  '}' ;
 task                : ID ':' 'Task' ; 
 // Participants group
@@ -22,10 +22,9 @@ rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
 ruleID              : ID ;
 ruleType            : 'Majority' | 'LeaderDriven' | 'Ratio' ;
-ruleContent         : appliedTo? people? rangeType? minVotes? ratio? ('deadline' deadlineID)? default? phases? ; // TODO: Propose alternative?
-appliedTo           : 'applied to' ID ; // Project, Activity, Task
+ruleContent         : people? rangeType? minVotes? ratio? ('deadline' deadlineID)? default? ; // TODO: Propose alternative?
 // collaborationID     : 'Issue' | 'Pull request' | 'All';
-// stage                : 'when' taskID ;
+// stage                : 'when' taskID ; // TODO: Refactor on event-based?
 // taskID              : 'Task Review' | 'Patch Review' | 'Release' | 'All' ;
 people              : 'people' participantID (',' participantID)* ;
 rangeType           : 'range' rangeID ;
@@ -33,6 +32,9 @@ rangeID             : 'Present' | 'Qualified' ;
 minVotes            : 'minVotes' SIGNED_INT ;  // Maj
 ratio               : 'ratio' FLOAT ; // Maj
 default             : ('default' ruleID) ; // LD
+// Scope group
+scope               : 'Scope' ':' ID ;
+// Phased policy TODO: Implement
 phases              : 'phases' '{' ruleID+ '}' ; // Phased
 
 

@@ -57,3 +57,13 @@ class UndefinedParticipantException(Exception):
 
     def __str__(self):
         return f'{self.participant_name} -> {self.message}'
+
+class UndefinedScopeException(Exception):
+    """Exception raised when a referenced scope is not defined."""
+    def __init__(self, scope_name, message="Scope not defined."):
+        self.scope_name = scope_name
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.scope_name} -> {self.message}'

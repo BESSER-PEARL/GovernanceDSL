@@ -61,10 +61,10 @@ class Deadline(Condition):
         self.__ts = ts
 
 class Rule(NamedElement):
-    def __init__(self, name: str, conditions: set[Condition], people: set[Participant]):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
         super().__init__(name)
         self.conditions = conditions
-        self.people = people
+        self.participants = participants
     
     @property
     def conditions(self) -> set[Condition]:
@@ -72,22 +72,30 @@ class Rule(NamedElement):
     
     @conditions.setter
     def conditions(self, conditions: set[Condition]):
+        if not conditions:  # Only check for None or empty
+            raise ValueError("Rule must have at least one condition")
         self.__conditions = conditions
 
     @property
-    def people(self) -> set[Participant]:
-        return self.__people
+    def participants(self) -> set[Participant]:
+        return self.__participants
     
-    @people.setter
-    def people(self, people: set[Participant]):
-        if not people:  # Only check for None or empty
+    @participants.setter
+    def participants(self, participants: set[Participant]):
+        if not participants:  # Only check for None or empty
             raise ValueError("Rule must have at least one participant")
-        self.__people = people
+        self.__participants = participants
 
 class MajorityRule(Rule):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], min_votes: int):
         super().__init__(name, conditions, participants)
         self.min_votes = min_votes
+    
+    @classmethod
+    def from_rule(cls, rule: Rule, min_votes: int):
+        majority = cls(name=rule.name, conditions=rule.conditions, 
+                      participants=rule.participants, min_votes=min_votes)
+        return majority
     
     @property
     def min_votes(self) -> int:
@@ -95,6 +103,8 @@ class MajorityRule(Rule):
     
     @min_votes.setter
     def min_votes(self, min_votes: int):
+        if min_votes < 0:
+            raise ValueError("min_votes must be greater than 0")
         self.__min_votes = min_votes
     
 

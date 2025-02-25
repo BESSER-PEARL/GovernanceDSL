@@ -13,7 +13,8 @@ from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
 )
 from metamodel.governance import (
-    Policy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule
+    Policy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule,
+    RatioMajorityRule, LeaderDrivenRule
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -130,6 +131,7 @@ class PolicyCreationListener(govdslListener):
 
         deadline_time = self.deadline_to_timedelta(amount=int(ctx.SIGNED_INT().getText()), time_unit=ctx.timeUnit().getText())
         deadline = Deadline(name=ctx.deadlineID().ID().getText(), ts=deadline_time)
+        print("Enter Deadline: ", deadline)
         self.__conditions[ctx.deadlineID().ID().getText()] = deadline
 
     def enterRule(self, ctx:govdslParser.RuleContext):
@@ -159,6 +161,8 @@ class PolicyCreationListener(govdslListener):
             raise UndefinedParticipantException(e.args[0]) from e
 
         try:
+            print(self.__conditions)
+            print(deadline_name)
             deadline = self.__conditions[deadline_name]
         except KeyError as e:
             raise UndefinedDeadlineException(deadline_name) from e
@@ -173,23 +177,18 @@ class PolicyCreationListener(govdslListener):
             case "Majority":
                 min_votes = int(ctx.ruleContent().minVotes().SIGNED_INT().getText())
                 rule = MajorityRule.from_rule(base_rule, min_votes=min_votes)
-            # TODO: Fill up other rule types
-            # case "Ratio":
-            #     min_votes = int(r.ruleContent().minVotes().SIGNED_INT().getText())
-            #     if min_votes < 0:
-            #         raise InvalidVotesException(min_votes)
-            #     range_type = RangeType(r.ruleContent().rangeType().rangeID().getText().replace(" ", "_").upper())
-            #     ratio = float(r.ruleContent().ratio().FLOAT().getText())
-            #     rule = RatioMajority.from_rule(base_rule, min_votes=min_votes, range_type=range_type, ratio=ratio)
-            # case "LeaderDriven":
-            #     default_name = r.ruleContent().default().ruleID().ID().getText()
-            #     if default_name not in self.__rules:
-            #         raise UndefinedRuleException(default_name)
-            #     default_rule = self.__rules[default_name]
-            #     rule = LeaderDriven.from_rule(base_rule, default=default_rule)
-            case _: 
+            case "Ratio":
+                min_votes = int(ctx.ruleContent().minVotes().SIGNED_INT().getText())
+                ratio = float(ctx.ruleContent().ratio().FLOAT().getText())
+                rule = RatioMajorityRule.from_rule(base_rule, min_votes=min_votes, ratio=ratio)
+            case "LeaderDriven":
+                default_name = ctx.ruleContent().default().ruleID().ID().getText()
+                if default_name not in self.__rules:
+                    raise UndefinedRuleException(default_name)
+                default_rule = self.__rules[default_name]
+                rule = LeaderDrivenRule.from_rule(base_rule, default=default_rule)
+            case _:
                 raise UnsupportedRuleTypeException(ctx.ruleType().getText())
-        print("Saving Rule: ", rule)
         self.__rules[rule_name] = rule
 
     def enterScope(self, ctx:govdslParser.ScopeContext):

@@ -6,13 +6,19 @@ Policy TestPolicy {
     }
     Participants:
         Roles : Committers
+        Individuals : Leader
     Conditions:
         reviewDeadline : 7 days
     Rules:
-        majorityRuleInvalid : Majority {
+        majorityRule : Majority {
             people Committers
-            minVotes -1
+            minVotes 2
             deadline reviewDeadline
+        }
+        leaderRule : LeaderDriven {
+            people Leader
+            deadline reviewDeadline
+            default majorityRule
         }
     Scope: TestActivity
 }

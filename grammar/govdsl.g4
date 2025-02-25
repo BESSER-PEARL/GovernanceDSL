@@ -11,7 +11,7 @@ task                : ID ':' 'Task' ;
 participants        : 'Participants' ':' roles | individuals ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID ;
-individuals         : 'Individual' ':' participantID (',' participantID)* ;
+individuals         : 'Individuals' ':' participantID (',' participantID)* ;
 // Conditions group
 conditions          : 'Conditions' ':'  deadline+ ;
 deadline            : deadlineID ':' SIGNED_INT timeUnit ;
@@ -30,7 +30,7 @@ people              : 'people' participantID (',' participantID)* ;
 rangeType           : 'range' rangeID ;
 rangeID             : 'Present' | 'Qualified' ;
 minVotes            : 'minVotes' SIGNED_INT ;  // Maj
-ratio               : 'ratio' FLOAT ; // Maj
+ratio               : 'ratio' FLOAT ; // Ratio
 default             : ('default' ruleID) ; // LD
 // Scope group
 scope               : 'Scope' ':' ID ;

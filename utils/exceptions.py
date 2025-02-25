@@ -67,3 +67,23 @@ class UndefinedScopeException(Exception):
 
     def __str__(self):
         return f'{self.scope_name} -> {self.message}'
+
+class EmptySetException(Exception):
+    """Exception raised when a set (of conditions, participants, etc.) is empty. This checks for cardinality of 1 or more."""
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return self.message
+
+class InvalidRatioException(Exception):
+    """Exception raised when a ratio is not between 0 and 1."""
+    def __init__(self, ratio, message="Ratio must be between 0 and 1."):
+        self.ratio = ratio
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.ratio} -> {self.message}'
+

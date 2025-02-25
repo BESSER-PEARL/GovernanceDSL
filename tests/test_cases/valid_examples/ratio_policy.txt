@@ -9,10 +9,11 @@ Policy TestPolicy {
     Conditions:
         reviewDeadline : 7 days
     Rules:
-        majorityRuleInvalid : Majority {
+        ratioRule : Ratio {
             people Committers
-            minVotes -1
+            minVotes 2
+            ratio 0.7
             deadline reviewDeadline
         }
-    Scope: TestActivity
+    Scope: TestTask
 }

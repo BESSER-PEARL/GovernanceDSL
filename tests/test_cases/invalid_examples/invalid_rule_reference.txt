@@ -1,12 +1,18 @@
-Project TestProject {
-    Roles : Leaders
-    Deadlines :
-        reviewDeadline : 3 days
-    Rules :
+Policy TestPolicy {
+    TestProject : Project {
+        TestActivity : Activity {
+            TestTask : Task
+        }
+    }
+    Participants:
+        Roles : Leaders
+    Conditions:
+        reviewDeadline : 7 days
+    Rules:
         leaderRule : LeaderDriven {
-            applied to Pull request
-            when Task Review
+            people Leaders
             deadline reviewDeadline
             default nonExistentRule
         }
+    Scope: TestActivity
 }

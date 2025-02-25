@@ -1,19 +1,22 @@
 import unittest
+from datetime import timedelta
+import io
+from pathlib import Path
+
 from antlr4 import (
     InputStream, CommonTokenStream, ParseTreeWalker
 )
-from pathlib import Path
-import io
-from datetime import timedelta
-
 from grammar.govdslLexer import govdslLexer
 from grammar.govdslParser import govdslParser
 from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
-from utils.exceptions import InvalidVotesException
+from utils.exceptions import (
+    InvalidVotesException, UndefinedRuleException, 
+    UndefinedDeadlineException, EmptySetException
+)
 from metamodel.governance import (
-    Policy, Project, Activity, Task, Rule, MajorityRule, 
-    Condition, Participant, Role, Deadline
+    Policy, Activity, MajorityRule, 
+    Role, Deadline, RatioMajorityRule, LeaderDrivenRule
 )
 
 class TestPolicyCreation(unittest.TestCase):
@@ -36,7 +39,7 @@ class TestPolicyCreation(unittest.TestCase):
 
     def test_majority_rule_creation(self):
         """Test the creation of a policy with a majority rule."""
-        with open(self.test_cases_path / "valid_examples/majority_rule.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/majority_policy.txt", "r") as file:
             text = file.read()
             
             # Setup parser and create model
@@ -81,6 +84,70 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Check for parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_invalid_num_votes(self):
+        """Test the creation of a policy with a majority rule having negative votes."""
+        with open(self.test_cases_path / "invalid_examples/invalid_num_votes.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(InvalidVotesException):
+                walker.walk(listener, tree)
+
+    def test_ratio_rule_creation(self):
+        """Test the creation of a policy with a ratio majority rule."""
+        with open(self.test_cases_path / "valid_examples/ratio_policy.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Test rules
+            self.assertEqual(len(policy.rules), 1)
+            rule = next(iter(policy.rules))
+            self.assertIsInstance(rule, RatioMajorityRule)
+            self.assertEqual(rule.ratio, 0.7)
+            self.assertEqual(rule.min_votes, 2)
+
+    def test_leader_driven_rule_creation(self):
+        """Test the creation of a policy with a leader driven rule."""
+        with open(self.test_cases_path / "valid_examples/leader_driven_policy.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Test rules
+            self.assertEqual(len(policy.rules), 2)
+            leader_rule = next(r for r in policy.rules if r.name == "leaderRule")
+            self.assertIsInstance(leader_rule, LeaderDrivenRule)
+            self.assertIsNotNone(leader_rule.default)
+            self.assertEqual(leader_rule.default.name, "majorityRule")
+
+    def test_invalid_rule_reference(self):
+        """Test the creation of a policy with an invalid rule reference."""
+        with open(self.test_cases_path / "invalid_examples/invalid_rule_reference.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(UndefinedRuleException):
+                walker.walk(listener, tree)
 
 if __name__ == '__main__':
     unittest.main()

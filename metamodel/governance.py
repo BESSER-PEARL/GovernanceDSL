@@ -1,7 +1,10 @@
 from enum import Enum
 from datetime import timedelta
 from besser.BUML.metamodel.structural import NamedElement
-
+from utils.exceptions import (
+    InvalidVotesException, EmptySetException, 
+    InvalidRatioException, 
+)
 
 
 # Scope hierarchy
@@ -65,7 +68,7 @@ class Rule(NamedElement):
     @conditions.setter
     def conditions(self, conditions: set[Condition]):
         if not conditions:  # Only check for None or empty
-            raise ValueError("Rule must have at least one condition")
+            raise EmptySetException("Rule must have at least one condition")
         self.__conditions = conditions
 
     @property
@@ -75,7 +78,7 @@ class Rule(NamedElement):
     @participants.setter
     def participants(self, participants: set[Participant]):
         if not participants:  # Only check for None or empty
-            raise ValueError("Rule must have at least one participant")
+            raise EmptySetException("Rule must have at least one participant")
         self.__participants = participants
 
 class MajorityRule(Rule):
@@ -96,7 +99,7 @@ class MajorityRule(Rule):
     @min_votes.setter
     def min_votes(self, min_votes: int):
         if min_votes < 0:
-            raise ValueError("min_votes must be greater than 0")
+            raise InvalidVotesException(min_votes)
         self.__min_votes = min_votes
 
 class RatioMajorityRule(MajorityRule):
@@ -117,7 +120,7 @@ class RatioMajorityRule(MajorityRule):
     @ratio.setter
     def ratio(self, ratio: float):
         if ratio < 0 or ratio > 1:
-            raise ValueError("ratio must be between 0 and 1")
+            raise InvalidRatioException(ratio)
         self.__ratio = ratio
     
 class LeaderDrivenRule(Rule):
@@ -138,12 +141,16 @@ class LeaderDrivenRule(Rule):
     @default.setter
     def default(self, default: Rule):
         if not default:
-            raise ValueError("LeaderDrivenRule must have a default rule")
+            raise EmptySetException("LeaderDrivenRule must have a default rule")
         self.__default = default
 
 # Policy
 class Policy(NamedElement):
     """A Policy must have at least one rule and one scope."""
+    def __init__(self, name: str):
+        super().__init__(name)
+
+class SinglePolicy(Policy):
     def __init__(self, name: str, rules: set[Rule], scopes: set[Scope]):
         super().__init__(name)
         self.rules = rules
@@ -156,7 +163,7 @@ class Policy(NamedElement):
     @rules.setter
     def rules(self, rules: set[Rule]):
         if not rules:  # Only check for None or empty
-            raise ValueError("Policy must have at least one rule")
+            raise EmptySetException("Policy must have at least one rule")
         self.__rules = rules
     
     @property
@@ -166,20 +173,21 @@ class Policy(NamedElement):
     @scope.setter
     def scope(self, scope: set[Scope]):
         if not scope:  # Only check for None or empty
-            raise ValueError("Policy must have at least one scope")
+            raise EmptySetException("Policy must have at least one scope")
         self.__scope = scope
 
-class PhasedPolicy(NamedElement):
-    def __init__(self, name: str, policies: set[Policy]):
+class PhasedPolicy(Policy):
+    """A PhasedPolicy must have at least one phase."""
+    def __init__(self, name: str, phases: set[SinglePolicy]):
         super().__init__(name)
-        self.policies = policies
+        self.phases = phases
     
     @property
-    def policies(self) -> set[Policy]:
-        return self.__policies
+    def phases(self) -> set[SinglePolicy]:
+        return self.__phases
     
-    @policies.setter
-    def policies(self, policies: set[Policy]):
-        if not policies:  # Only check for None or empty
-            raise ValueError("PhasedPolicy must have at least one policy")
-        self.__policies = policies
+    @phases.setter
+    def phases(self, phases: set[SinglePolicy]):
+        if not phases:  # Only check for None or empty
+            raise EmptySetException("PhasedPolicy must have at least one phase.")
+        self.__phases = phases

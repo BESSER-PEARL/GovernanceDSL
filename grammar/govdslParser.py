@@ -95,7 +95,7 @@ class govdslParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'Policy'", "'{'", "'}'", "':'", "'Project'", 
                      "'Activity'", "'Task'", "'Participants'", "'Roles'", 
-                     "','", "'Individual'", "'Conditions'", "'days'", "'weeks'", 
+                     "','", "'Individuals'", "'Conditions'", "'days'", "'weeks'", 
                      "'months'", "'years'", "'Rules'", "'Majority'", "'LeaderDriven'", 
                      "'Ratio'", "'deadline'", "'people'", "'range'", "'Present'", 
                      "'Qualified'", "'minVotes'", "'ratio'", "'default'", 

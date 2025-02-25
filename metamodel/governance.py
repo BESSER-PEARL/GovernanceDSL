@@ -17,15 +17,7 @@ class Activity(Scope):
     def __init__(self, name: str):
         super().__init__(name)
 
-class Development(Activity):
-    def __init__(self, name: str):
-        super().__init__(name)
-
 class Task(Scope):
-    def __init__(self, name: str):
-        super().__init__(name)
-
-class PullRequestReview(Task):
     def __init__(self, name: str):
         super().__init__(name)
 
@@ -106,7 +98,48 @@ class MajorityRule(Rule):
         if min_votes < 0:
             raise ValueError("min_votes must be greater than 0")
         self.__min_votes = min_votes
+
+class RatioMajorityRule(MajorityRule):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], min_votes: int, ratio: float):
+        super().__init__(name, conditions, participants, min_votes)
+        self.ratio = ratio
     
+    @classmethod
+    def from_rule(cls, rule: MajorityRule, min_votes: int, ratio: float):
+        ratio_majority = cls(name=rule.name, conditions=rule.conditions, 
+                             participants=rule.participants, min_votes=min_votes, ratio=ratio)
+        return ratio_majority
+    
+    @property
+    def ratio(self) -> float:
+        return self.__ratio
+    
+    @ratio.setter
+    def ratio(self, ratio: float):
+        if ratio < 0 or ratio > 1:
+            raise ValueError("ratio must be between 0 and 1")
+        self.__ratio = ratio
+    
+class LeaderDrivenRule(Rule):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], default: Rule):
+        super().__init__(name, conditions, participants)
+        self.default = default
+    
+    @classmethod
+    def from_rule(cls, rule: Rule, default: Rule):
+        leader_driven = cls(name=rule.name, conditions=rule.conditions, 
+                            participants=rule.participants, default=default)
+        return leader_driven
+
+    @property
+    def default(self) -> Rule:
+        return self.__default
+    
+    @default.setter
+    def default(self, default: Rule):
+        if not default:
+            raise ValueError("LeaderDrivenRule must have a default rule")
+        self.__default = default
 
 # Policy
 class Policy(NamedElement):

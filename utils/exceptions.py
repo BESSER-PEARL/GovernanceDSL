@@ -28,9 +28,19 @@ class UndefinedRuleException(Exception):
     def __str__(self):
         return f'{self.rule_name} -> {self.message}'
 
-class UndefinedDeadlineException(Exception): # Maybe we could have a generic UndefinedElementException
-    """Exception raised when a referenced deadline is not defined."""
-    def __init__(self, deadline_name, message="Deadline not defined."):
+class UndefinedConditionException(Exception): # Maybe we could have a generic UndefinedElementException
+    """Exception raised when a referenced condition is not defined."""
+    def __init__(self, condition_name, message="Condition not defined."):
+        self.condition_name = condition_name
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.condition_name} -> {self.message}'
+
+class InvalidDeadlineException(Exception):
+    """Exception raised when both offset and date are null in a Deadline."""
+    def __init__(self, deadline_name, message="Deadline must have either offset or date defined."):
         self.deadline_name = deadline_name
         self.message = message
         super().__init__(self.message)

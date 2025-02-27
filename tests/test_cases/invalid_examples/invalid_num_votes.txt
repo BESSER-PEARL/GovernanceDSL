@@ -7,12 +7,12 @@ Policy TestPolicy {
     Participants:
         Roles : Committers
     Conditions:
-        reviewDeadline : 7 days
+        Deadline reviewDeadline : 7 days
+        VotingCondition votCond : minVotes -1
     Rules:
-        majorityRuleInvalid : Majority {
+        majorityRule : Majority {
             people Committers
-            minVotes -1
-            deadline reviewDeadline
+            conditions reviewDeadline, votCond
         }
     Scope: TestActivity
 }

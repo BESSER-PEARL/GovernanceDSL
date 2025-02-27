@@ -13,24 +13,31 @@ roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID ;
 individuals         : 'Individuals' ':' participantID (',' participantID)* ;
 // Conditions group
-conditions          : 'Conditions' ':'  deadline+ ;
-deadline            : deadlineID ':' SIGNED_INT timeUnit ;
+conditions          : 'Conditions' ':'  deadline? votingCondition? ;
+deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
+offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
+date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY
+votingCondition     : 'VotingCondition' voteConditionID ':' (minVotes | ratio | (minVotes ',' ratio)) ;  // TODO: Change to a whole condition, where we can have minVotes and/or ratio
+voteConditionID     : ID ;
+minVotes            : 'minVotes' SIGNED_INT ; 
+ratio               : 'ratio' FLOAT ; 
+
 // Rules group
 rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
 ruleID              : ID ;
 ruleType            : 'Majority' | 'LeaderDriven' | 'Ratio' ;
-ruleContent         : people? rangeType? minVotes? ratio? ('deadline' deadlineID)? default? ; // TODO: Propose alternative?
+ruleContent         : people? rangeType? ruleConditions? default? ; // TODO: Propose alternative?
 // collaborationID     : 'Issue' | 'Pull request' | 'All';
 // stage                : 'when' taskID ; // TODO: Refactor on event-based?
 // taskID              : 'Task Review' | 'Patch Review' | 'Release' | 'All' ;
 people              : 'people' participantID (',' participantID)* ;
 rangeType           : 'range' rangeID ;
 rangeID             : 'Present' | 'Qualified' ;
-minVotes            : 'minVotes' SIGNED_INT ;  // Maj
-ratio               : 'ratio' FLOAT ; // Ratio
+ruleConditions      : 'conditions' conditionID (',' conditionID)* ;
+conditionID         : ID ;
 default             : ('default' ruleID) ; // LD
 // Scope group
 scope               : 'Scope' ':' ID ;

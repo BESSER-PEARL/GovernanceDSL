@@ -1,20 +1,19 @@
 import warnings
+from datetime import timedelta, datetime
+from besser.BUML.metamodel.structural import (
+    StringType, IntegerType, FloatType, TimeDeltaType
+) # TODO: Check if necessary (for attr type validation)
 from utils.exceptions import (
     InvalidVotesException, 
-    InsufficientPhasesException, 
     UndefinedRuleException, 
-    UndefinedDeadlineException, 
+    UndefinedConditionException, 
     UnsupportedRuleTypeException,
     UndefinedParticipantException,
     UndefinedScopeException
 )
-from datetime import timedelta
-from besser.BUML.metamodel.structural import (
-    StringType, IntegerType, FloatType, TimeDeltaType
-)
 from metamodel.governance import (
-    Policy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule,
-    RatioMajorityRule, LeaderDrivenRule
+    SinglePolicy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule,
+    RatioMajorityRule, LeaderDrivenRule, VotingCondition
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -128,59 +127,67 @@ class PolicyCreationListener(govdslListener):
             self.__participants[i.ID().getText()] = individual
             
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
+        name = ctx.deadlineID().ID().getText()
+        offset = None
+        date = None
+        
+        # Check for offset
+        if ctx.offset():
+            amount = int(ctx.offset().SIGNED_INT().getText())
+            time_unit = ctx.offset().timeUnit().getText()
+            offset = self.deadline_to_timedelta(amount=amount, time_unit=time_unit)
+        
+        # Check for date
+        if ctx.date():
+            day = int(ctx.date().SIGNED_INT(0).getText())    # First SIGNED_INT is day
+            month = int(ctx.date().SIGNED_INT(1).getText())  # Second SIGNED_INT is month
+            year = int(ctx.date().SIGNED_INT(2).getText())   # Third SIGNED_INT is year
+            date = datetime(year=year, month=month, day=day)
+        
+        deadline = Deadline(name=name, offset=offset, date=date)
+        self.__conditions[name] = deadline
 
-        deadline_time = self.deadline_to_timedelta(amount=int(ctx.SIGNED_INT().getText()), time_unit=ctx.timeUnit().getText())
-        deadline = Deadline(name=ctx.deadlineID().ID().getText(), ts=deadline_time)
-        print("Enter Deadline: ", deadline)
-        self.__conditions[ctx.deadlineID().ID().getText()] = deadline
+    def enterVotingCondition(self, ctx:govdslParser.VotingConditionContext):
+        
+        name = ctx.voteConditionID().ID().getText()
+        min_votes = None
+        ratio = None
+        if ctx.minVotes():
+            min_votes = int(ctx.minVotes().SIGNED_INT().getText())
+        if ctx.ratio():
+            ratio = float(ctx.ratio().FLOAT().getText())
+        condition = VotingCondition(name=name, minVotes=min_votes, ratio=ratio)
+        self.__conditions[name] = condition 
 
     def enterRule(self, ctx:govdslParser.RuleContext):
         
         rule_name = ctx.ruleID().ID().getText()
         rule_type = ctx.ruleType().getText()
-        # TODO: This goes to PolicyPhased
-        # if rule_type == "Phased":
-        #     phases_id = self.find_descendant_nodes_by_type(node=ctx.ruleContent().phases(),
-        #                                     target_type=govdslParser.RuleIDContext)
-        #     phases = set()
-        #     for p_id in phases_id:
-        #         phase_rule_name = p_id.ID().getText()
-        #         if phase_rule_name not in self.__rules:
-        #             raise UndefinedRuleException(phase_rule_name)
-        #         phase_rule = self.__rules[phase_rule_name]
-        #         phases.add(phase_rule)
-        #     rule = Phased(name=rule_name, phases=phases)
-        #     self.__rules[rule_name] = rule
-        # else:
-            # Create base Rule instance with common attributes
-        # TODO: For now, we just try with one deadline. But in future we will have a set of conditions.
-        deadline_name = ctx.ruleContent().deadlineID().ID().getText()
+
+        conditions = set()
+        if ctx.ruleContent().ruleConditions():
+            conditions_set = self.find_descendant_nodes_by_type(node=ctx.ruleContent(),
+                                                target_type=govdslParser.ConditionIDContext)
+            for c in conditions_set:
+                c_id = c.ID().getText()
+                try:
+                    conditions.add(self.__conditions[c_id])
+                except KeyError as e:
+                    raise UndefinedConditionException(c_id) from e
+                
         try:
             people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
         except KeyError as e:
             raise UndefinedParticipantException(e.args[0]) from e
 
-        try:
-            print(self.__conditions)
-            print(deadline_name)
-            deadline = self.__conditions[deadline_name]
-        except KeyError as e:
-            raise UndefinedDeadlineException(deadline_name) from e
-
-        # stage = Stage(r.ruleContent().stage().stageID().getText().replace(" ", "_").upper()) TODO: For now we do not populate attributes
-        conditions = set()
-        conditions.add(deadline)
         base_rule = Rule(name=rule_name, conditions=conditions, participants=people)
 
         # Transform base rule into specific rule type
         match rule_type:
             case "Majority":
-                min_votes = int(ctx.ruleContent().minVotes().SIGNED_INT().getText())
-                rule = MajorityRule.from_rule(base_rule, min_votes=min_votes)
+                rule = MajorityRule.from_rule(base_rule)
             case "Ratio":
-                min_votes = int(ctx.ruleContent().minVotes().SIGNED_INT().getText())
-                ratio = float(ctx.ruleContent().ratio().FLOAT().getText())
-                rule = RatioMajorityRule.from_rule(base_rule, min_votes=min_votes, ratio=ratio)
+                rule = RatioMajorityRule.from_rule(base_rule)
             case "LeaderDriven":
                 default_name = ctx.ruleContent().default().ruleID().ID().getText()
                 if default_name not in self.__rules:
@@ -202,4 +209,4 @@ class PolicyCreationListener(govdslListener):
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
 
-        self.__policy = Policy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))
+        self.__policy = SinglePolicy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))

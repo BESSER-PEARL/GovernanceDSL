@@ -1,24 +1,24 @@
-Project TestProject {
-    Roles : Reviewers, QA
-    Deadlines :
-        reviewDeadline : 3 days
-        qaDeadline : 2 days
-    Rules :
+Policy TestPolicy {
+    TestProject : Project {
+        TestActivity : Activity {
+            TestTask : Task
+        }
+    }
+    Participants:
+        Roles : Reviewers, QA
+    Conditions:
+        Deadline reviewDeadline : 3 days
+        Deadline qaDeadline : 2 days
+        MinVotes reviewVotes : 2
+        MinVotes qaVotes : 1
+    Rules:
         reviewPhase : Majority {
-            applied to Pull request
-            when Task Review
             people Reviewers
-            range Present
-            minVotes 2
-            deadline reviewDeadline
+            conditions reviewDeadline, reviewVotes
         }
         qaPhase : Majority {
-            applied to Pull request
-            when Task Review
             people QA
-            range Present
-            minVotes 1
-            deadline qaDeadline
+            conditions qaDeadline, qaVotes
         }
         phasedRule : Phased {
             phases {
@@ -26,4 +26,5 @@ Project TestProject {
                 qaPhase
             }
         }
+    Scope: TestActivity
 }

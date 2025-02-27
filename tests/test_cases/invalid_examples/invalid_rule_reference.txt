@@ -7,11 +7,11 @@ Policy TestPolicy {
     Participants:
         Roles : Leaders
     Conditions:
-        reviewDeadline : 7 days
+        Deadline reviewDeadline : 7 days
     Rules:
         leaderRule : LeaderDriven {
             people Leaders
-            deadline reviewDeadline
+            conditions reviewDeadline
             default nonExistentRule
         }
     Scope: TestActivity

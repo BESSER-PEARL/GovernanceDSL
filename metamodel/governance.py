@@ -1,9 +1,10 @@
 from enum import Enum
-from datetime import timedelta
+from datetime import timedelta, datetime  
 from besser.BUML.metamodel.structural import NamedElement
 from utils.exceptions import (
     InvalidVotesException, EmptySetException, 
-    InvalidRatioException, 
+    InvalidRatioException, InvalidDeadlineException,
+    UndefinedParticipantException, UndefinedScopeException  
 )
 
 
@@ -24,7 +25,7 @@ class Task(Scope):
     def __init__(self, name: str):
         super().__init__(name)
 
-# Rule
+# Participant
 class Participant(NamedElement):
     def __init__(self, name: str):
         super().__init__(name)
@@ -37,24 +38,105 @@ class Role(Participant):
     def __init__(self, name: str):
         super().__init__(name)
 
+class hasRole(NamedElement):
+    def __init__(self, name: str, role: Role, individual: Individual, scope: Scope):
+        super().__init__(name)
+        self.role = role
+        self.individual = individual
+        self.scope = scope
+    
+    @property
+    def role(self) -> Role:
+        return self.__role
+    
+    @role.setter
+    def role(self, role: Role):
+        if role is None:
+            raise UndefinedParticipantException(None)
+        self.__role = role
+    
+    @property
+    def individual(self) -> Individual:
+        return self.__individual
+    
+    @individual.setter
+    def individual(self, individual: Individual):
+        if individual is None:
+            raise UndefinedParticipantException(None)
+        self.__individual = individual
+    
+    @property
+    def scope(self) -> Scope:
+        return self.__scope
+    
+    @scope.setter
+    def scope(self, scope: Scope):
+        if scope is None:
+            raise UndefinedScopeException(None)
+        self.__scope = scope
 
+
+# Condition
 class Condition(NamedElement):
     def __init__(self, name: str):
         super().__init__(name)
 
 class Deadline(Condition):
-    def __init__(self, name: str, ts: timedelta):
+    def __init__(self, name: str, offset: timedelta, date: datetime):
         super().__init__(name)
-        self.ts = ts
+        if offset is None and date is None:
+            raise InvalidDeadlineException(name)
+        self.offset = offset
+        self.date = date
     
     @property
-    def ts(self) -> timedelta:
-        return self.__ts
+    def offset(self) -> timedelta:
+        return self.__offset
     
-    @ts.setter
-    def ts(self, ts: timedelta):
-        self.__ts = ts
+    @offset.setter
+    def offset(self, offset: timedelta):
+        if offset is None and self.date is None:
+            raise InvalidDeadlineException(self.name)
+        self.__offset = offset
 
+    @property
+    def date(self) -> datetime:
+        return self.__date
+    
+    @date.setter
+    def date(self, date: datetime):
+        if date is None and self.offset is None:
+            raise InvalidDeadlineException(self.name)
+        self.__date = date
+
+class VotingCondition(Condition):
+    def __init__(self, name: str, minVotes: int, ratio: float):
+        super().__init__(name)
+        self.minVotes = minVotes
+        self.ratio = ratio
+    
+    @property
+    def minVotes(self) -> int:
+        return self.__minVotes
+    
+    @minVotes.setter
+    def minVotes(self, minVotes: int):
+        if minVotes and minVotes < 0:
+            raise InvalidVotesException("Number of votes must be non-negative.")
+        self.__minVotes = minVotes
+    
+    @property
+    def ratio(self) -> float:
+        return self.__ratio
+    
+    @ratio.setter
+    def ratio(self, ratio: float):
+        if ratio and (ratio < 0 or ratio > 1):
+            raise InvalidRatioException("Ratio must be between 0 and 1.")
+        self.__ratio = ratio
+
+
+# Rule
 class Rule(NamedElement):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
         super().__init__(name)
@@ -81,48 +163,36 @@ class Rule(NamedElement):
             raise EmptySetException("Rule must have at least one participant")
         self.__participants = participants
 
-class MajorityRule(Rule):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], min_votes: int):
+class VotingRule(Rule):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
         super().__init__(name, conditions, participants)
-        self.min_votes = min_votes
     
     @classmethod
-    def from_rule(cls, rule: Rule, min_votes: int):
+    def from_rule(cls, rule: Rule):
+        voting = cls(name=rule.name, conditions=rule.conditions, participants=rule.participants)
+        return voting
+
+
+class MajorityRule(VotingRule):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
+        super().__init__(name, conditions, participants)
+    
+    @classmethod
+    def from_rule(cls, rule: Rule):
         majority = cls(name=rule.name, conditions=rule.conditions, 
-                      participants=rule.participants, min_votes=min_votes)
+                      participants=rule.participants)
         return majority
-    
-    @property
-    def min_votes(self) -> int:
-        return self.__min_votes
-    
-    @min_votes.setter
-    def min_votes(self, min_votes: int):
-        if min_votes < 0:
-            raise InvalidVotesException(min_votes)
-        self.__min_votes = min_votes
 
 class RatioMajorityRule(MajorityRule):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], min_votes: int, ratio: float):
-        super().__init__(name, conditions, participants, min_votes)
-        self.ratio = ratio
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
+        super().__init__(name, conditions, participants)
     
     @classmethod
-    def from_rule(cls, rule: MajorityRule, min_votes: int, ratio: float):
+    def from_rule(cls, rule: MajorityRule):
         ratio_majority = cls(name=rule.name, conditions=rule.conditions, 
-                             participants=rule.participants, min_votes=min_votes, ratio=ratio)
+                           participants=rule.participants)
         return ratio_majority
-    
-    @property
-    def ratio(self) -> float:
-        return self.__ratio
-    
-    @ratio.setter
-    def ratio(self, ratio: float):
-        if ratio < 0 or ratio > 1:
-            raise InvalidRatioException(ratio)
-        self.__ratio = ratio
-    
+
 class LeaderDrivenRule(Rule):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], default: Rule):
         super().__init__(name, conditions, participants)

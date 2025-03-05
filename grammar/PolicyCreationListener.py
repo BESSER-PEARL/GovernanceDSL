@@ -5,15 +5,13 @@ from besser.BUML.metamodel.structural import (
 ) # TODO: Check if necessary (for attr type validation)
 from utils.exceptions import (
     InvalidVotesException, 
-    UndefinedRuleException, 
-    UndefinedConditionException, 
-    UnsupportedRuleTypeException,
-    UndefinedParticipantException,
-    UndefinedScopeException
+    UndefinedAttributeException, 
+    UnsupportedRuleTypeException
 )
 from metamodel.governance import (
-    SinglePolicy, Project, Activity, Task, Role, Individual, Deadline, Rule, MajorityRule,
-    RatioMajorityRule, LeaderDrivenRule, VotingCondition
+    SinglePolicy, Project, Activity, Task, Role, Individual,
+    Deadline, Rule, MajorityRule, RatioMajorityRule,
+    LeaderDrivenRule, VotingCondition, TaskTypeEnum, PlatformEnum
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -88,27 +86,76 @@ class PolicyCreationListener(govdslListener):
                 warnings.warn(f"Unsupported time unit: {time_unit}. Defaulting to days.")
                 return timedelta(days=amount)
     
-    def enterActivity(self, ctx:govdslParser.ActivityContext):
-
-        tasks = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.TaskContext)
+    def convert_string_to_task_type(self, task_type_str: str) -> TaskTypeEnum:
+        """
+        Converts a string representation of a task type to the corresponding TaskTypeEnum value.
         
-        activity_tasks = set()
-        for t in tasks:
-            task_name = t.ID().getText()
-            task = Task(name=task_name)
-            activity_tasks.add(task)
-            self.__scopes[task_name] = task
+        Args:
+            task_type_str: String representation from the grammar (e.g., "Pull request", "Issue")
+            
+        Returns:
+            The corresponding TaskTypeEnum value
+            
+        Raises:
+            UndefinedAttributeException if the task type string doesn't match any enum value
+        """
+        task_type_map = {
+            "Pull request": TaskTypeEnum.PULL_REQUEST,
+            "Issue": TaskTypeEnum.ISSUE
+        }
+        
+        if task_type_str not in task_type_map:
+            raise UndefinedAttributeException("task_type", task_type_str)
+    
+        return task_type_map[task_type_str]
 
+    def convert_string_to_platform(self, platform_str: str) -> PlatformEnum:
+        """
+        Converts a string representation of a platform to the corresponding PlatformEnum value.
+        
+        Args:
+            platform_str: String representation from the grammar (e.g., "GitHub")
+            
+        Returns:
+            The corresponding PlatformEnum value
+            
+        Raises:
+            UndefinedAttributeException if the platform string doesn't match any enum value
+        """
+        platform_map = {
+            "GitHub": PlatformEnum.GITHUB, # Adapt for variants (e.g., git hub)
+            # Add more platforms as needed
+        }
+        
+        # Case-insensitive matching; we need to adapt the grammar too
+        normalized_platform = platform_str.lower()
+        for key, value in platform_map.items():
+            if key.lower() == normalized_platform:
+                return value
+        
+        raise UndefinedAttributeException("platform", platform_str)
+
+    def enterActivity(self, ctx:govdslParser.ActivityContext):
         activity_name = ctx.ID().getText()
         activity = Activity(name=activity_name) # TODO: relationship with tasks, tasks=activity_tasks)
-        self.__project_activities[activity_name] = activity
+        # self.__project_activities[activity_name] = activity # TODO: work in relationships
         self.__scopes[activity_name] = activity
     
+    def enterTask(self, ctx:govdslParser.TaskContext):
+        task_name = ctx.ID().getText()
+        task_type_str = ctx.taskType().getText()
+        task_type_enum = self.convert_string_to_task_type(task_type_str)
+        task = Task(name=task_name, task_type=task_type_enum)
+        self.__scopes[task_name] = task
+
+    
     def exitProject(self, ctx:govdslParser.ProjectContext):
-        
-        self.__project = Project(name=ctx.ID().getText()) # TODO: relationship with activities, activities=set(self.__project_activities.values())
-        self.__scopes[ctx.ID().getText()] = self.__project
+        project_name = ctx.ID().getText()
+        platform_str = ctx.platform().getText()
+        platform_enum = self.convert_string_to_platform(platform_str)
+        repo_id = ctx.repoID().getText()
+        project = Project(name=project_name, platform=platform_enum, project_id=repo_id) # TODO: relationship with activities, activities=set(self.__project_activities.values())
+        self.__scopes[project_name] = project
         
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 
@@ -166,19 +213,18 @@ class PolicyCreationListener(govdslListener):
 
         conditions = set()
         if ctx.ruleContent().ruleConditions():
-            conditions_set = self.find_descendant_nodes_by_type(node=ctx.ruleContent(),
-                                                target_type=govdslParser.ConditionIDContext)
-            for c in conditions_set:
-                c_id = c.ID().getText()
+            condition_count = len(ctx.ruleContent().ruleConditions().ID())
+            for i in range(condition_count):
+                c_id = ctx.ruleContent().ruleConditions().ID(i).getText()
                 try:
                     conditions.add(self.__conditions[c_id])
                 except KeyError as e:
-                    raise UndefinedConditionException(c_id) from e
+                    raise UndefinedAttributeException("condition", c_id) from e
                 
         try:
             people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
         except KeyError as e:
-            raise UndefinedParticipantException(e.args[0]) from e
+            raise UndefinedAttributeException("participant", e.args[0]) from e
 
         base_rule = Rule(name=rule_name, conditions=conditions, participants=people)
 
@@ -191,21 +237,22 @@ class PolicyCreationListener(govdslListener):
             case "LeaderDriven":
                 default_name = ctx.ruleContent().default().ruleID().ID().getText()
                 if default_name not in self.__rules:
-                    raise UndefinedRuleException(default_name)
+                    raise UndefinedAttributeException("rule", default_name)
                 default_rule = self.__rules[default_name]
                 rule = LeaderDrivenRule.from_rule(base_rule, default=default_rule)
             case _:
                 raise UnsupportedRuleTypeException(ctx.ruleType().getText())
         self.__rules[rule_name] = rule
 
-    def enterScope(self, ctx:govdslParser.ScopeContext):
-
-        scope_name = ctx.ID().getText()
-        try:
-            scope = self.__scopes[scope_name]
-        except KeyError as e:
-            raise UndefinedScopeException(scope_name) from e
-        self.__policy_scopes[ctx.ID().getText()] = scope
+    def enterAppliedTo(self, ctx:govdslParser.AppliedToContext):
+        scope_count = len(ctx.ID())
+        for i in range(scope_count):
+            scope_name = ctx.ID(i).getText()
+            try:
+                scope = self.__scopes[scope_name]
+                self.__policy_scopes[scope_name] = scope
+            except KeyError as e:
+                raise UndefinedAttributeException("scope", scope_name) from e
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
 

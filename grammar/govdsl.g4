@@ -2,19 +2,24 @@ grammar govdsl;
 
 // Parser rules
 policy              : 'Policy' ID '{'   attributes*  '}' EOF;
-attributes          : project | participants | conditions | rules | scope ;
-// Project group
-project             : ID ':' 'Project' '{'   activity*  '}' ;
-activity            : ID ':' 'Activity' '{'  task*  '}' ;
-task                : ID ':' 'Task' ; 
+attributes          : scopes | participants | conditions | rules | appliedTo ;
+// Scope group
+scopes              : 'Scopes' ':'  (project | activity | task)+ ;
+project             : 'Project' ID 'from' platform ':' repoID ;
+platform            : 'GitHub' ;
+repoID              : ID ('/' ID)? ; // owner/repo
+activity            : 'Activity' ID ':' ;
+task                : 'Task' ID ':' taskType ;
+taskType            : 'Issue' | 'Pull request' | 'All' ; 
+// TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 // Participants group
 participants        : 'Participants' ':' roles | individuals ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID ;
 individuals         : 'Individuals' ':' participantID (',' participantID)* ;
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? votingCondition? ;
-deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
+conditions          : 'Conditions' ':'  deadline+ votingCondition? ratio? ;
+deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
@@ -23,7 +28,6 @@ votingCondition     : 'VotingCondition' voteConditionID ':' (minVotes | ratio | 
 voteConditionID     : ID ;
 minVotes            : 'minVotes' SIGNED_INT ; 
 ratio               : 'ratio' FLOAT ; 
-
 // Rules group
 rules               : 'Rules' ':'  rule+ ;
 rule                : ruleID ':' ruleType '{'  ruleContent  '}'  ; // ruleContent depending on ruleType
@@ -36,11 +40,10 @@ ruleContent         : people? rangeType? ruleConditions? default? ; // TODO: Pro
 people              : 'people' participantID (',' participantID)* ;
 rangeType           : 'range' rangeID ;
 rangeID             : 'Present' | 'Qualified' ;
-ruleConditions      : 'conditions' conditionID (',' conditionID)* ;
-conditionID         : ID ;
+ruleConditions      : 'conditions' ID (',' ID)* ;
 default             : ('default' ruleID) ; // LD
 // Scope group
-scope               : 'Scope' ':' ID ;
+appliedTo           : 'Applied to' ':' ID (',' ID)* ;
 // Phased policy TODO: Implement
 phases              : 'phases' '{' ruleID+ '}' ; // Phased
 

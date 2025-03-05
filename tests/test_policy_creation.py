@@ -11,11 +11,11 @@ from grammar.govdslParser import govdslParser
 from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
-    InvalidVotesException, UndefinedRuleException, 
-    UndefinedConditionException, EmptySetException
+    InvalidVotesException, UndefinedAttributeException, 
+    EmptySetException
 )
 from metamodel.governance import (
-    SinglePolicy, Activity, MajorityRule, 
+    SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
     Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition
 )
 
@@ -59,8 +59,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertEqual(len(policy.scope), 1)
             scope = next(iter(policy.scope))
-            self.assertIsInstance(scope, Activity)
-            self.assertEqual(scope.name, "TestActivity")
+            self.assertIsInstance(scope, Task)
+            self.assertEqual(scope.name, "TestTask")
+            self.assertEqual(scope.task_type, TaskTypeEnum.PULL_REQUEST)
             
             # Test rule content
             self.assertEqual(len(policy.rules), 1)
@@ -72,7 +73,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(rule.participants), 1)
             participant = next(iter(rule.participants))
             self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Committers")
+            self.assertEqual(participant.name, "Maintainers")
             
             # Test rule's conditions
             self.assertEqual(len(rule.conditions), 2)
@@ -82,15 +83,15 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(deadline_conditions), 1)
             deadline = next(iter(deadline_conditions))
             self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.offset, timedelta(days=7))
+            self.assertEqual(deadline.offset, timedelta(days=14))
             
             # Test VotingCondition condition
             voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
             self.assertEqual(len(voting_conditions), 1)
-            votCond = next(iter(voting_conditions))
-            self.assertEqual(votCond.name, "votCond")
-            self.assertEqual(votCond.minVotes, 2)
-            self.assertEqual(votCond.ratio, 0.5)
+            vot_cond = next(iter(voting_conditions))
+            self.assertEqual(vot_cond.name, "votCond")
+            self.assertEqual(vot_cond.minVotes, 2)
+            self.assertEqual(vot_cond.ratio, 1)
             
             # Check for parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
@@ -217,7 +218,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             
-            with self.assertRaises(UndefinedRuleException):
+            with self.assertRaises(UndefinedAttributeException):
                 walker.walk(listener, tree)
 
 if __name__ == '__main__':

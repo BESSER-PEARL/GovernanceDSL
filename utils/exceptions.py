@@ -18,26 +18,6 @@ class InsufficientPhasesException(Exception):
     def __str__(self):
         return f'{self.rule_name} -> {self.message}'
 
-class UndefinedRuleException(Exception):
-    """Exception raised when a referenced rule is not defined."""
-    def __init__(self, rule_name, message="Rule not defined."):
-        self.rule_name = rule_name
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f'{self.rule_name} -> {self.message}'
-
-class UndefinedConditionException(Exception): # Maybe we could have a generic UndefinedElementException
-    """Exception raised when a referenced condition is not defined."""
-    def __init__(self, condition_name, message="Condition not defined."):
-        self.condition_name = condition_name
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f'{self.condition_name} -> {self.message}'
-
 class InvalidDeadlineException(Exception):
     """Exception raised when both offset and date are null in a Deadline."""
     def __init__(self, deadline_name, message="Deadline must have either offset or date defined."):
@@ -58,26 +38,6 @@ class UnsupportedRuleTypeException(Exception):
     def __str__(self):
         return f'{self.rule_type} -> {self.message}'
 
-class UndefinedParticipantException(Exception):
-    """Exception raised when a referenced participant is not defined."""
-    def __init__(self, participant_name, message="Participant not defined."):
-        self.participant_name = participant_name
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f'{self.participant_name} -> {self.message}'
-
-class UndefinedScopeException(Exception):
-    """Exception raised when a referenced scope is not defined."""
-    def __init__(self, scope_name, message="Scope not defined."):
-        self.scope_name = scope_name
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f'{self.scope_name} -> {self.message}'
-
 class EmptySetException(Exception):
     """Exception raised when a set (of conditions, participants, etc.) is empty. This checks for cardinality of 1 or more."""
     def __init__(self, message):
@@ -97,3 +57,18 @@ class InvalidRatioException(Exception):
     def __str__(self):
         return f'{self.ratio} -> {self.message}'
 
+class UndefinedAttributeException(Exception):
+    """Exception raised when a referenced attribute is not defined or not supported."""
+    def __init__(self, attribute_type, attribute_value=None, message=None):
+        self.attribute_type = attribute_type
+        self.attribute_value = attribute_value
+        # Generate a default message if none provided
+        if message is None:
+            message = f"{attribute_type} not defined or not supported."
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        if self.attribute_value is not None:
+            return f'{self.attribute_type}: {self.attribute_value} -> {self.message}'
+        return f'{self.attribute_type} -> {self.message}'

@@ -2,11 +2,18 @@ from enum import Enum
 from datetime import timedelta, datetime  
 from besser.BUML.metamodel.structural import NamedElement
 from utils.exceptions import (
-    InvalidVotesException, EmptySetException, 
+    InvalidVotesException, EmptySetException,
     InvalidRatioException, InvalidDeadlineException,
-    UndefinedParticipantException, UndefinedScopeException  
+    UndefinedAttributeException
 )
 
+# Enums
+class PlatformEnum(Enum):
+    GITHUB = 1
+
+class TaskTypeEnum(Enum):
+    PULL_REQUEST = 1
+    ISSUE = 2
 
 # Scope hierarchy
 class Scope(NamedElement):
@@ -14,16 +21,47 @@ class Scope(NamedElement):
         super().__init__(name)
 
 class Project(Scope):
-    def __init__(self, name: str):
+    def __init__(self, name: str, platform: PlatformEnum, project_id: str):
         super().__init__(name)
+        self.platform = platform
+        self.project_id = project_id
+    
+    @property
+    def platform(self) -> PlatformEnum:
+        return self.__platform
+    
+    @platform.setter
+    def platform(self, platform: PlatformEnum):
+        if not isinstance(platform, PlatformEnum):
+            raise UndefinedAttributeException("platform", platform)
+        self.__platform = platform
+    
+    @property
+    def project_id(self) -> str:
+        return self.__project_id
+    
+    @project_id.setter
+    def project_id(self, project_id: str):
+        self.__project_id = project_id
 
 class Activity(Scope):
     def __init__(self, name: str):
         super().__init__(name)
 
 class Task(Scope):
-    def __init__(self, name: str):
+    def __init__(self, name: str, task_type: TaskTypeEnum):
         super().__init__(name)
+        self.task_type = task_type
+
+    @property
+    def task_type(self) -> TaskTypeEnum:
+        return self.__task_type
+    
+    @task_type.setter
+    def task_type(self, task_type: TaskTypeEnum):
+        if not isinstance(task_type, TaskTypeEnum):
+            raise UndefinedAttributeException("task_type", task_type)
+        self.__task_type = task_type
 
 # Participant
 class Participant(NamedElement):
@@ -52,7 +90,7 @@ class hasRole(NamedElement):
     @role.setter
     def role(self, role: Role):
         if role is None:
-            raise UndefinedParticipantException(None)
+            raise UndefinedAttributeException("role", None)
         self.__role = role
     
     @property
@@ -62,7 +100,7 @@ class hasRole(NamedElement):
     @individual.setter
     def individual(self, individual: Individual):
         if individual is None:
-            raise UndefinedParticipantException(None)
+            raise UndefinedAttributeException("individual", None)
         self.__individual = individual
     
     @property
@@ -72,7 +110,7 @@ class hasRole(NamedElement):
     @scope.setter
     def scope(self, scope: Scope):
         if scope is None:
-            raise UndefinedScopeException(None)
+            raise UndefinedAttributeException("scope", None)
         self.__scope = scope
 
 

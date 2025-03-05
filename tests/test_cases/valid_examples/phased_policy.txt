@@ -1,11 +1,8 @@
 Policy TestPolicy {
-    TestProject : Project {
-        TestActivity : Activity {
-            TestTask : Task
-        }
-    }
+    Scopes:
+        Task pr : Pull request
     Participants:
-        Roles : Reviewers, QA
+        Roles : Maintainers
     Conditions:
         Deadline reviewDeadline : 3 days
         Deadline qaDeadline : 2 days
@@ -27,4 +24,40 @@ Policy TestPolicy {
             }
         }
     Scope: TestActivity
+}
+PhasedPolicy phasedPolicy {
+    Scopes:
+        Task pr : Pull request
+    Phases {
+        Policy phase_1 {
+            Scopes:
+                Task TestTask : Pull request
+            Participants:
+                Roles : Maintainers
+            Conditions:
+                Deadline reviewDeadline : 14 days
+                VotingCondition votCond : minVotes 2 , ratio 1.0
+            Rules:
+                majorityRule : Majority {
+                    people Maintainers
+                    conditions reviewDeadline, votCond
+                }
+            Applied to: TestTask
+        }
+        Policy phase_2 {
+            Scopes:
+                Task TestTask : Pull request
+            Participants:
+                Roles : Maintainers
+            Conditions:
+                VotingCondition votCond : minVotes 1 , ratio 1.0
+            Rules:
+                majorityRule : Majority {
+                    people Maintainers
+                    conditions votCond
+                }
+            Applied to: TestTask
+        }
+    }
+    Applied to: pr
 }

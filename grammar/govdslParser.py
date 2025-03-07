@@ -10,7 +10,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,54,336,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,54,335,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
@@ -21,37 +21,37 @@ def serializedATN():
         5,3,109,8,3,10,3,12,3,112,9,3,1,3,1,3,1,4,1,4,1,4,1,4,3,4,120,8,
         4,1,5,1,5,3,5,124,8,5,1,6,1,6,1,6,1,6,1,6,4,6,131,8,6,11,6,12,6,
         132,1,7,1,7,1,7,1,7,1,7,1,7,1,7,3,7,142,8,7,1,8,1,8,1,9,1,9,1,9,
-        3,9,149,8,9,1,10,1,10,1,10,1,10,1,11,1,11,1,11,1,11,3,11,159,8,11,
-        1,11,1,11,1,11,1,11,1,12,1,12,1,13,1,13,1,14,1,14,1,14,1,14,1,15,
-        1,15,1,15,1,15,3,15,177,8,15,1,16,1,16,1,16,1,16,1,16,5,16,184,8,
-        16,10,16,12,16,187,9,16,1,17,1,17,1,18,1,18,1,18,1,18,1,18,5,18,
-        196,8,18,10,18,12,18,199,9,18,1,19,1,19,1,19,4,19,204,8,19,11,19,
-        12,19,205,1,19,3,19,209,8,19,1,19,3,19,212,8,19,1,20,1,20,1,20,1,
-        20,1,20,1,20,1,20,1,20,1,20,3,20,223,8,20,1,21,1,21,1,21,1,22,1,
-        22,1,23,1,23,1,24,1,24,1,24,1,24,1,24,1,24,1,25,1,25,1,25,1,25,1,
-        25,1,25,1,25,1,25,1,25,3,25,247,8,25,1,26,1,26,1,27,1,27,1,27,1,
-        28,1,28,1,28,1,29,1,29,1,29,4,29,260,8,29,11,29,12,29,261,1,30,1,
-        30,1,30,1,30,1,30,1,30,1,30,1,31,1,31,1,32,1,32,1,33,3,33,276,8,
-        33,1,33,3,33,279,8,33,1,33,3,33,282,8,33,1,33,3,33,285,8,33,1,34,
-        1,34,1,34,1,34,5,34,291,8,34,10,34,12,34,294,9,34,1,35,1,35,1,35,
-        1,36,1,36,1,37,1,37,1,37,1,37,5,37,305,8,37,10,37,12,37,308,9,37,
-        1,38,1,38,1,38,1,39,1,39,1,39,1,39,1,39,1,39,1,39,3,39,320,8,39,
-        1,40,1,40,1,41,1,41,1,42,1,42,1,42,1,42,4,42,330,8,42,11,42,12,42,
-        331,1,42,1,42,1,42,0,0,43,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,
-        30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,
-        74,76,78,80,82,84,0,7,1,0,13,15,1,0,17,19,1,0,26,29,1,0,34,36,1,
-        0,39,40,1,0,46,47,1,0,48,49,325,0,86,1,0,0,0,2,91,1,0,0,0,4,93,1,
-        0,0,0,6,104,1,0,0,0,8,119,1,0,0,0,10,123,1,0,0,0,12,125,1,0,0,0,
-        14,134,1,0,0,0,16,143,1,0,0,0,18,145,1,0,0,0,20,150,1,0,0,0,22,154,
-        1,0,0,0,24,164,1,0,0,0,26,166,1,0,0,0,28,168,1,0,0,0,30,176,1,0,
-        0,0,32,178,1,0,0,0,34,188,1,0,0,0,36,190,1,0,0,0,38,200,1,0,0,0,
-        40,213,1,0,0,0,42,224,1,0,0,0,44,227,1,0,0,0,46,229,1,0,0,0,48,231,
-        1,0,0,0,50,237,1,0,0,0,52,248,1,0,0,0,54,250,1,0,0,0,56,253,1,0,
-        0,0,58,256,1,0,0,0,60,263,1,0,0,0,62,270,1,0,0,0,64,272,1,0,0,0,
-        66,275,1,0,0,0,68,286,1,0,0,0,70,295,1,0,0,0,72,298,1,0,0,0,74,300,
-        1,0,0,0,76,309,1,0,0,0,78,312,1,0,0,0,80,321,1,0,0,0,82,323,1,0,
-        0,0,84,325,1,0,0,0,86,87,3,2,1,0,87,88,5,0,0,1,88,1,1,0,0,0,89,92,
-        3,4,2,0,90,92,3,6,3,0,91,89,1,0,0,0,91,90,1,0,0,0,92,3,1,0,0,0,93,
+        3,9,149,8,9,1,10,1,10,1,10,1,11,1,11,1,11,1,11,3,11,158,8,11,1,11,
+        1,11,1,11,1,11,1,12,1,12,1,13,1,13,1,14,1,14,1,14,1,14,1,15,1,15,
+        1,15,1,15,3,15,176,8,15,1,16,1,16,1,16,1,16,1,16,5,16,183,8,16,10,
+        16,12,16,186,9,16,1,17,1,17,1,18,1,18,1,18,1,18,1,18,5,18,195,8,
+        18,10,18,12,18,198,9,18,1,19,1,19,1,19,4,19,203,8,19,11,19,12,19,
+        204,1,19,3,19,208,8,19,1,19,3,19,211,8,19,1,20,1,20,1,20,1,20,1,
+        20,1,20,1,20,1,20,1,20,3,20,222,8,20,1,21,1,21,1,21,1,22,1,22,1,
+        23,1,23,1,24,1,24,1,24,1,24,1,24,1,24,1,25,1,25,1,25,1,25,1,25,1,
+        25,1,25,1,25,1,25,3,25,246,8,25,1,26,1,26,1,27,1,27,1,27,1,28,1,
+        28,1,28,1,29,1,29,1,29,4,29,259,8,29,11,29,12,29,260,1,30,1,30,1,
+        30,1,30,1,30,1,30,1,30,1,31,1,31,1,32,1,32,1,33,3,33,275,8,33,1,
+        33,3,33,278,8,33,1,33,3,33,281,8,33,1,33,3,33,284,8,33,1,34,1,34,
+        1,34,1,34,5,34,290,8,34,10,34,12,34,293,9,34,1,35,1,35,1,35,1,36,
+        1,36,1,37,1,37,1,37,1,37,5,37,304,8,37,10,37,12,37,307,9,37,1,38,
+        1,38,1,38,1,39,1,39,1,39,1,39,1,39,1,39,1,39,3,39,319,8,39,1,40,
+        1,40,1,41,1,41,1,42,1,42,1,42,1,42,4,42,329,8,42,11,42,12,42,330,
+        1,42,1,42,1,42,0,0,43,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,
+        32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,
+        76,78,80,82,84,0,7,1,0,13,15,1,0,17,19,1,0,26,29,1,0,34,36,1,0,39,
+        40,1,0,46,47,1,0,48,49,324,0,86,1,0,0,0,2,91,1,0,0,0,4,93,1,0,0,
+        0,6,104,1,0,0,0,8,119,1,0,0,0,10,123,1,0,0,0,12,125,1,0,0,0,14,134,
+        1,0,0,0,16,143,1,0,0,0,18,145,1,0,0,0,20,150,1,0,0,0,22,153,1,0,
+        0,0,24,163,1,0,0,0,26,165,1,0,0,0,28,167,1,0,0,0,30,175,1,0,0,0,
+        32,177,1,0,0,0,34,187,1,0,0,0,36,189,1,0,0,0,38,199,1,0,0,0,40,212,
+        1,0,0,0,42,223,1,0,0,0,44,226,1,0,0,0,46,228,1,0,0,0,48,230,1,0,
+        0,0,50,236,1,0,0,0,52,247,1,0,0,0,54,249,1,0,0,0,56,252,1,0,0,0,
+        58,255,1,0,0,0,60,262,1,0,0,0,62,269,1,0,0,0,64,271,1,0,0,0,66,274,
+        1,0,0,0,68,285,1,0,0,0,70,294,1,0,0,0,72,297,1,0,0,0,74,299,1,0,
+        0,0,76,308,1,0,0,0,78,311,1,0,0,0,80,320,1,0,0,0,82,322,1,0,0,0,
+        84,324,1,0,0,0,86,87,3,2,1,0,87,88,5,0,0,1,88,1,1,0,0,0,89,92,3,
+        4,2,0,90,92,3,6,3,0,91,89,1,0,0,0,91,90,1,0,0,0,92,3,1,0,0,0,93,
         94,5,1,0,0,94,95,5,51,0,0,95,99,5,2,0,0,96,98,3,8,4,0,97,96,1,0,
         0,0,98,101,1,0,0,0,99,97,1,0,0,0,99,100,1,0,0,0,100,102,1,0,0,0,
         101,99,1,0,0,0,102,103,5,3,0,0,103,5,1,0,0,0,104,105,5,4,0,0,105,
@@ -69,60 +69,59 @@ def serializedATN():
         0,141,136,1,0,0,0,141,142,1,0,0,0,142,15,1,0,0,0,143,144,5,9,0,0,
         144,17,1,0,0,0,145,148,5,51,0,0,146,147,5,10,0,0,147,149,5,51,0,
         0,148,146,1,0,0,0,148,149,1,0,0,0,149,19,1,0,0,0,150,151,5,11,0,
-        0,151,152,5,51,0,0,152,153,5,6,0,0,153,21,1,0,0,0,154,155,5,12,0,
-        0,155,158,5,51,0,0,156,157,5,6,0,0,157,159,3,24,12,0,158,156,1,0,
-        0,0,158,159,1,0,0,0,159,160,1,0,0,0,160,161,5,2,0,0,161,162,3,26,
-        13,0,162,163,5,3,0,0,163,23,1,0,0,0,164,165,7,0,0,0,165,25,1,0,0,
-        0,166,167,3,28,14,0,167,27,1,0,0,0,168,169,5,16,0,0,169,170,5,6,
-        0,0,170,171,7,1,0,0,171,29,1,0,0,0,172,173,5,20,0,0,173,174,5,6,
-        0,0,174,177,3,32,16,0,175,177,3,36,18,0,176,172,1,0,0,0,176,175,
-        1,0,0,0,177,31,1,0,0,0,178,179,5,21,0,0,179,180,5,6,0,0,180,185,
-        3,34,17,0,181,182,5,22,0,0,182,184,3,34,17,0,183,181,1,0,0,0,184,
-        187,1,0,0,0,185,183,1,0,0,0,185,186,1,0,0,0,186,33,1,0,0,0,187,185,
-        1,0,0,0,188,189,5,51,0,0,189,35,1,0,0,0,190,191,5,23,0,0,191,192,
-        5,6,0,0,192,197,3,34,17,0,193,194,5,22,0,0,194,196,3,34,17,0,195,
-        193,1,0,0,0,196,199,1,0,0,0,197,195,1,0,0,0,197,198,1,0,0,0,198,
-        37,1,0,0,0,199,197,1,0,0,0,200,201,5,24,0,0,201,203,5,6,0,0,202,
-        204,3,40,20,0,203,202,1,0,0,0,204,205,1,0,0,0,205,203,1,0,0,0,205,
-        206,1,0,0,0,206,208,1,0,0,0,207,209,3,50,25,0,208,207,1,0,0,0,208,
-        209,1,0,0,0,209,211,1,0,0,0,210,212,3,56,28,0,211,210,1,0,0,0,211,
-        212,1,0,0,0,212,39,1,0,0,0,213,214,5,25,0,0,214,215,3,44,22,0,215,
-        222,5,6,0,0,216,223,3,42,21,0,217,223,3,48,24,0,218,219,3,42,21,
-        0,219,220,5,22,0,0,220,221,3,48,24,0,221,223,1,0,0,0,222,216,1,0,
-        0,0,222,217,1,0,0,0,222,218,1,0,0,0,223,41,1,0,0,0,224,225,5,52,
-        0,0,225,226,3,46,23,0,226,43,1,0,0,0,227,228,5,51,0,0,228,45,1,0,
-        0,0,229,230,7,2,0,0,230,47,1,0,0,0,231,232,5,52,0,0,232,233,5,10,
-        0,0,233,234,5,52,0,0,234,235,5,10,0,0,235,236,5,52,0,0,236,49,1,
-        0,0,0,237,238,5,30,0,0,238,239,3,52,26,0,239,246,5,6,0,0,240,247,
-        3,54,27,0,241,247,3,56,28,0,242,243,3,54,27,0,243,244,5,22,0,0,244,
-        245,3,56,28,0,245,247,1,0,0,0,246,240,1,0,0,0,246,241,1,0,0,0,246,
-        242,1,0,0,0,247,51,1,0,0,0,248,249,5,51,0,0,249,53,1,0,0,0,250,251,
-        5,31,0,0,251,252,5,52,0,0,252,55,1,0,0,0,253,254,5,32,0,0,254,255,
-        5,53,0,0,255,57,1,0,0,0,256,257,5,33,0,0,257,259,5,6,0,0,258,260,
-        3,60,30,0,259,258,1,0,0,0,260,261,1,0,0,0,261,259,1,0,0,0,261,262,
-        1,0,0,0,262,59,1,0,0,0,263,264,3,62,31,0,264,265,5,6,0,0,265,266,
-        3,64,32,0,266,267,5,2,0,0,267,268,3,66,33,0,268,269,5,3,0,0,269,
-        61,1,0,0,0,270,271,5,51,0,0,271,63,1,0,0,0,272,273,7,3,0,0,273,65,
-        1,0,0,0,274,276,3,68,34,0,275,274,1,0,0,0,275,276,1,0,0,0,276,278,
-        1,0,0,0,277,279,3,70,35,0,278,277,1,0,0,0,278,279,1,0,0,0,279,281,
-        1,0,0,0,280,282,3,74,37,0,281,280,1,0,0,0,281,282,1,0,0,0,282,284,
-        1,0,0,0,283,285,3,76,38,0,284,283,1,0,0,0,284,285,1,0,0,0,285,67,
-        1,0,0,0,286,287,5,37,0,0,287,292,3,34,17,0,288,289,5,22,0,0,289,
-        291,3,34,17,0,290,288,1,0,0,0,291,294,1,0,0,0,292,290,1,0,0,0,292,
-        293,1,0,0,0,293,69,1,0,0,0,294,292,1,0,0,0,295,296,5,38,0,0,296,
-        297,3,72,36,0,297,71,1,0,0,0,298,299,7,4,0,0,299,73,1,0,0,0,300,
-        301,5,41,0,0,301,306,5,51,0,0,302,303,5,22,0,0,303,305,5,51,0,0,
-        304,302,1,0,0,0,305,308,1,0,0,0,306,304,1,0,0,0,306,307,1,0,0,0,
-        307,75,1,0,0,0,308,306,1,0,0,0,309,310,5,42,0,0,310,311,3,62,31,
-        0,311,77,1,0,0,0,312,313,5,43,0,0,313,314,5,6,0,0,314,319,3,80,40,
-        0,315,316,5,44,0,0,316,317,3,82,41,0,317,318,5,45,0,0,318,320,1,
-        0,0,0,319,315,1,0,0,0,319,320,1,0,0,0,320,79,1,0,0,0,321,322,7,5,
-        0,0,322,81,1,0,0,0,323,324,7,6,0,0,324,83,1,0,0,0,325,326,5,50,0,
-        0,326,329,5,2,0,0,327,330,3,4,2,0,328,330,3,6,3,0,329,327,1,0,0,
-        0,329,328,1,0,0,0,330,331,1,0,0,0,331,329,1,0,0,0,331,332,1,0,0,
-        0,332,333,1,0,0,0,333,334,5,3,0,0,334,85,1,0,0,0,28,91,99,110,119,
-        123,130,132,141,148,158,176,185,197,205,208,211,222,246,261,275,
-        278,281,284,292,306,319,329,331
+        0,151,152,5,51,0,0,152,21,1,0,0,0,153,154,5,12,0,0,154,157,5,51,
+        0,0,155,156,5,6,0,0,156,158,3,24,12,0,157,155,1,0,0,0,157,158,1,
+        0,0,0,158,159,1,0,0,0,159,160,5,2,0,0,160,161,3,26,13,0,161,162,
+        5,3,0,0,162,23,1,0,0,0,163,164,7,0,0,0,164,25,1,0,0,0,165,166,3,
+        28,14,0,166,27,1,0,0,0,167,168,5,16,0,0,168,169,5,6,0,0,169,170,
+        7,1,0,0,170,29,1,0,0,0,171,172,5,20,0,0,172,173,5,6,0,0,173,176,
+        3,32,16,0,174,176,3,36,18,0,175,171,1,0,0,0,175,174,1,0,0,0,176,
+        31,1,0,0,0,177,178,5,21,0,0,178,179,5,6,0,0,179,184,3,34,17,0,180,
+        181,5,22,0,0,181,183,3,34,17,0,182,180,1,0,0,0,183,186,1,0,0,0,184,
+        182,1,0,0,0,184,185,1,0,0,0,185,33,1,0,0,0,186,184,1,0,0,0,187,188,
+        5,51,0,0,188,35,1,0,0,0,189,190,5,23,0,0,190,191,5,6,0,0,191,196,
+        3,34,17,0,192,193,5,22,0,0,193,195,3,34,17,0,194,192,1,0,0,0,195,
+        198,1,0,0,0,196,194,1,0,0,0,196,197,1,0,0,0,197,37,1,0,0,0,198,196,
+        1,0,0,0,199,200,5,24,0,0,200,202,5,6,0,0,201,203,3,40,20,0,202,201,
+        1,0,0,0,203,204,1,0,0,0,204,202,1,0,0,0,204,205,1,0,0,0,205,207,
+        1,0,0,0,206,208,3,50,25,0,207,206,1,0,0,0,207,208,1,0,0,0,208,210,
+        1,0,0,0,209,211,3,56,28,0,210,209,1,0,0,0,210,211,1,0,0,0,211,39,
+        1,0,0,0,212,213,5,25,0,0,213,214,3,44,22,0,214,221,5,6,0,0,215,222,
+        3,42,21,0,216,222,3,48,24,0,217,218,3,42,21,0,218,219,5,22,0,0,219,
+        220,3,48,24,0,220,222,1,0,0,0,221,215,1,0,0,0,221,216,1,0,0,0,221,
+        217,1,0,0,0,222,41,1,0,0,0,223,224,5,52,0,0,224,225,3,46,23,0,225,
+        43,1,0,0,0,226,227,5,51,0,0,227,45,1,0,0,0,228,229,7,2,0,0,229,47,
+        1,0,0,0,230,231,5,52,0,0,231,232,5,10,0,0,232,233,5,52,0,0,233,234,
+        5,10,0,0,234,235,5,52,0,0,235,49,1,0,0,0,236,237,5,30,0,0,237,238,
+        3,52,26,0,238,245,5,6,0,0,239,246,3,54,27,0,240,246,3,56,28,0,241,
+        242,3,54,27,0,242,243,5,22,0,0,243,244,3,56,28,0,244,246,1,0,0,0,
+        245,239,1,0,0,0,245,240,1,0,0,0,245,241,1,0,0,0,246,51,1,0,0,0,247,
+        248,5,51,0,0,248,53,1,0,0,0,249,250,5,31,0,0,250,251,5,52,0,0,251,
+        55,1,0,0,0,252,253,5,32,0,0,253,254,5,53,0,0,254,57,1,0,0,0,255,
+        256,5,33,0,0,256,258,5,6,0,0,257,259,3,60,30,0,258,257,1,0,0,0,259,
+        260,1,0,0,0,260,258,1,0,0,0,260,261,1,0,0,0,261,59,1,0,0,0,262,263,
+        3,62,31,0,263,264,5,6,0,0,264,265,3,64,32,0,265,266,5,2,0,0,266,
+        267,3,66,33,0,267,268,5,3,0,0,268,61,1,0,0,0,269,270,5,51,0,0,270,
+        63,1,0,0,0,271,272,7,3,0,0,272,65,1,0,0,0,273,275,3,68,34,0,274,
+        273,1,0,0,0,274,275,1,0,0,0,275,277,1,0,0,0,276,278,3,70,35,0,277,
+        276,1,0,0,0,277,278,1,0,0,0,278,280,1,0,0,0,279,281,3,74,37,0,280,
+        279,1,0,0,0,280,281,1,0,0,0,281,283,1,0,0,0,282,284,3,76,38,0,283,
+        282,1,0,0,0,283,284,1,0,0,0,284,67,1,0,0,0,285,286,5,37,0,0,286,
+        291,3,34,17,0,287,288,5,22,0,0,288,290,3,34,17,0,289,287,1,0,0,0,
+        290,293,1,0,0,0,291,289,1,0,0,0,291,292,1,0,0,0,292,69,1,0,0,0,293,
+        291,1,0,0,0,294,295,5,38,0,0,295,296,3,72,36,0,296,71,1,0,0,0,297,
+        298,7,4,0,0,298,73,1,0,0,0,299,300,5,41,0,0,300,305,5,51,0,0,301,
+        302,5,22,0,0,302,304,5,51,0,0,303,301,1,0,0,0,304,307,1,0,0,0,305,
+        303,1,0,0,0,305,306,1,0,0,0,306,75,1,0,0,0,307,305,1,0,0,0,308,309,
+        5,42,0,0,309,310,3,62,31,0,310,77,1,0,0,0,311,312,5,43,0,0,312,313,
+        5,6,0,0,313,318,3,80,40,0,314,315,5,44,0,0,315,316,3,82,41,0,316,
+        317,5,45,0,0,317,319,1,0,0,0,318,314,1,0,0,0,318,319,1,0,0,0,319,
+        79,1,0,0,0,320,321,7,5,0,0,321,81,1,0,0,0,322,323,7,6,0,0,323,83,
+        1,0,0,0,324,325,5,50,0,0,325,328,5,2,0,0,326,329,3,4,2,0,327,329,
+        3,6,3,0,328,326,1,0,0,0,328,327,1,0,0,0,329,330,1,0,0,0,330,328,
+        1,0,0,0,330,331,1,0,0,0,331,332,1,0,0,0,332,333,5,3,0,0,333,85,1,
+        0,0,0,28,91,99,110,119,123,130,132,141,148,157,175,184,196,204,207,
+        210,221,245,260,274,277,280,283,291,305,318,328,330
     ]
 
 class govdslParser ( Parser ):
@@ -938,8 +937,6 @@ class govdslParser ( Parser ):
             self.match(govdslParser.T__10)
             self.state = 151
             self.match(govdslParser.ID)
-            self.state = 152
-            self.match(govdslParser.T__5)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -988,25 +985,25 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 154
+            self.state = 153
             self.match(govdslParser.T__11)
-            self.state = 155
+            self.state = 154
             self.match(govdslParser.ID)
-            self.state = 158
+            self.state = 157
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==6:
-                self.state = 156
+                self.state = 155
                 self.match(govdslParser.T__5)
-                self.state = 157
+                self.state = 156
                 self.taskType()
 
 
-            self.state = 160
+            self.state = 159
             self.match(govdslParser.T__1)
-            self.state = 161
+            self.state = 160
             self.taskContent()
-            self.state = 162
+            self.state = 161
             self.match(govdslParser.T__2)
         except RecognitionException as re:
             localctx.exception = re
@@ -1046,7 +1043,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 164
+            self.state = 163
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 57344) != 0)):
                 self._errHandler.recoverInline(self)
@@ -1093,7 +1090,7 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 26, self.RULE_taskContent)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 166
+            self.state = 165
             self.status()
         except RecognitionException as re:
             localctx.exception = re
@@ -1133,11 +1130,11 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 168
+            self.state = 167
             self.match(govdslParser.T__15)
-            self.state = 169
+            self.state = 168
             self.match(govdslParser.T__5)
-            self.state = 170
+            self.state = 169
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 917504) != 0)):
                 self._errHandler.recoverInline(self)
@@ -1187,21 +1184,21 @@ class govdslParser ( Parser ):
         localctx = govdslParser.ParticipantsContext(self, self._ctx, self.state)
         self.enterRule(localctx, 30, self.RULE_participants)
         try:
-            self.state = 176
+            self.state = 175
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [20]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 172
+                self.state = 171
                 self.match(govdslParser.T__19)
-                self.state = 173
+                self.state = 172
                 self.match(govdslParser.T__5)
-                self.state = 174
+                self.state = 173
                 self.roles()
                 pass
             elif token in [23]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 175
+                self.state = 174
                 self.individuals()
                 pass
             else:
@@ -1251,21 +1248,21 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 178
+            self.state = 177
             self.match(govdslParser.T__20)
-            self.state = 179
+            self.state = 178
             self.match(govdslParser.T__5)
-            self.state = 180
+            self.state = 179
             self.participantID()
-            self.state = 185
+            self.state = 184
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==22:
-                self.state = 181
+                self.state = 180
                 self.match(govdslParser.T__21)
-                self.state = 182
+                self.state = 181
                 self.participantID()
-                self.state = 187
+                self.state = 186
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1308,7 +1305,7 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 34, self.RULE_participantID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 188
+            self.state = 187
             self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1354,21 +1351,21 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 190
+            self.state = 189
             self.match(govdslParser.T__22)
-            self.state = 191
+            self.state = 190
             self.match(govdslParser.T__5)
-            self.state = 192
+            self.state = 191
             self.participantID()
-            self.state = 197
+            self.state = 196
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==22:
-                self.state = 193
+                self.state = 192
                 self.match(govdslParser.T__21)
-                self.state = 194
+                self.state = 193
                 self.participantID()
-                self.state = 199
+                self.state = 198
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1424,35 +1421,35 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 200
+            self.state = 199
             self.match(govdslParser.T__23)
-            self.state = 201
+            self.state = 200
             self.match(govdslParser.T__5)
-            self.state = 203 
+            self.state = 202 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 202
+                self.state = 201
                 self.deadline()
-                self.state = 205 
+                self.state = 204 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==25):
                     break
 
-            self.state = 208
+            self.state = 207
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==30:
-                self.state = 207
+                self.state = 206
                 self.votingCondition()
 
 
-            self.state = 211
+            self.state = 210
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==32:
-                self.state = 210
+                self.state = 209
                 self.ratio()
 
 
@@ -1504,31 +1501,31 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 40, self.RULE_deadline)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 213
+            self.state = 212
             self.match(govdslParser.T__24)
-            self.state = 214
+            self.state = 213
             self.deadlineID()
-            self.state = 215
+            self.state = 214
             self.match(govdslParser.T__5)
-            self.state = 222
+            self.state = 221
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,16,self._ctx)
             if la_ == 1:
-                self.state = 216
+                self.state = 215
                 self.offset()
                 pass
 
             elif la_ == 2:
-                self.state = 217
+                self.state = 216
                 self.date()
                 pass
 
             elif la_ == 3:
-                self.state = 218
+                self.state = 217
                 self.offset()
-                self.state = 219
+                self.state = 218
                 self.match(govdslParser.T__21)
-                self.state = 220
+                self.state = 219
                 self.date()
                 pass
 
@@ -1576,9 +1573,9 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 42, self.RULE_offset)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 224
+            self.state = 223
             self.match(govdslParser.SIGNED_INT)
-            self.state = 225
+            self.state = 224
             self.timeUnit()
         except RecognitionException as re:
             localctx.exception = re
@@ -1619,7 +1616,7 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 44, self.RULE_deadlineID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 227
+            self.state = 226
             self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1659,7 +1656,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 229
+            self.state = 228
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 1006632960) != 0)):
                 self._errHandler.recoverInline(self)
@@ -1708,15 +1705,15 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 48, self.RULE_date)
         try:
             self.enterOuterAlt(localctx, 1)
+            self.state = 230
+            self.match(govdslParser.SIGNED_INT)
             self.state = 231
-            self.match(govdslParser.SIGNED_INT)
+            self.match(govdslParser.T__9)
             self.state = 232
-            self.match(govdslParser.T__9)
-            self.state = 233
             self.match(govdslParser.SIGNED_INT)
-            self.state = 234
+            self.state = 233
             self.match(govdslParser.T__9)
-            self.state = 235
+            self.state = 234
             self.match(govdslParser.SIGNED_INT)
         except RecognitionException as re:
             localctx.exception = re
@@ -1766,31 +1763,31 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 50, self.RULE_votingCondition)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 237
+            self.state = 236
             self.match(govdslParser.T__29)
-            self.state = 238
+            self.state = 237
             self.voteConditionID()
-            self.state = 239
+            self.state = 238
             self.match(govdslParser.T__5)
-            self.state = 246
+            self.state = 245
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,17,self._ctx)
             if la_ == 1:
-                self.state = 240
+                self.state = 239
                 self.minVotes()
                 pass
 
             elif la_ == 2:
-                self.state = 241
+                self.state = 240
                 self.ratio()
                 pass
 
             elif la_ == 3:
-                self.state = 242
+                self.state = 241
                 self.minVotes()
-                self.state = 243
+                self.state = 242
                 self.match(govdslParser.T__21)
-                self.state = 244
+                self.state = 243
                 self.ratio()
                 pass
 
@@ -1834,7 +1831,7 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 52, self.RULE_voteConditionID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 248
+            self.state = 247
             self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1875,9 +1872,9 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 54, self.RULE_minVotes)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 250
+            self.state = 249
             self.match(govdslParser.T__30)
-            self.state = 251
+            self.state = 250
             self.match(govdslParser.SIGNED_INT)
         except RecognitionException as re:
             localctx.exception = re
@@ -1918,9 +1915,9 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 56, self.RULE_ratio)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 253
+            self.state = 252
             self.match(govdslParser.T__31)
-            self.state = 254
+            self.state = 253
             self.match(govdslParser.FLOAT)
         except RecognitionException as re:
             localctx.exception = re
@@ -1966,17 +1963,17 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 256
+            self.state = 255
             self.match(govdslParser.T__32)
-            self.state = 257
+            self.state = 256
             self.match(govdslParser.T__5)
-            self.state = 259 
+            self.state = 258 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 258
+                self.state = 257
                 self.rule_()
-                self.state = 261 
+                self.state = 260 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==51):
@@ -2030,17 +2027,17 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 60, self.RULE_rule)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 263
+            self.state = 262
             self.ruleID()
-            self.state = 264
+            self.state = 263
             self.match(govdslParser.T__5)
-            self.state = 265
+            self.state = 264
             self.ruleType()
-            self.state = 266
+            self.state = 265
             self.match(govdslParser.T__1)
-            self.state = 267
+            self.state = 266
             self.ruleContent()
-            self.state = 268
+            self.state = 267
             self.match(govdslParser.T__2)
         except RecognitionException as re:
             localctx.exception = re
@@ -2081,7 +2078,7 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 62, self.RULE_ruleID)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 270
+            self.state = 269
             self.match(govdslParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -2121,7 +2118,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 272
+            self.state = 271
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 120259084288) != 0)):
                 self._errHandler.recoverInline(self)
@@ -2181,35 +2178,35 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 275
+            self.state = 274
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==37:
-                self.state = 274
+                self.state = 273
                 self.people()
 
 
-            self.state = 278
+            self.state = 277
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==38:
-                self.state = 277
+                self.state = 276
                 self.rangeType()
 
 
-            self.state = 281
+            self.state = 280
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==41:
-                self.state = 280
+                self.state = 279
                 self.ruleConditions()
 
 
-            self.state = 284
+            self.state = 283
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==42:
-                self.state = 283
+                self.state = 282
                 self.default()
 
 
@@ -2257,19 +2254,19 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 286
+            self.state = 285
             self.match(govdslParser.T__36)
-            self.state = 287
+            self.state = 286
             self.participantID()
-            self.state = 292
+            self.state = 291
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==22:
-                self.state = 288
+                self.state = 287
                 self.match(govdslParser.T__21)
-                self.state = 289
+                self.state = 288
                 self.participantID()
-                self.state = 294
+                self.state = 293
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -2313,9 +2310,9 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 70, self.RULE_rangeType)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 295
+            self.state = 294
             self.match(govdslParser.T__37)
-            self.state = 296
+            self.state = 295
             self.rangeID()
         except RecognitionException as re:
             localctx.exception = re
@@ -2355,7 +2352,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 298
+            self.state = 297
             _la = self._input.LA(1)
             if not(_la==39 or _la==40):
                 self._errHandler.recoverInline(self)
@@ -2405,19 +2402,19 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 300
+            self.state = 299
             self.match(govdslParser.T__40)
-            self.state = 301
+            self.state = 300
             self.match(govdslParser.ID)
-            self.state = 306
+            self.state = 305
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==22:
-                self.state = 302
+                self.state = 301
                 self.match(govdslParser.T__21)
-                self.state = 303
+                self.state = 302
                 self.match(govdslParser.ID)
-                self.state = 308
+                self.state = 307
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -2461,9 +2458,9 @@ class govdslParser ( Parser ):
         self.enterRule(localctx, 76, self.RULE_default)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 309
+            self.state = 308
             self.match(govdslParser.T__41)
-            self.state = 310
+            self.state = 309
             self.ruleID()
         except RecognitionException as re:
             localctx.exception = re
@@ -2510,21 +2507,21 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 312
+            self.state = 311
             self.match(govdslParser.T__42)
-            self.state = 313
+            self.state = 312
             self.match(govdslParser.T__5)
-            self.state = 314
+            self.state = 313
             self.orderType()
-            self.state = 319
+            self.state = 318
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==44:
-                self.state = 315
+                self.state = 314
                 self.match(govdslParser.T__43)
-                self.state = 316
+                self.state = 315
                 self.orderMode()
-                self.state = 317
+                self.state = 316
                 self.match(govdslParser.T__44)
 
 
@@ -2566,7 +2563,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 321
+            self.state = 320
             _la = self._input.LA(1)
             if not(_la==46 or _la==47):
                 self._errHandler.recoverInline(self)
@@ -2611,7 +2608,7 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 323
+            self.state = 322
             _la = self._input.LA(1)
             if not(_la==48 or _la==49):
                 self._errHandler.recoverInline(self)
@@ -2669,35 +2666,35 @@ class govdslParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 325
+            self.state = 324
             self.match(govdslParser.T__49)
-            self.state = 326
+            self.state = 325
             self.match(govdslParser.T__1)
-            self.state = 329 
+            self.state = 328 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 329
+                self.state = 328
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [1]:
-                    self.state = 327
+                    self.state = 326
                     self.singlePolicy()
                     pass
                 elif token in [4]:
-                    self.state = 328
+                    self.state = 327
                     self.phasedPolicy()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 331 
+                self.state = 330 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==1 or _la==4):
                     break
 
-            self.state = 333
+            self.state = 332
             self.match(govdslParser.T__2)
         except RecognitionException as re:
             localctx.exception = re

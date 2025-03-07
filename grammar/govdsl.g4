@@ -12,7 +12,7 @@ scopes              : 'Scopes' ':'  (project | activity | task)+ ;
 project             : 'Project' ID ('from' platform ':' repoID)? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
-activity            : 'Activity' ID ':' ;
+activity            : 'Activity' ID ;
 task                : 'Task' ID (':' taskType)? '{' taskContent '}' ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
 taskContent         : status ;

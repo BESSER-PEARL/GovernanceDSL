@@ -1,9 +1,6 @@
 Policy TestPolicy {
-    TestProject : Project {
-        TestActivity : Activity {
-            TestTask : Task
-        }
-    }
+    Scopes:
+        Activity TestActivity
     Participants:
         Roles : Committers
     Conditions:
@@ -14,5 +11,4 @@ Policy TestPolicy {
             people Committers
             conditions reviewDeadline, votCond
         }
-    Scope: TestActivity
 }

@@ -1,11 +1,13 @@
 Policy TestPolicy {
-    TestProject : Project {
-        TestActivity : Activity {
-            TestTask : Task
+    Scopes:
+        Project TestProject from GitHub : owner/repo
+        Activity TestActivity
+        Task TestTask : Pull request {
+            Status : completed
         }
-    }
     Participants:
-        Roles : Leaders, Committers
+        Roles : Committers
+        Individuals : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
         VotingCondition defaultVotCond : minVotes 2
@@ -15,9 +17,8 @@ Policy TestPolicy {
             conditions reviewDeadline, defaultVotCond
         }
         leaderRule : LeaderDriven {
-            people Leaders
+            people Leader
             conditions reviewDeadline
             default majorityRule
         }
-    Scope: TestActivity
 }

@@ -1,9 +1,7 @@
 Policy TestPolicy {
-    TestProject : Project {
-        TestActivity : Activity {
-            TestTask : Task
-        }
-    }
+    Scopes:
+        Project TestProject from GitHub : owner/repo
+        Activity TestActivity
     Participants:
         Roles : Committers
     Conditions:
@@ -14,5 +12,4 @@ Policy TestPolicy {
             people Committers
             conditions reviewDeadline, votCond
         }
-    Scope: TestActivity
 }

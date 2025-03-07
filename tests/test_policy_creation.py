@@ -17,7 +17,7 @@ from utils.exceptions import (
 from metamodel.governance import (
     SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
     Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition,
-    StatusEnum, PlatformEnum, Project
+    StatusEnum, PlatformEnum, Project, Individual
 )
 
 class TestPolicyCreation(unittest.TestCase):
@@ -138,10 +138,20 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 1)
-            scope = next(iter(policy.scopes))
-            self.assertIsInstance(scope, Activity)
-            self.assertEqual(scope.name, "TestActivity")
+            self.assertEqual(len(policy.scopes), 2)
+            scopes = list(policy.scopes)
+
+            # Find and verify the Project scope
+            project_scope = next((s for s in scopes if s.name == "TestProject"), None)
+            self.assertIsNotNone(project_scope, "TestProject scope not found")
+            self.assertIsInstance(project_scope, Project)
+            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(project_scope.project_id, "owner/repo")
+
+            # Find and verify the Activity scope
+            activity_scope = next((s for s in scopes if s.name == "TestActivity"), None)
+            self.assertIsNotNone(activity_scope, "TestActivity scope not found")
+            self.assertIsInstance(activity_scope, Activity)
             
             # Test rule content
             self.assertEqual(len(policy.rules), 1)
@@ -190,10 +200,27 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 1)
-            scope = next(iter(policy.scopes))
-            self.assertIsInstance(scope, Activity)
-            self.assertEqual(scope.name, "TestActivity")
+            self.assertEqual(len(policy.scopes), 3)
+            scopes = list(policy.scopes)
+
+            # Find and verify the Project scope
+            project_scope = next((s for s in scopes if s.name == "TestProject"), None)
+            self.assertIsNotNone(project_scope, "TestProject scope not found")
+            self.assertIsInstance(project_scope, Project)
+            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(project_scope.project_id, "owner/repo")
+
+            # Find and verify the Activity scope
+            activity_scope = next((s for s in scopes if s.name == "TestActivity"), None)
+            self.assertIsNotNone(activity_scope, "TestActivity scope not found")
+            self.assertIsInstance(activity_scope, Activity)
+
+            # Find and verify the Task scope
+            task_scope = next((s for s in scopes if s.name == "TestTask"), None)
+            self.assertIsNotNone(task_scope, "TestTask scope not found")
+            self.assertIsInstance(task_scope, Task)
+            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
+            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
             
             # Test rules count
             self.assertEqual(len(policy.rules), 2)
@@ -217,8 +244,8 @@ class TestPolicyCreation(unittest.TestCase):
             # Test leader rule's participants
             self.assertEqual(len(leader_rule.participants), 1)
             participant = next(iter(leader_rule.participants))
-            self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Leaders")
+            self.assertIsInstance(participant, Individual)
+            self.assertEqual(participant.name, "Leader")
 
     def test_invalid_rule_reference(self):
         """Test the creation of a policy with an invalid rule reference."""

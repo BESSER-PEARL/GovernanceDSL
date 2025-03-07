@@ -500,17 +500,13 @@ class PolicyCreationListener(govdslListener):
                 rule = RatioMajorityRule.from_rule(base_rule)
             case "LeaderDriven":
                 default_name = ctx.ruleContent().default().ruleID().ID().getText()
-                if default_name not in self.__rules:
+                if current_policy_id not in self.__policy_rules_map or default_name not in {r.name for r in self.__policy_rules_map[current_policy_id]}:
                     raise UndefinedAttributeException("rule", default_name)
-                default_rule = self.__rules[default_name]
+                default_rule = next(r for r in self.__policy_rules_map[current_policy_id] if r.name == default_name)
                 rule = LeaderDrivenRule.from_rule(base_rule, default=default_rule)
             case _:
                 raise UnsupportedRuleTypeException(ctx.ruleType().getText())
         self._register_rule_with_current_policy(rule)
-
-    # def exitPolicy(self, ctx:govdslParser.PolicyContext):
-
-    #     self.__policy = SinglePolicy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
         """Final policy construction using the tree structure"""
@@ -528,4 +524,4 @@ class PolicyCreationListener(govdslListener):
             self.__policy = root_policies[0].policy_object
         else:
             raise Exception("No root policy found. Grammar violation.") # Same as if
-        
+

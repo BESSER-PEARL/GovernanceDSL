@@ -1,9 +1,8 @@
 Policy TestPolicy {
-    TestProject : Project {
-        TestActivity : Activity {
-            TestTask : Task
+    Scopes:
+        Task TestTask : Pull request {
+            Status : accepted
         }
-    }
     Participants:
         Roles : Leaders
     Conditions:
@@ -14,5 +13,4 @@ Policy TestPolicy {
             conditions reviewDeadline
             default nonExistentRule
         }
-    Scope: TestActivity
 }

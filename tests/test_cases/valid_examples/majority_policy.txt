@@ -1,7 +1,9 @@
 Policy TestPolicy {
     Scopes:
         Project TestProjectGH from GitHub : owner/repo
-        Task TestTask : Pull request
+        Task TestTask : Pull request {
+            Status : completed
+        }
     Participants:
         Roles : Maintainers
     Conditions:
@@ -12,5 +14,4 @@ Policy TestPolicy {
             people Maintainers
             conditions reviewDeadline, votCond
         }
-    Applied to: TestTask
 }

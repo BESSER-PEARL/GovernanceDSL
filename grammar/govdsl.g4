@@ -1,16 +1,22 @@
 grammar govdsl;
 
 // Parser rules
-policy              : 'Policy' ID '{'   attributes*  '}' EOF;
-attributes          : scopes | participants | conditions | rules | appliedTo ;
+policy              : policyContent EOF ;
+policyContent       : singlePolicy | phasedPolicy ;
+singlePolicy        : 'Policy' ID '{'  attributesSingle*  '}' ;
+phasedPolicy        : 'PhasedPolicy' ID '{'  attributesPhased*  '}' ;
+attributesSingle    : scopes | participants | conditions | rules ;
+attributesPhased    : order | phases ;
 // Scope group
 scopes              : 'Scopes' ':'  (project | activity | task)+ ;
-project             : 'Project' ID 'from' platform ':' repoID ;
+project             : 'Project' ID ('from' platform ':' repoID)? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
 activity            : 'Activity' ID ':' ;
-task                : 'Task' ID ':' taskType ;
+task                : 'Task' ID (':' taskType)? '{' taskContent '}' ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
+taskContent         : status ;
+status              : 'Status' ':' ('completed' | 'accepted' | 'partial') ;
 // TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 // Participants group
 participants        : 'Participants' ':' roles | individuals ;
@@ -19,7 +25,7 @@ participantID       : ID ;
 individuals         : 'Individuals' ':' participantID (',' participantID)* ;
 // Conditions group
 conditions          : 'Conditions' ':'  deadline+ votingCondition? ratio? ;
-deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset date) ) ;
+deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
@@ -42,10 +48,11 @@ rangeType           : 'range' rangeID ;
 rangeID             : 'Present' | 'Qualified' ;
 ruleConditions      : 'conditions' ID (',' ID)* ;
 default             : ('default' ruleID) ; // LD
-// Scope group
-appliedTo           : 'Applied to' ':' ID (',' ID)* ;
-// Phased policy TODO: Implement
-phases              : 'phases' '{' ruleID+ '}' ; // Phased
+// Phased policy 
+order               : 'Order' ':' orderType ('(' orderMode ')')? ; 
+orderType           : 'Sequential' | 'Parallel' ;
+orderMode           : 'exclusive' | 'inclusive' ;
+phases              : 'Phases' '{' (singlePolicy | phasedPolicy)+ '}' ; 
 
 
 // Lexer rules

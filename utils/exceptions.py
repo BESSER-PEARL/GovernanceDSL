@@ -9,14 +9,14 @@ class InvalidVotesException(Exception):
         return f'{self.votes} -> {self.message}'
 
 class InsufficientPhasesException(Exception):
-    """Exception raised when a phased rule has fewer than two phases."""
-    def __init__(self, rule_name, message="Phased rule must have at least two phases."):
-        self.rule_name = rule_name
+    """Exception raised when a phased policy has fewer than two phases."""
+    def __init__(self, policy_name, message="Phased policy must have at least two phases."):
+        self.policy_name = policy_name
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
-        return f'{self.rule_name} -> {self.message}'
+        return f'{self.policy_name} -> {self.message}'
 
 class InvalidDeadlineException(Exception):
     """Exception raised when both offset and date are null in a Deadline."""

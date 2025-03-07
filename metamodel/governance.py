@@ -15,14 +15,35 @@ class TaskTypeEnum(Enum):
     PULL_REQUEST = 1
     ISSUE = 2
 
+class StatusEnum(Enum):
+    COMPLETED = 1
+    ACCEPTED = 2
+    PARTIAL = 3
+
+class OrderEnum(Enum):
+    SEQUENTIAL_INCLUSIVE = 1
+    SEQUENTIAL_EXCLUSIVE = 2
+
+
 # Scope hierarchy
 class Scope(NamedElement):
-    def __init__(self, name: str):
+    def __init__(self, name: str, status: StatusEnum):
         super().__init__(name)
+        self.status = status
+    
+    @property
+    def status(self) -> StatusEnum:
+        return self.__status
+    
+    @status.setter
+    def status(self, status: StatusEnum):
+        if status is not None and not isinstance(status, StatusEnum): # We can have None values
+            raise UndefinedAttributeException("status", status)
+        self.__status = status
 
 class Project(Scope):
-    def __init__(self, name: str, platform: PlatformEnum, project_id: str):
-        super().__init__(name)
+    def __init__(self, name: str, status: StatusEnum, platform: PlatformEnum, project_id: str):
+        super().__init__(name, status)
         self.platform = platform
         self.project_id = project_id
     
@@ -45,12 +66,12 @@ class Project(Scope):
         self.__project_id = project_id
 
 class Activity(Scope):
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, name: str, status: StatusEnum):
+        super().__init__(name, status)
 
 class Task(Scope):
-    def __init__(self, name: str, task_type: TaskTypeEnum):
-        super().__init__(name)
+    def __init__(self, name: str, status: StatusEnum, task_type: TaskTypeEnum):
+        super().__init__(name, status)
         self.task_type = task_type
 
     @property
@@ -255,14 +276,25 @@ class LeaderDrivenRule(Rule):
 # Policy
 class Policy(NamedElement):
     """A Policy must have at least one rule and one scope."""
-    def __init__(self, name: str):
+    def __init__(self, name: str, scopes: set[Scope]):
         super().__init__(name)
+        self.scopes = scopes
+    
+    @property
+    def scopes(self) -> set[Scope]:
+        return self.__scopes
+    
+    @scopes.setter
+    def scopes(self, scopes: set[Scope]):
+        if not scopes:  # Only check for None or empty
+            raise EmptySetException("Policy must have at least one scope")
+        self.__scopes = scopes
+
 
 class SinglePolicy(Policy):
     def __init__(self, name: str, rules: set[Rule], scopes: set[Scope]):
-        super().__init__(name)
+        super().__init__(name, scopes)
         self.rules = rules
-        self.scope = scopes
 
     @property
     def rules(self) -> set[Rule]:
@@ -274,28 +306,29 @@ class SinglePolicy(Policy):
             raise EmptySetException("Policy must have at least one rule")
         self.__rules = rules
     
-    @property
-    def scope(self) -> set[Scope]:
-        return self.__scope
-    
-    @scope.setter
-    def scope(self, scope: set[Scope]):
-        if not scope:  # Only check for None or empty
-            raise EmptySetException("Policy must have at least one scope")
-        self.__scope = scope
-
 class PhasedPolicy(Policy):
     """A PhasedPolicy must have at least one phase."""
-    def __init__(self, name: str, phases: set[SinglePolicy]):
-        super().__init__(name)
+    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scopes: set[Scope]):
+        super().__init__(name, scopes)
         self.phases = phases
+        self.order = order
     
     @property
-    def phases(self) -> set[SinglePolicy]:
+    def phases(self) -> set[Policy]:
         return self.__phases
     
     @phases.setter
-    def phases(self, phases: set[SinglePolicy]):
+    def phases(self, phases: set[Policy]):
         if not phases:  # Only check for None or empty
             raise EmptySetException("PhasedPolicy must have at least one phase.")
         self.__phases = phases
+    
+    @property
+    def order(self) -> OrderEnum:
+        return self.__order
+    
+    @order.setter
+    def order(self, order: OrderEnum):
+        if not isinstance(order, OrderEnum):
+            raise UndefinedAttributeException("order", order)
+        self.__order = order

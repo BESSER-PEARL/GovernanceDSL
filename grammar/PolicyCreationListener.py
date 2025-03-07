@@ -8,10 +8,12 @@ from utils.exceptions import (
     UndefinedAttributeException, 
     UnsupportedRuleTypeException
 )
+from utils.policy_tree import PolicyNode
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, Rule, MajorityRule, RatioMajorityRule,
-    LeaderDrivenRule, VotingCondition, TaskTypeEnum, PlatformEnum
+    LeaderDrivenRule, VotingCondition, TaskTypeEnum, PlatformEnum,
+    PhasedPolicy, OrderEnum, StatusEnum
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -24,13 +26,20 @@ class PolicyCreationListener(govdslListener):
     def __init__(self):
         super().__init__()
         self.__policy = None
-        self.__project = None
-        self.__project_activities = {}
-        self.__scopes = {}
         self.__policy_scopes = {}
-        self.__participants = {}
-        self.__conditions = {}
         self.__rules = {}
+
+        # Maps to track attributes by policy ID
+        self.__policy_rules_map = {}        # So we have a set for each policy. Maybe we could use a dict with the rule name as key. Same for following maps.
+        self.__policy_scopes_map = {}
+        self.__policy_participants_map = {}
+        self.__policy_conditions_map = {}
+        self.__policy_order_map = {}
+
+        # Policy tree structure
+        self.policy_tree = {}  # Maps policy ID to PolicyNode
+        self.policy_stack = []  # Tracks the current policy context
+        self.current_phased_policy = None  # Tracks current phased policy being processed
 
     def get_policy(self):
         """Policy: Retrieves the Policy instance."""
@@ -135,27 +144,258 @@ class PolicyCreationListener(govdslListener):
         
         raise UndefinedAttributeException("platform", platform_str)
 
+    def _construct_policy_objects(self):
+        """Construct policy objects from leaves to root"""
+        # Identify leaf nodes first (no children)
+        leaves = [node for node in self.policy_tree.values() if not node.children]
+        
+        # Process nodes in dependency order (leaves first)
+        processed = set()
+        to_process = leaves.copy()
+        
+        while to_process:
+            node = to_process.pop(0)
+            
+            # Skip if already processed
+            if node.policy_id in processed:
+                continue
+            
+            # For single policies
+            if node.policy_type == "single":
+                rules = self._get_rules_for_policy(node.policy_id)
+                scopes = self._get_scopes_for_policy(node.policy_id)
+                node.policy_object = SinglePolicy(name=node.policy_id, 
+                                                rules=rules, 
+                                                scopes=scopes)
+            
+            # For phased policies
+            elif node.policy_type == "phased":
+                # Check if all children are processed
+                if not all(child.policy_id in processed for child in node.children):
+                    # Put back in queue and process later
+                    to_process.append(node)
+                    continue
+                
+                # Get phases (child policies) and create phased policy
+                phases = {child.policy_object for child in node.children}
+                order = self._get_order_for_policy(node.policy_id)
+                # Collect all scopes from direct children
+                combined_scopes = set()
+                for child in node.children:
+                    if hasattr(child.policy_object, 'scopes'):
+                        combined_scopes.update(child.policy_object.scopes)
+                    else:
+                        raise Exception(f"Child policy {child.policy_id} does not have scopes defined.")
+            
+                node.policy_object = PhasedPolicy(name=node.policy_id,
+                                            phases=phases,
+                                            order=order,
+                                            scopes=combined_scopes)
+            
+            # Mark as processed
+            processed.add(node.policy_id)
+            
+            # Add parent to processing queue if exists
+            if node.parent and node.parent.policy_id not in processed:
+                to_process.append(node.parent)
+    
+    def _get_rules_for_policy(self, policy_id):
+        """Extract rules defined within a specific policy"""
+        return self.__policy_rules_map.get(policy_id, set())
+        
+    def _get_scopes_for_policy(self, policy_id):
+        """Extract scopes defined within a specific policy"""
+        return self.__policy_scopes_map.get(policy_id, set())
+        
+    def _get_order_for_policy(self, policy_id):
+        """Get the execution order for a phased policy"""
+        return self.__policy_order_map.get(policy_id)
+    
+    def _get_condition_for_policy(self, policy_id):
+        """Get the conditions defined within a specific policy"""
+        return self.__policy_conditions_map.get(policy_id)
+    
+    def _get_participants_for_policy(self, policy_id):
+        """Get the participants defined within a specific policy"""
+        return self.__policy_participants_map.get(policy_id)
+    
+    def _register_scope_with_current_policy(self, scope_obj):
+        """
+        Registers a scope object (Activity, Project, Task) with the current policy.
+        
+        Args:
+            scope_obj: The scope object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the scopes set for this policy if needed
+        if current_policy_id not in self.__policy_scopes_map:
+            self.__policy_scopes_map[current_policy_id] = set()
+        
+        # Associate the scope with the current policy
+        self.__policy_scopes_map[current_policy_id].add(scope_obj)
+
+    def _register_participant_with_current_policy(self, participant_obj):
+        """
+        Registers a participant object (Role, Individual) with the current policy.
+        
+        Args:
+            participant_obj: The participant object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the participants set for this policy if needed
+        if current_policy_id not in self.__policy_participants_map:
+            self.__policy_participants_map[current_policy_id] = set()
+        
+        # Associate the participant with the current policy
+        self.__policy_participants_map[current_policy_id].add(participant_obj)
+
+    def _register_condition_with_current_policy(self, condition_obj):
+        """
+        Registers a condition object (VotingCondition, Deadline) with the current policy.
+        
+        Args:
+            condition_obj: The condition object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the conditions set for this policy if needed
+        if current_policy_id not in self.__policy_conditions_map:
+            self.__policy_conditions_map[current_policy_id] = set()
+        
+        # Associate the condition with the current policy
+        self.__policy_conditions_map[current_policy_id].add(condition_obj)
+    
+    def _register_rule_with_current_policy(self, rule):
+        """
+        Registers a rule object with the current policy.
+        
+        Args:
+            rule: The rule object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the rules set for this policy if needed
+        if current_policy_id not in self.__policy_rules_map:
+            self.__policy_rules_map[current_policy_id] = set()
+        
+        # Associate the rule with the current policy
+        self.__policy_rules_map[current_policy_id].add(rule)
+
+    def enterSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
+        """When entering a single policy, create a node and establish relationships"""
+        policy_id = ctx.ID().getText()
+        node = PolicyNode(policy_id, "single")
+        self.policy_tree[policy_id] = node
+        
+        # If we're inside a phased policy, establish parent-child relationship
+        if self.current_phased_policy:
+            self.current_phased_policy.add_child(node)
+        
+        # Push to stack to track current context
+        self.policy_stack.append(node)
+
+    def exitSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
+        """When exiting a single policy, pop from stack"""
+        self.policy_stack.pop()
+
+    def enterPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
+        """When entering a phased policy, create a node"""
+        policy_id = ctx.ID().getText()
+        node = PolicyNode(policy_id, "phased")
+        self.policy_tree[policy_id] = node
+        
+        # Set as current phased policy
+        self.current_phased_policy = node
+        
+        # Push to stack to track current context
+        self.policy_stack.append(node)
+    
+    def enterOrder(self, ctx:govdslParser.OrderContext):
+        order_type = ctx.orderType().getText()
+        order_mode = ctx.orderMode().getText() if ctx.orderMode() else None
+        order = None
+
+        # Create the appropriate OrderEnum value
+        if order_type == "Sequential":
+            if order_mode == "exclusive":
+                order = OrderEnum.SEQUENTIAL_EXCLUSIVE
+            else: # TODO: Handle case where order mode is not specified
+                order = OrderEnum.SEQUENTIAL_INCLUSIVE
+        # TODO: Add other order types as needed (discuss w/ Jordi and Javi)
+        
+        # Register with current phased policy
+        current_policy_id = self.policy_stack[-1].policy_id if self.policy_stack else None
+        if current_policy_id:
+            self.__policy_order_map[current_policy_id] = order
+        else:
+            raise Exception("Handling of policy_stack is incorrect.")
+
+    def exitPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
+        """When exiting a phased policy, clear current and pop stack"""
+        self.current_phased_policy = None
+        self.policy_stack.pop()
+
     def enterActivity(self, ctx:govdslParser.ActivityContext):
         activity_name = ctx.ID().getText()
-        activity = Activity(name=activity_name) # TODO: relationship with tasks, tasks=activity_tasks)
+        activity = Activity(name=activity_name, status=None) # TODO: relationship with tasks, tasks=activity_tasks)
         # self.__project_activities[activity_name] = activity # TODO: work in relationships
-        self.__scopes[activity_name] = activity
+        self._register_scope_with_current_policy(activity)
     
     def enterTask(self, ctx:govdslParser.TaskContext):
         task_name = ctx.ID().getText()
         task_type_str = ctx.taskType().getText()
         task_type_enum = self.convert_string_to_task_type(task_type_str)
-        task = Task(name=task_name, task_type=task_type_enum)
-        self.__scopes[task_name] = task
-
+        # Extract status if present
+        status = None
+        if ctx.taskContent() and ctx.taskContent().status():
+            status_text = ctx.taskContent().status().getText()
+            if "completed" in status_text:
+                status = StatusEnum.COMPLETED
+            elif "accepted" in status_text:
+                status = StatusEnum.ACCEPTED
+            elif "partial" in status_text:
+                status = StatusEnum.PARTIAL
+        task = Task(name=task_name, task_type=task_type_enum, status=status)
+        self._register_scope_with_current_policy(task)
     
     def exitProject(self, ctx:govdslParser.ProjectContext):
+        # For project we do exit to make the relationships. But for now, we are not defining them.
         project_name = ctx.ID().getText()
         platform_str = ctx.platform().getText()
         platform_enum = self.convert_string_to_platform(platform_str)
         repo_id = ctx.repoID().getText()
-        project = Project(name=project_name, platform=platform_enum, project_id=repo_id) # TODO: relationship with activities, activities=set(self.__project_activities.values())
-        self.__scopes[project_name] = project
+        project = Project(name=project_name, platform=platform_enum, project_id=repo_id, status=None) # TODO: relationship with activities, activities=set(self.__project_activities.values())
+        self._register_scope_with_current_policy(project)
         
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 
@@ -163,7 +403,7 @@ class PolicyCreationListener(govdslListener):
                                                 target_type=govdslParser.ParticipantIDContext)
         for r in roles:
             role = Role(name=r.ID().getText())
-            self.__participants[r.ID().getText()] = role # WARNING: This might generate conflict if there is a role with the same name as a individual
+            self._register_participant_with_current_policy(role) # WARNING: This might generate conflict if there is a role with the same name as a individual
     
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
         
@@ -171,7 +411,7 @@ class PolicyCreationListener(govdslListener):
                                                 target_type=govdslParser.ParticipantIDContext)
         for i in individuals:
             individual = Individual(name=i.ID().getText())
-            self.__participants[i.ID().getText()] = individual
+            self._register_participant_with_current_policy(individual) # WARNING: This might generate conflict if there is a individual with the same name as a role
             
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
         name = ctx.deadlineID().ID().getText()
@@ -192,7 +432,7 @@ class PolicyCreationListener(govdslListener):
             date = datetime(year=year, month=month, day=day)
         
         deadline = Deadline(name=name, offset=offset, date=date)
-        self.__conditions[name] = deadline
+        self._register_condition_with_current_policy(deadline)
 
     def enterVotingCondition(self, ctx:govdslParser.VotingConditionContext):
         
@@ -204,12 +444,15 @@ class PolicyCreationListener(govdslListener):
         if ctx.ratio():
             ratio = float(ctx.ratio().FLOAT().getText())
         condition = VotingCondition(name=name, minVotes=min_votes, ratio=ratio)
-        self.__conditions[name] = condition 
+        self._register_condition_with_current_policy(condition)
 
     def enterRule(self, ctx:govdslParser.RuleContext):
         
         rule_name = ctx.ruleID().ID().getText()
         rule_type = ctx.ruleType().getText()
+
+        current_policy_id = self.policy_stack[-1].policy_id
+
 
         conditions = set()
         if ctx.ruleContent().ruleConditions():
@@ -217,14 +460,35 @@ class PolicyCreationListener(govdslListener):
             for i in range(condition_count):
                 c_id = ctx.ruleContent().ruleConditions().ID(i).getText()
                 try:
-                    conditions.add(self.__conditions[c_id])
+                    if current_policy_id in self.__policy_conditions_map: # TODO: Refactor the access to maps with a generic function.
+                        for condition in self.__policy_conditions_map[current_policy_id]:
+                            if condition.name == c_id:
+                                conditions.add(condition)
+                                break  # Found it, no need to continue searching
+                        else:  # This else corresponds to the for loop (executes if no break occurred)
+                            raise UndefinedAttributeException("condition", c_id)
+                    else:
+                        raise Exception("Policy is not inconditions map.")
                 except KeyError as e:
                     raise UndefinedAttributeException("condition", c_id) from e
                 
-        try:
-            people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
-        except KeyError as e:
-            raise UndefinedAttributeException("participant", e.args[0]) from e
+        policy_participants = self._get_participants_for_policy(current_policy_id)
+        if not policy_participants:
+            raise Exception(f"No participants defined in policy {current_policy_id}")
+
+        # people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
+        participants = self.find_descendant_nodes_by_type(node=ctx.ruleContent(),
+                                                           target_type=govdslParser.ParticipantIDContext)
+        people = set()
+        for p in participants:
+            p_id = p.ID().getText()
+            # Search in policy's participants set
+            for participant in policy_participants:
+                if participant.name == p_id:
+                    people.add(participant)
+                    break
+            else:
+                raise UndefinedAttributeException("participant", p_id)
 
         base_rule = Rule(name=rule_name, conditions=conditions, participants=people)
 
@@ -242,18 +506,26 @@ class PolicyCreationListener(govdslListener):
                 rule = LeaderDrivenRule.from_rule(base_rule, default=default_rule)
             case _:
                 raise UnsupportedRuleTypeException(ctx.ruleType().getText())
-        self.__rules[rule_name] = rule
+        self._register_rule_with_current_policy(rule)
 
-    def enterAppliedTo(self, ctx:govdslParser.AppliedToContext):
-        scope_count = len(ctx.ID())
-        for i in range(scope_count):
-            scope_name = ctx.ID(i).getText()
-            try:
-                scope = self.__scopes[scope_name]
-                self.__policy_scopes[scope_name] = scope
-            except KeyError as e:
-                raise UndefinedAttributeException("scope", scope_name) from e
+    # def exitPolicy(self, ctx:govdslParser.PolicyContext):
+
+    #     self.__policy = SinglePolicy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
+        """Final policy construction using the tree structure"""
+        # Build all objects from the tree (bottom-up)
+        self._construct_policy_objects()
+        
+        # Set the root policy as the main policy
+        root_policies = [node for node in self.policy_tree.values() if node.parent is None]
 
-        self.__policy = SinglePolicy(name=ctx.ID().getText(), rules=set(self.__rules.values()), scopes=set(self.__policy_scopes.values()))
+        # Should never enter here, but just in case
+        if len(root_policies) > 1:
+            raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")
+    
+        if root_policies:
+            self.__policy = root_policies[0].policy_object
+        else:
+            raise Exception("No root policy found. Grammar violation.") # Same as if
+        

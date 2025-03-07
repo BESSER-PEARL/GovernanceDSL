@@ -16,7 +16,8 @@ from utils.exceptions import (
 )
 from metamodel.governance import (
     SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
-    Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition
+    Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition,
+    StatusEnum, PlatformEnum, Project
 )
 
 class TestPolicyCreation(unittest.TestCase):
@@ -57,11 +58,22 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scope), 1)
-            scope = next(iter(policy.scope))
-            self.assertIsInstance(scope, Task)
-            self.assertEqual(scope.name, "TestTask")
-            self.assertEqual(scope.task_type, TaskTypeEnum.PULL_REQUEST)
+            self.assertEqual(len(policy.scopes), 2)
+            scopes = list(policy.scopes)
+
+            # Find and verify the Task scope
+            task_scope = next((s for s in scopes if s.name == "TestTask"), None)
+            self.assertIsNotNone(task_scope, "TestTask scope not found")
+            self.assertIsInstance(task_scope, Task)
+            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
+            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
+
+            # Find and verify the Project scope
+            project_scope = next((s for s in scopes if s.name == "TestProjectGH"), None)
+            self.assertIsNotNone(project_scope, "TestProjectGH scope not found")
+            self.assertIsInstance(project_scope, Project)
+            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(project_scope.project_id, "owner/repo")
             
             # Test rule content
             self.assertEqual(len(policy.rules), 1)
@@ -126,8 +138,8 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scope), 1)
-            scope = next(iter(policy.scope))
+            self.assertEqual(len(policy.scopes), 1)
+            scope = next(iter(policy.scopes))
             self.assertIsInstance(scope, Activity)
             self.assertEqual(scope.name, "TestActivity")
             
@@ -178,8 +190,8 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scope), 1)
-            scope = next(iter(policy.scope))
+            self.assertEqual(len(policy.scopes), 1)
+            scope = next(iter(policy.scopes))
             self.assertIsInstance(scope, Activity)
             self.assertEqual(scope.name, "TestActivity")
             

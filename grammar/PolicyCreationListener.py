@@ -39,7 +39,7 @@ class PolicyCreationListener(govdslListener):
         # Policy tree structure
         self.policy_tree = {}  # Maps policy ID to PolicyNode
         self.policy_stack = []  # Tracks the current policy context
-        self.current_phased_policy = None  # Tracks current phased policy being processed
+        self.phased_policy_stack = []  # Tracks the current phased policies
 
     def get_policy(self):
         """Policy: Retrieves the Policy instance."""
@@ -146,9 +146,10 @@ class PolicyCreationListener(govdslListener):
 
     def _construct_policy_objects(self):
         """Construct policy objects from leaves to root"""
+        print("Starting policy object construction")
         # Identify leaf nodes first (no children)
         leaves = [node for node in self.policy_tree.values() if not node.children]
-        
+                
         # Process nodes in dependency order (leaves first)
         processed = set()
         to_process = leaves.copy()
@@ -181,6 +182,8 @@ class PolicyCreationListener(govdslListener):
                 order = self._get_order_for_policy(node.policy_id)
                 # Collect all scopes from direct children
                 combined_scopes = set()
+                if not node.children:
+                    raise Exception(f"Phased policy {node.policy_id} does not have children defined.")
                 for child in node.children:
                     if hasattr(child.policy_object, 'scopes'):
                         combined_scopes.update(child.policy_object.scopes)
@@ -318,8 +321,8 @@ class PolicyCreationListener(govdslListener):
         self.policy_tree[policy_id] = node
         
         # If we're inside a phased policy, establish parent-child relationship
-        if self.current_phased_policy:
-            self.current_phased_policy.add_child(node)
+        if self.phased_policy_stack:
+                        self.phased_policy_stack[-1].add_child(node)
         
         # Push to stack to track current context
         self.policy_stack.append(node)
@@ -334,12 +337,14 @@ class PolicyCreationListener(govdslListener):
         node = PolicyNode(policy_id, "phased")
         self.policy_tree[policy_id] = node
         
-        # Set as current phased policy
-        self.current_phased_policy = node
+        # If we're inside another phased policy, establish parent-child relationship
+        if self.phased_policy_stack:
+                        self.phased_policy_stack[-1].add_child(node)
         
         # Push to stack to track current context
         self.policy_stack.append(node)
-    
+        self.phased_policy_stack.append(node)
+
     def enterOrder(self, ctx:govdslParser.OrderContext):
         order_type = ctx.orderType().getText()
         order_mode = ctx.orderMode().getText() if ctx.orderMode() else None
@@ -362,7 +367,7 @@ class PolicyCreationListener(govdslListener):
 
     def exitPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
         """When exiting a phased policy, clear current and pop stack"""
-        self.current_phased_policy = None
+        self.phased_policy_stack.pop()
         self.policy_stack.pop()
 
     def enterActivity(self, ctx:govdslParser.ActivityContext):
@@ -453,7 +458,7 @@ class PolicyCreationListener(govdslListener):
 
         current_policy_id = self.policy_stack[-1].policy_id
 
-
+                        
         conditions = set()
         if ctx.ruleContent().ruleConditions():
             condition_count = len(ctx.ruleContent().ruleConditions().ID())

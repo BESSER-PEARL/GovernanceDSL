@@ -17,7 +17,7 @@ from utils.exceptions import (
 from metamodel.governance import (
     SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
     Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition,
-    StatusEnum, PlatformEnum, Project, Individual
+    StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum
 )
 
 class TestPolicyCreation(unittest.TestCase):
@@ -259,6 +259,106 @@ class TestPolicyCreation(unittest.TestCase):
             
             with self.assertRaises(UndefinedAttributeException):
                 walker.walk(listener, tree)
+
+    def test_phased_policy_creation(self):
+        """Test the creation of a phased policy."""
+        with open(self.test_cases_path / "valid_examples/phased_policy.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Assertions
+            self.assertIsInstance(policy, PhasedPolicy)
+            self.assertEqual(policy.name, "phasedPolicy")
+            self.assertEqual(policy.order, OrderEnum.SEQUENTIAL_EXCLUSIVE)
+            
+            # Test phases count
+            self.assertEqual(len(policy.phases), 2)
+            phases = list(policy.phases)
+            
+            # Test first phase
+            phase_1 = next((p for p in phases if p.name == "phase_1"), None)
+            self.assertIsNotNone(phase_1, "Phase 1 not found")
+            self.assertIsInstance(phase_1, SinglePolicy)
+            
+            # Test phase 1 scope
+            self.assertEqual(len(phase_1.scopes), 1)
+            task_scope = next(iter(phase_1.scopes))
+            self.assertIsInstance(task_scope, Task)
+            self.assertEqual(task_scope.name, "TestTask")
+            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
+            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
+            
+            # Test phase 1 rule content
+            self.assertEqual(len(phase_1.rules), 1)
+            rule = next(iter(phase_1.rules))
+            self.assertIsInstance(rule, MajorityRule)
+            self.assertEqual(rule.name, "majorityRule")
+            
+            # Test phase 1 rule's participants
+            self.assertEqual(len(rule.participants), 1)
+            participant = next(iter(rule.participants))
+            self.assertIsInstance(participant, Role)
+            self.assertEqual(participant.name, "Maintainers")
+            
+            # Test phase 1 rule's conditions
+            self.assertEqual(len(rule.conditions), 2)
+            
+            # Test Deadline condition
+            deadline_conditions = {c for c in rule.conditions if isinstance(c, Deadline)}
+            self.assertEqual(len(deadline_conditions), 1)
+            deadline = next(iter(deadline_conditions))
+            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.offset, timedelta(days=14))
+            
+            # Test VotingCondition condition
+            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
+            self.assertEqual(len(voting_conditions), 1)
+            vot_cond = next(iter(voting_conditions))
+            self.assertEqual(vot_cond.name, "votCond")
+            self.assertEqual(vot_cond.minVotes, 2)
+            self.assertEqual(vot_cond.ratio, 1)
+            
+            # Test second phase
+            phase_2 = next((p for p in phases if p.name == "phase_2"), None)
+            self.assertIsNotNone(phase_2, "Phase 2 not found")
+            self.assertIsInstance(phase_2, SinglePolicy)
+            
+            # Test phase 2 scope
+            self.assertEqual(len(phase_2.scopes), 1)
+            task_scope = next(iter(phase_2.scopes))
+            self.assertIsInstance(task_scope, Task)
+            self.assertEqual(task_scope.name, "TestTask2")
+            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
+            self.assertEqual(task_scope.status, StatusEnum.PARTIAL)
+            
+            # Test phase 2 rule content
+            self.assertEqual(len(phase_2.rules), 1)
+            rule = next(iter(phase_2.rules))
+            self.assertIsInstance(rule, MajorityRule)
+            self.assertEqual(rule.name, "majorityRule")
+            
+            # Test phase 2 rule's participants
+            self.assertEqual(len(rule.participants), 1)
+            participant = next(iter(rule.participants))
+            self.assertIsInstance(participant, Role)
+            self.assertEqual(participant.name, "Maintainers")
+            
+            # Test phase 2 rule's conditions
+            self.assertEqual(len(rule.conditions), 1)
+            
+            # Test VotingCondition condition
+            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
+            self.assertEqual(len(voting_conditions), 1)
+            vot_cond = next(iter(voting_conditions))
+            self.assertEqual(vot_cond.name, "votCond")
+            self.assertEqual(vot_cond.minVotes, 1)
+            self.assertEqual(vot_cond.ratio, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,3 +13,4 @@ build
 **/.antlr/**
 *.tokens
 *.interp
+.vscode/settings.json

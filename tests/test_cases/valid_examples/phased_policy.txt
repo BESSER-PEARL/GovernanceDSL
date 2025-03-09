@@ -1,37 +1,13 @@
-Policy TestPolicy {
-    Scopes:
-        Task pr : Pull request
-    Participants:
-        Roles : Maintainers
-    Conditions:
-        Deadline reviewDeadline : 3 days
-        Deadline qaDeadline : 2 days
-        MinVotes reviewVotes : 2
-        MinVotes qaVotes : 1
-    Rules:
-        reviewPhase : Majority {
-            people Reviewers
-            conditions reviewDeadline, reviewVotes
-        }
-        qaPhase : Majority {
-            people QA
-            conditions qaDeadline, qaVotes
-        }
-        phasedRule : Phased {
-            phases {
-                reviewPhase
-                qaPhase
-            }
-        }
-    Scope: TestActivity
-}
 PhasedPolicy phasedPolicy {
-    Scopes:
-        Task pr : Pull request
+    Order : Sequential {
+        exclusive
+    }
     Phases {
         Policy phase_1 {
             Scopes:
-                Task TestTask : Pull request
+                Task TestTask : Pull request {
+                    Status : completed
+                }
             Participants:
                 Roles : Maintainers
             Conditions:
@@ -42,11 +18,12 @@ PhasedPolicy phasedPolicy {
                     people Maintainers
                     conditions reviewDeadline, votCond
                 }
-            Applied to: TestTask
         }
         Policy phase_2 {
             Scopes:
-                Task TestTask : Pull request
+                Task TestTask2 : Pull request {
+                    Status : partial
+                }
             Participants:
                 Roles : Maintainers
             Conditions:
@@ -56,8 +33,6 @@ PhasedPolicy phasedPolicy {
                     people Maintainers
                     conditions votCond
                 }
-            Applied to: TestTask
         }
     }
-    Applied to: pr
 }

@@ -24,7 +24,7 @@ roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID ;
 individuals         : 'Individuals' ':' participantID (',' participantID)* ;
 // Conditions group
-conditions          : 'Conditions' ':'  deadline+ votingCondition? ratio? ;
+conditions          : 'Conditions' ':'  deadline? votingCondition? ratio? ;
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
@@ -49,7 +49,7 @@ rangeID             : 'Present' | 'Qualified' ;
 ruleConditions      : 'conditions' ID (',' ID)* ;
 default             : ('default' ruleID) ; // LD
 // Phased policy 
-order               : 'Order' ':' orderType ('(' orderMode ')')? ; 
+order               : 'Order' ':' orderType ('{' orderMode '}')? ; 
 orderType           : 'Sequential' | 'Parallel' ;
 orderMode           : 'exclusive' | 'inclusive' ;
 phases              : 'Phases' '{' (singlePolicy | phasedPolicy)+ '}' ; 

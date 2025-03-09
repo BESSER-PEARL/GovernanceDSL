@@ -16,7 +16,7 @@ from utils.exceptions import (
 )
 from metamodel.governance import (
     SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
-    Role, Deadline, RatioMajorityRule, LeaderDrivenRule, VotingCondition,
+    Role, Deadline, LeaderDrivenRule, VotingCondition,
     StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum
 )
 

@@ -155,7 +155,7 @@ class TestPolicyCreation(unittest.TestCase):
             # Test rule content
             self.assertEqual(len(policy.rules), 1)
             rule = next(iter(policy.rules))
-            self.assertIsInstance(rule, RatioMajorityRule)
+            self.assertIsInstance(rule, MajorityRule)
             self.assertEqual(rule.name, "ratioRule")
             
             # Test rule's participants

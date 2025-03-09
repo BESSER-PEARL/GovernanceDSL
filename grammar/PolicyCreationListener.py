@@ -11,7 +11,7 @@ from utils.exceptions import (
 from utils.policy_tree import PolicyNode
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
-    Deadline, Rule, MajorityRule, RatioMajorityRule,
+    Deadline, Rule, MajorityRule, AbsoluteMajorityRule,
     LeaderDrivenRule, VotingCondition, TaskTypeEnum, PlatformEnum,
     PhasedPolicy, OrderEnum, StatusEnum
 )
@@ -501,8 +501,8 @@ class PolicyCreationListener(govdslListener):
         match rule_type:
             case "Majority":
                 rule = MajorityRule.from_rule(base_rule)
-            case "Ratio":
-                rule = RatioMajorityRule.from_rule(base_rule)
+            case "AbsoluteMajority":
+                rule = AbsoluteMajorityRule.from_rule(base_rule)
             case "LeaderDriven":
                 default_name = ctx.ruleContent().default().ruleID().ID().getText()
                 if current_policy_id not in self.__policy_rules_map or default_name not in {r.name for r in self.__policy_rules_map[current_policy_id]}:

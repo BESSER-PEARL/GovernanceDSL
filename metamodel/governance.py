@@ -242,15 +242,15 @@ class MajorityRule(VotingRule):
                       participants=rule.participants)
         return majority
 
-class RatioMajorityRule(MajorityRule):
+class AbsoluteMajorityRule(VotingRule):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant]):
         super().__init__(name, conditions, participants)
     
     @classmethod
-    def from_rule(cls, rule: MajorityRule):
-        ratio_majority = cls(name=rule.name, conditions=rule.conditions, 
-                           participants=rule.participants)
-        return ratio_majority
+    def from_rule(cls, rule: Rule):
+        abs_majority = cls(name=rule.name, conditions=rule.conditions, 
+                      participants=rule.participants)
+        return abs_majority
 
 class LeaderDrivenRule(Rule):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], default: Rule):

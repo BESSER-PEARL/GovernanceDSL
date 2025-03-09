@@ -8,7 +8,7 @@ Policy TestPolicy {
         Roles : Maintainers
     Conditions:
         Deadline reviewDeadline : 14 days
-        VotingCondition votCond : minVotes 2 , ratio 1.0
+        VotingCondition votCond : minVotes 2
     Rules:
         majorityRule : Majority {
             people Maintainers

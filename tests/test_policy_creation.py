@@ -103,7 +103,6 @@ class TestPolicyCreation(unittest.TestCase):
             vot_cond = next(iter(voting_conditions))
             self.assertEqual(vot_cond.name, "votCond")
             self.assertEqual(vot_cond.minVotes, 2)
-            self.assertEqual(vot_cond.ratio, 1)
             
             # Check for parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

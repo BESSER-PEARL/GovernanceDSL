@@ -261,7 +261,7 @@ class TestPolicyCreation(unittest.TestCase):
 
     def test_phased_policy_creation(self):
         """Test the creation of a phased policy."""
-        with open(self.test_cases_path / "valid_examples/phased_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/hfc_governance.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()

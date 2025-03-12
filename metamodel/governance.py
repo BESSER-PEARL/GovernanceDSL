@@ -11,10 +11,6 @@ from utils.exceptions import (
 class PlatformEnum(Enum):
     GITHUB = 1
 
-class TaskTypeEnum(Enum):
-    PULL_REQUEST = 1
-    ISSUE = 2
-
 class StatusEnum(Enum):
     COMPLETED = 1
     ACCEPTED = 2
@@ -70,19 +66,8 @@ class Activity(Scope):
         super().__init__(name, status)
 
 class Task(Scope):
-    def __init__(self, name: str, status: StatusEnum, task_type: TaskTypeEnum):
+    def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
-        self.task_type = task_type
-
-    @property
-    def task_type(self) -> TaskTypeEnum:
-        return self.__task_type
-    
-    @task_type.setter
-    def task_type(self, task_type: TaskTypeEnum):
-        if not isinstance(task_type, TaskTypeEnum):
-            raise UndefinedAttributeException("task_type", task_type)
-        self.__task_type = task_type
 
 # Participant
 class Participant(NamedElement):

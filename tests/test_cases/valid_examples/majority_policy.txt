@@ -2,7 +2,8 @@ Policy TestPolicy {
     Scopes:
         Project TestProjectGH from GitHub : owner/repo
         Task TestTask : Pull request {
-            Status : completed
+            Action : merge
+            Labels : bug
         }
     Participants:
         Roles : Maintainers

@@ -3,18 +3,19 @@ Policy TestPolicy {
         Project TestProject from GitHub : owner/repo
         Activity TestActivity
         Task TestTask : Pull request {
-            Status : completed
+            Action : review
+            Labels : feature
         }
     Participants:
-        Roles : Committers
+        Roles : Maintainers
         Individuals : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
-        VotingCondition defaultVotCond : minVotes 2
+        VotingCondition votCond : minVotes 2
     Rules:
         majorityRule : Majority {
-            people Committers
-            conditions reviewDeadline, defaultVotCond
+            people Maintainers
+            conditions votCond
         }
         leaderRule : LeaderDriven {
             people Leader

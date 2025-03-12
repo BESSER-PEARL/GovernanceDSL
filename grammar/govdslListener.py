@@ -134,12 +134,57 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#actionWithLabels.
+    def enterActionWithLabels(self, ctx:govdslParser.ActionWithLabelsContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#actionWithLabels.
+    def exitActionWithLabels(self, ctx:govdslParser.ActionWithLabelsContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#status.
     def enterStatus(self, ctx:govdslParser.StatusContext):
         pass
 
     # Exit a parse tree produced by govdslParser#status.
     def exitStatus(self, ctx:govdslParser.StatusContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#statusEnum.
+    def enterStatusEnum(self, ctx:govdslParser.StatusEnumContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#statusEnum.
+    def exitStatusEnum(self, ctx:govdslParser.StatusEnumContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#action.
+    def enterAction(self, ctx:govdslParser.ActionContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#action.
+    def exitAction(self, ctx:govdslParser.ActionContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#actionEnum.
+    def enterActionEnum(self, ctx:govdslParser.ActionEnumContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#actionEnum.
+    def exitActionEnum(self, ctx:govdslParser.ActionEnumContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#labels.
+    def enterLabels(self, ctx:govdslParser.LabelsContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#labels.
+    def exitLabels(self, ctx:govdslParser.LabelsContext):
         pass
 
 

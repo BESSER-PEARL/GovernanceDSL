@@ -9,14 +9,23 @@ from utils.exceptions import (
     UnsupportedRuleTypeException
 )
 from utils.policy_tree import PolicyNode
+from utils.gh_extension import (
+    ActionEnum, Label, PullRequest
+)
+from utils.attribute_converters import (
+    str_to_status_enum, str_to_action_enum, deadline_to_timedelta,
+    str_to_platform_enum
+)
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, Rule, MajorityRule, AbsoluteMajorityRule,
-    LeaderDrivenRule, VotingCondition, TaskTypeEnum, PlatformEnum,
-    PhasedPolicy, OrderEnum, StatusEnum
+    LeaderDrivenRule, VotingCondition,
+    PhasedPolicy, OrderEnum
 )
+
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
+
 
 
 class PolicyCreationListener(govdslListener):
@@ -69,80 +78,8 @@ class PolicyCreationListener(govdslListener):
 
         return matching_nodes
     
-    def deadline_to_timedelta(self, amount:int, time_unit:str) -> timedelta:
-        """
-        Converts a deadline to a timedelta object.
-
-        Args:
-            amount: The amount of time to convert.
-            time_unit: The unit of time to convert (e.g., days, weeks, etc.).
-
-        Returns:
-            A timedelta representation from datetime library.
-        """
-        if amount < 0:
-            raise InvalidVotesException(amount)
-        match  time_unit:
-            case "days":
-                return timedelta(days=amount)
-            case "weeks":
-                return timedelta(weeks=amount)
-            case "months":
-                return timedelta(weeks=amount*4) # Timedelta do not support above weeks (months, years). dateutil.relativedelta.relativedelta could be also used
-            case "years":
-                return timedelta(weeks=amount*52) # Approximation
-            case _:
-                warnings.warn(f"Unsupported time unit: {time_unit}. Defaulting to days.")
-                return timedelta(days=amount)
     
-    def convert_string_to_task_type(self, task_type_str: str) -> TaskTypeEnum:
-        """
-        Converts a string representation of a task type to the corresponding TaskTypeEnum value.
-        
-        Args:
-            task_type_str: String representation from the grammar (e.g., "Pull request", "Issue")
-            
-        Returns:
-            The corresponding TaskTypeEnum value
-            
-        Raises:
-            UndefinedAttributeException if the task type string doesn't match any enum value
-        """
-        task_type_map = {
-            "Pull request": TaskTypeEnum.PULL_REQUEST,
-            "Issue": TaskTypeEnum.ISSUE
-        }
-        
-        if task_type_str not in task_type_map:
-            raise UndefinedAttributeException("task_type", task_type_str)
-    
-        return task_type_map[task_type_str]
 
-    def convert_string_to_platform(self, platform_str: str) -> PlatformEnum:
-        """
-        Converts a string representation of a platform to the corresponding PlatformEnum value.
-        
-        Args:
-            platform_str: String representation from the grammar (e.g., "GitHub")
-            
-        Returns:
-            The corresponding PlatformEnum value
-            
-        Raises:
-            UndefinedAttributeException if the platform string doesn't match any enum value
-        """
-        platform_map = {
-            "GitHub": PlatformEnum.GITHUB, # Adapt for variants (e.g., git hub)
-            # Add more platforms as needed
-        }
-        
-        # Case-insensitive matching; we need to adapt the grammar too
-        normalized_platform = platform_str.lower()
-        for key, value in platform_map.items():
-            if key.lower() == normalized_platform:
-                return value
-        
-        raise UndefinedAttributeException("platform", platform_str)
 
     def _construct_policy_objects(self):
         """Construct policy objects from leaves to root"""
@@ -163,8 +100,8 @@ class PolicyCreationListener(govdslListener):
             
             # For single policies
             if node.policy_type == "single":
-                rules = self._get_rules_for_policy(node.policy_id)
-                scopes = self._get_scopes_for_policy(node.policy_id)
+                rules = self.__policy_rules_map.get(node.policy_id)
+                scopes = self.__policy_scopes_map.get(node.policy_id)
                 node.policy_object = SinglePolicy(name=node.policy_id, 
                                                 rules=rules, 
                                                 scopes=scopes)
@@ -179,7 +116,7 @@ class PolicyCreationListener(govdslListener):
                 
                 # Get phases (child policies) and create phased policy
                 phases = {child.policy_object for child in node.children}
-                order = self._get_order_for_policy(node.policy_id)
+                order = self.__policy_order_map.get(node.policy_id)
                 # Collect all scopes from direct children
                 combined_scopes = set()
                 if not node.children:
@@ -201,26 +138,6 @@ class PolicyCreationListener(govdslListener):
             # Add parent to processing queue if exists
             if node.parent and node.parent.policy_id not in processed:
                 to_process.append(node.parent)
-    
-    def _get_rules_for_policy(self, policy_id):
-        """Extract rules defined within a specific policy"""
-        return self.__policy_rules_map.get(policy_id, set())
-        
-    def _get_scopes_for_policy(self, policy_id):
-        """Extract scopes defined within a specific policy"""
-        return self.__policy_scopes_map.get(policy_id, set())
-        
-    def _get_order_for_policy(self, policy_id):
-        """Get the execution order for a phased policy"""
-        return self.__policy_order_map.get(policy_id)
-    
-    def _get_condition_for_policy(self, policy_id):
-        """Get the conditions defined within a specific policy"""
-        return self.__policy_conditions_map.get(policy_id)
-    
-    def _get_participants_for_policy(self, policy_id):
-        """Get the participants defined within a specific policy"""
-        return self.__policy_participants_map.get(policy_id)
     
     def _register_scope_with_current_policy(self, scope_obj):
         """
@@ -378,26 +295,41 @@ class PolicyCreationListener(govdslListener):
     
     def enterTask(self, ctx:govdslParser.TaskContext):
         task_name = ctx.ID().getText()
-        task_type_str = ctx.taskType().getText()
-        task_type_enum = self.convert_string_to_task_type(task_type_str)
+        
         # Extract status if present
         status = None
-        if ctx.taskContent() and ctx.taskContent().status():
-            status_text = ctx.taskContent().status().getText()
-            if "completed" in status_text:
-                status = StatusEnum.COMPLETED
-            elif "accepted" in status_text:
-                status = StatusEnum.ACCEPTED
-            elif "partial" in status_text:
-                status = StatusEnum.PARTIAL
-        task = Task(name=task_name, task_type=task_type_enum, status=status)
+        if ctx.taskContent().status():
+            status = str_to_status_enum(ctx.taskContent().status().statusEnum().getText())
+        
+        task = None
+        
+        # That's the gh_extension part
+        if ctx.taskType():
+            task_type_str = ctx.taskType().getText().lower()
+            if ctx.taskContent().status():
+                raise UndefinedAttributeException("action", "This task must have an action defined.")
+            if ctx.taskContent().action():
+                action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
+                labels = None
+            else: # Action with labels
+                action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
+                label_count = len(ctx.taskContent().actionWithLabels().labels().ID())
+                labels = set()
+                for i in range(label_count):
+                    l_id = ctx.taskContent().actionWithLabels().labels().ID(i).getText()
+                    labels.add(Label(name=l_id))
+            match task_type_str:
+                case "pull request":
+                    task = PullRequest(name=task_name, status=status, action=action, labels=labels) # TODO: Implement further task types
+        else:
+            task = Task(name=task_name, status=status)
         self._register_scope_with_current_policy(task)
     
     def exitProject(self, ctx:govdslParser.ProjectContext):
         # For project we do exit to make the relationships. But for now, we are not defining them.
         project_name = ctx.ID().getText()
         platform_str = ctx.platform().getText()
-        platform_enum = self.convert_string_to_platform(platform_str)
+        platform_enum = str_to_platform_enum(platform_str)
         repo_id = ctx.repoID().getText()
         project = Project(name=project_name, platform=platform_enum, project_id=repo_id, status=None) # TODO: relationship with activities, activities=set(self.__project_activities.values())
         self._register_scope_with_current_policy(project)
@@ -427,7 +359,7 @@ class PolicyCreationListener(govdslListener):
         if ctx.offset():
             amount = int(ctx.offset().SIGNED_INT().getText())
             time_unit = ctx.offset().timeUnit().getText()
-            offset = self.deadline_to_timedelta(amount=amount, time_unit=time_unit)
+            offset = deadline_to_timedelta(value=amount, unit=time_unit)
         
         # Check for date
         if ctx.date():
@@ -477,7 +409,7 @@ class PolicyCreationListener(govdslListener):
                 except KeyError as e:
                     raise UndefinedAttributeException("condition", c_id) from e
                 
-        policy_participants = self._get_participants_for_policy(current_policy_id)
+        policy_participants = self.__policy_participants_map.get(current_policy_id)
         if not policy_participants:
             raise Exception(f"No participants defined in policy {current_policy_id}")
 

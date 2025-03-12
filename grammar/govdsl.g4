@@ -15,8 +15,13 @@ repoID              : ID ('/' ID)? ; // owner/repo
 activity            : 'Activity' ID ;
 task                : 'Task' ID (':' taskType)? '{' taskContent '}' ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
-taskContent         : status ;
-status              : 'Status' ':' ('completed' | 'accepted' | 'partial') ;
+taskContent         : status | action | actionWithLabels ;
+actionWithLabels    : action labels ;
+status              : 'Status' ':' statusEnum ;
+statusEnum          : 'completed' | 'accepted' | 'partial' ;
+action              : 'Action' ':' actionEnum ;
+actionEnum          : 'merge' | 'review' | 'release' ;
+labels              : 'Labels' ':' ID (',' ID)* ;
 // TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 // Participants group
 participants        : 'Participants' ':' roles | individuals ;
@@ -52,8 +57,7 @@ default             : ('default' ruleID) ; // LD
 order               : 'Order' ':' orderType ('{' orderMode '}')? ; 
 orderType           : 'Sequential' | 'Parallel' ;
 orderMode           : 'exclusive' | 'inclusive' ;
-phases              : 'Phases' '{' (singlePolicy | phasedPolicy)+ '}' ; 
-
+phases              : 'Phases' '{' (singlePolicy | phasedPolicy)+ '}' ;
 
 // Lexer rules
 ID              : [a-zA-Z_][a-zA-Z0-9_]* ;

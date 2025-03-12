@@ -15,10 +15,11 @@ from utils.exceptions import (
     EmptySetException
 )
 from metamodel.governance import (
-    SinglePolicy, Activity, MajorityRule, Task, TaskTypeEnum,
+    SinglePolicy, Activity, MajorityRule, Task, 
     Role, Deadline, LeaderDrivenRule, VotingCondition,
     StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum
 )
+from utils.gh_extension import ActionEnum, PullRequest
 
 class TestPolicyCreation(unittest.TestCase):
     def setUp(self):
@@ -64,9 +65,8 @@ class TestPolicyCreation(unittest.TestCase):
             # Find and verify the Task scope
             task_scope = next((s for s in scopes if s.name == "TestTask"), None)
             self.assertIsNotNone(task_scope, "TestTask scope not found")
-            self.assertIsInstance(task_scope, Task)
-            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
-            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
+            self.assertIsInstance(task_scope, PullRequest)  # Changed from Task to PullRequest
+            self.assertEqual(task_scope.action, ActionEnum.MERGE)  # Check for action instead of status
 
             # Find and verify the Project scope
             project_scope = next((s for s in scopes if s.name == "TestProjectGH"), None)
@@ -217,9 +217,13 @@ class TestPolicyCreation(unittest.TestCase):
             # Find and verify the Task scope
             task_scope = next((s for s in scopes if s.name == "TestTask"), None)
             self.assertIsNotNone(task_scope, "TestTask scope not found")
-            self.assertIsInstance(task_scope, Task)
-            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
-            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
+            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
+            self.assertEqual(task_scope.action, ActionEnum.REVIEW)  # Changed status to action
+            # Check for labels if applicable
+            self.assertIsNotNone(task_scope.labels)
+            self.assertEqual(len(task_scope.labels), 1)
+            label = next(iter(task_scope.labels))
+            self.assertEqual(label.name, "feature")
             
             # Test rules count
             self.assertEqual(len(policy.rules), 2)
@@ -260,7 +264,7 @@ class TestPolicyCreation(unittest.TestCase):
                 walker.walk(listener, tree)
 
     def test_phased_policy_creation(self):
-        """Test the creation of a phased policy."""
+        """Test the creation of a phased policy. Based on the HFC governance policy."""
         with open(self.test_cases_path / "valid_examples/hfc_governance.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
@@ -288,10 +292,11 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 1 scope
             self.assertEqual(len(phase_1.scopes), 1)
             task_scope = next(iter(phase_1.scopes))
-            self.assertIsInstance(task_scope, Task)
+            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
             self.assertEqual(task_scope.name, "TestTask")
-            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
-            self.assertEqual(task_scope.status, StatusEnum.COMPLETED)
+            self.assertEqual(task_scope.action, ActionEnum.REVIEW)  # Changed status to action
+            # Check for labels
+            self.assertIsNone(task_scope.labels)
             
             # Test phase 1 rule content
             self.assertEqual(len(phase_1.rules), 1)
@@ -331,10 +336,11 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 2 scope
             self.assertEqual(len(phase_2.scopes), 1)
             task_scope = next(iter(phase_2.scopes))
-            self.assertIsInstance(task_scope, Task)
+            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
             self.assertEqual(task_scope.name, "TestTask2")
-            self.assertEqual(task_scope.task_type, TaskTypeEnum.PULL_REQUEST)
-            self.assertEqual(task_scope.status, StatusEnum.PARTIAL)
+            self.assertEqual(task_scope.action, ActionEnum.MERGE)  # Changed status to action
+            # Check for labels
+            self.assertIsNone(task_scope.labels)
             
             # Test phase 2 rule content
             self.assertEqual(len(phase_2.rules), 1)

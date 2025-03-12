@@ -6,13 +6,13 @@ PhasedPolicy phasedPolicy {
         Policy phase_1 {
             Scopes:
                 Task TestTask : Pull request {
-                    Status : completed
+                    Action : review
                 }
             Participants:
                 Roles : Maintainers
             Conditions:
                 Deadline reviewDeadline : 14 days
-                VotingCondition votCond : minVotes 2 , ratio 1.0
+                VotingCondition votCond : minVotes 2, ratio 1.0
             Rules:
                 majorityRule : Majority {
                     people Maintainers
@@ -22,12 +22,12 @@ PhasedPolicy phasedPolicy {
         Policy phase_2 {
             Scopes:
                 Task TestTask2 : Pull request {
-                    Status : partial
+                    Action : merge
                 }
             Participants:
                 Roles : Maintainers
             Conditions:
-                VotingCondition votCond : minVotes 1 , ratio 1.0
+                VotingCondition votCond : minVotes 1, ratio 1.0
             Rules:
                 majorityRule : Majority {
                     people Maintainers

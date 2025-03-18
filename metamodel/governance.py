@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from besser.BUML.metamodel.structural import NamedElement
 from utils.exceptions import (
     InvalidVotesException, EmptySetException,
-    InvalidRatioException, InvalidDeadlineException,
+    InvalidValueException, InvalidDeadlineException,
     UndefinedAttributeException
 )
 
@@ -82,9 +82,10 @@ class Participant(NamedElement):
         return hash(self.name)
 
 class Individual(Participant):
-    def __init__(self, name: str): 
+    def __init__(self, name: str, confidence: float = 1.0):
         super().__init__(name)
         self.__role = None
+        self.confidence = confidence
     
     @property
     def role(self) -> 'hasRole':
@@ -93,6 +94,16 @@ class Individual(Participant):
     @role.setter
     def role(self, role_assignement: 'hasRole'):
         self.__role = role_assignement
+
+    @property
+    def confidence(self) -> float:
+        return self.__confidence
+    
+    @confidence.setter
+    def confidence(self, confidence: float):
+        if confidence < 0 or confidence > 1:
+            raise InvalidValueException("confidence", confidence)
+        self.__confidence = confidence
 
 class Role(Participant):
     def __init__(self, name: str):
@@ -192,7 +203,7 @@ class VotingCondition(Condition):
     @ratio.setter
     def ratio(self, ratio: float):
         if ratio and (ratio < 0 or ratio > 1):
-            raise InvalidRatioException("Ratio must be between 0 and 1.")
+            raise InvalidValueException("ratio", ratio)
         self.__ratio = ratio
 
 

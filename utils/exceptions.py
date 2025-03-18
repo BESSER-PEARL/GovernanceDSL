@@ -47,15 +47,15 @@ class EmptySetException(Exception):
     def __str__(self):
         return self.message
 
-class InvalidRatioException(Exception):
-    """Exception raised when a ratio is not between 0 and 1."""
-    def __init__(self, ratio, message="Ratio must be between 0 and 1."):
-        self.ratio = ratio
-        self.message = message
+class InvalidValueException(Exception):
+    """Exception raised when a value is outside of its acceptable range (typically 0-1)."""
+    def __init__(self, attribute_name: str, value, min_value=0, max_value=1):
+        self.attribute_name = attribute_name
+        self.value = value
+        self.min_value = min_value
+        self.max_value = max_value
+        self.message = f"{attribute_name} must be between {min_value} and {max_value}, but got {value}."
         super().__init__(self.message)
-
-    def __str__(self):
-        return f'{self.ratio} -> {self.message}'
 
 class UndefinedAttributeException(Exception):
     """Exception raised when a referenced attribute is not defined or not supported."""

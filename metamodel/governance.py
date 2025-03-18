@@ -196,28 +196,27 @@ class VotingCondition(Condition):
         self.__ratio = ratio
 
 
-# Policy hierarchy - Rule is now merged into SinglePolicy
+# Policy hierarchy
 class Policy(NamedElement):
     """A Policy must have at least one scope."""
-    def __init__(self, name: str, scopes: set[Scope]):
+    def __init__(self, name: str, scope: Scope):
         super().__init__(name)
-        self.scopes = scopes
+        self.scope = scope
     
     @property
-    def scopes(self) -> set[Scope]:
-        return self.__scopes
+    def scope(self) -> set[Scope]:
+        return self.__scope
     
-    @scopes.setter
-    def scopes(self, scopes: set[Scope]):
-        if not scopes:  # Only check for None or empty
+    @scope.setter
+    def scope(self, scope: Scope):
+        if not scope:  # Only check for None or empty
             raise EmptySetException("Policy must have at least one scope")
-        self.__scopes = scopes
+        self.__scope = scope
 
 
 class SinglePolicy(Policy):
-    """SinglePolicy now includes the attributes from Rule directly"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scopes: set[Scope]):
-        super().__init__(name, scopes)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, scope)
         self.conditions = conditions
         self.participants = participants
     
@@ -243,52 +242,51 @@ class SinglePolicy(Policy):
 
 
 class VotingPolicy(SinglePolicy):
-    """VotingPolicy extends SinglePolicy instead of Rule"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scopes: set[Scope]):
-        super().__init__(name, conditions, participants, scopes)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, conditions, participants, scope)
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy):
         voting = cls(name=policy.name, conditions=policy.conditions, 
-                     participants=policy.participants, scopes=policy.scopes)
+                     participants=policy.participants, scope=policy.scope)
         return voting
 
 
 class MajorityPolicy(VotingPolicy):
     """MajorityPolicy extends VotingPolicy"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scopes: set[Scope]):
-        super().__init__(name, conditions, participants, scopes)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, conditions, participants, scope)
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy):
         majority = cls(name=policy.name, conditions=policy.conditions, 
-                       participants=policy.participants, scopes=policy.scopes)
+                       participants=policy.participants, scope=policy.scope)
         return majority
 
 
 class AbsoluteMajorityPolicy(VotingPolicy):
     """AbsoluteMajorityPolicy extends VotingPolicy"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scopes: set[Scope]):
-        super().__init__(name, conditions, participants, scopes)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, conditions, participants, scope)
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy):
         abs_majority = cls(name=policy.name, conditions=policy.conditions, 
-                           participants=policy.participants, scopes=policy.scopes)
+                           participants=policy.participants, scope=policy.scope)
         return abs_majority
 
 
 class LeaderDrivenPolicy(SinglePolicy):
     """LeaderDrivenPolicy extends SinglePolicy and references another SinglePolicy as default"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scopes: set[Scope], default: SinglePolicy):
-        super().__init__(name, conditions, participants, scopes)
+                 scope: Scope, default: SinglePolicy):
+        super().__init__(name, conditions, participants, scope)
         self.default = default
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, default: SinglePolicy):
         leader_driven = cls(name=policy.name, conditions=policy.conditions, 
-                            participants=policy.participants, scopes=policy.scopes, 
+                            participants=policy.participants, scope=policy.scope, 
                             default=default)
         return leader_driven
 
@@ -305,8 +303,8 @@ class LeaderDrivenPolicy(SinglePolicy):
 
 class PhasedPolicy(Policy):
     """A PhasedPolicy must have at least one phase."""
-    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scopes: set[Scope]):
-        super().__init__(name, scopes)
+    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scope: Scope):
+        super().__init__(name, scope)
         self.phases = phases # TODO: Ordered set
         self.order = order
     

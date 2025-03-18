@@ -52,21 +52,15 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()  # Changed from get_project()
+            policy = listener.get_policy()
             
             # Assertions
             self.assertIsInstance(policy, SinglePolicy)
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 2)
+            self.assertEqual(len(policy.scopes), 1)
             scopes = list(policy.scopes)
-
-            # Find and verify the Task scope
-            task_scope = next((s for s in scopes if s.name == "TestTask"), None)
-            self.assertIsNotNone(task_scope, "TestTask scope not found")
-            self.assertIsInstance(task_scope, PullRequest)  # Changed from Task to PullRequest
-            self.assertEqual(task_scope.action, ActionEnum.MERGE)  # Check for action instead of status
 
             # Find and verify the Project scope
             project_scope = next((s for s in scopes if s.name == "TestProjectGH"), None)
@@ -80,12 +74,6 @@ class TestPolicyCreation(unittest.TestCase):
             rule = next(iter(policy.rules))
             self.assertIsInstance(rule, MajorityRule)
             self.assertEqual(rule.name, "majorityRule")
-            
-            # Test rule's participants
-            self.assertEqual(len(rule.participants), 1)
-            participant = next(iter(rule.participants))
-            self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Maintainers")
             
             # Test rule's conditions
             self.assertEqual(len(rule.conditions), 2)
@@ -104,7 +92,25 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(vot_cond.name, "votCond")
             self.assertEqual(vot_cond.minVotes, 2)
             
-            # Check for parser errors
+            # Check participants 
+            self.assertEqual(len(rule.participants), 2)
+
+            # Test individuals
+            individuals = {i for i in rule.participants if isinstance(i, Individual)}
+            self.assertEqual(len(individuals), 1)
+            individual = next(iter(individuals))
+            self.assertEqual(individual.name, "Joe")
+
+            # Test hasRole
+            self.assertEqual(individual.role.name, "Joe_Maintainer")
+            
+            # Test roles
+            roles = {r for r in rule.participants if isinstance(r, Role)}
+            self.assertEqual(len(roles), 1)
+            role = next(iter(roles))
+            self.assertEqual(role.name, "Maintainer")
+            
+            # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
     def test_invalid_num_votes(self):

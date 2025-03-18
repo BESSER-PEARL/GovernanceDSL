@@ -20,7 +20,6 @@ class OrderEnum(Enum):
     SEQUENTIAL_INCLUSIVE = 1
     SEQUENTIAL_EXCLUSIVE = 2
 
-
 # Scope hierarchy
 class Scope(NamedElement):
     def __init__(self, name: str, status: StatusEnum):
@@ -74,9 +73,34 @@ class Participant(NamedElement):
     def __init__(self, name: str):
         super().__init__(name)
 
+    def __eq__(self, value):
+        # TODO: With this implementation: 
+        # Roles and Individuals with the same name are considered equal.
+        # In a set, only one of them would be stored (the last one added would replace the first)
+        # (handle duplicates in Listener)
+        if not isinstance(value, Participant):
+            return False
+        return self.name == value.name
+    
+    def __hash__(self):
+        return hash(self.name)
+
 class Individual(Participant):
-    def __init__(self, name: str):
+    def __init__(self, name: str): 
         super().__init__(name)
+        self.__role = None
+
+    # Can we use the setter instead?
+    # def add_role(self, role_assignement: 'hasRole'):
+    #     self.__role = role_assignement
+    
+    @property
+    def role(self) -> 'hasRole':
+        return self.__role
+    
+    @role.setter
+    def role(self, role_assignement: 'hasRole'):
+        self.__role = role_assignement
 
 class Role(Participant):
     def __init__(self, name: str):
@@ -295,7 +319,7 @@ class PhasedPolicy(Policy):
     """A PhasedPolicy must have at least one phase."""
     def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scopes: set[Scope]):
         super().__init__(name, scopes)
-        self.phases = phases
+        self.phases = phases # TODO: Ordered set
         self.order = order
     
     @property

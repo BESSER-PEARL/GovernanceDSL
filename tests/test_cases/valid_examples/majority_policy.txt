@@ -1,18 +1,15 @@
 Policy TestPolicy {
-    Scopes:
+    Scope:
         Project TestProjectGH from GitHub : owner/repo
-        Task TestTask : Pull request {
-            Action : merge
-            Labels : bug
-        }
     Participants:
-        Roles : Maintainers
+        Roles : Maintainer
+        Individuals : Joe as Maintainer        
     Conditions:
         Deadline reviewDeadline : 14 days
         VotingCondition votCond : minVotes 2
     Rules:
         majorityRule : Majority {
-            people Maintainers
+            people Maintainer, Joe
             conditions reviewDeadline, votCond
         }
 }

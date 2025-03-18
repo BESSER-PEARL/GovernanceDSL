@@ -20,7 +20,7 @@ from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, Rule, MajorityRule, AbsoluteMajorityRule,
     LeaderDrivenRule, VotingCondition,
-    PhasedPolicy, OrderEnum
+    PhasedPolicy, OrderEnum, hasRole
 )
 
 from .govdslParser import govdslParser
@@ -343,12 +343,39 @@ class PolicyCreationListener(govdslListener):
             self._register_participant_with_current_policy(role) # WARNING: This might generate conflict if there is a role with the same name as a individual
     
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
-        
         individuals = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.ParticipantIDContext)
-        for i in individuals:
-            individual = Individual(name=i.ID().getText())
-            self._register_participant_with_current_policy(individual) # WARNING: This might generate conflict if there is a individual with the same name as a role
+                                                            target_type=govdslParser.IndividualIDContext)
+        
+        for i in individuals:            
+            i_name = i.participantID().ID().getText()
+            individual = Individual(name=i_name)
+
+            if i.hasRole():
+                role_name = i.hasRole().participantID().ID().getText()
+                # Find the role object, if already defined
+                current_policy_id = self.policy_stack[-1].policy_id
+                if current_policy_id in self.__policy_participants_map:
+                    ref_role = Role(name=role_name)
+                    # Check if the role exists in the set
+                    if ref_role in self.__policy_participants_map[current_policy_id]:
+                        # Get the actual role object from the set
+                        role_obj = next(p for p in self.__policy_participants_map[current_policy_id] if p == ref_role)
+                    else:
+                        # TODO: Role must not be defined a priori. Or it must?
+                        role_obj = Role(name=role_name)
+                        self._register_participant_with_current_policy(role_obj)
+
+                    # Create hasRole relationship
+                    # TODO: Discuss Scope multiplicity, if * add grammar ("as role in scope")
+                    # policy_scopes = self.__policy_scopes_map.get(current_policy_id, [])
+                    scope = next(iter(self.__policy_scopes_map.get(current_policy_id, [])), None)
+                    if scope:
+                        role_assignment = hasRole(f"{i_name}_{role_name}", role_obj, individual, scope)
+                        individual.role = role_assignment
+                    else:
+                        raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Scope must be defined before Participants).")
+              
+            self._register_participant_with_current_policy(individual)
             
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
         name = ctx.deadlineID().ID().getText()

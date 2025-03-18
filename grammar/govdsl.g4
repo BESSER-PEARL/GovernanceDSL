@@ -8,7 +8,7 @@ phasedPolicy        : 'PhasedPolicy' ID '{'  attributesPhased*  '}' ;
 attributesSingle    : scopes | participants | conditions | rules ;
 attributesPhased    : order | phases ;
 // Scope group
-scopes              : 'Scopes' ':'  (project | activity | task)+ ;
+scopes              : 'Scope' ':'  (project | activity | task) ;
 project             : 'Project' ID ('from' platform ':' repoID)? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
@@ -26,8 +26,10 @@ labels              : 'Labels' ':' ID (',' ID)* ;
 // Participants group
 participants        : 'Participants' ':' roles | individuals ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
-participantID       : ID ;
-individuals         : 'Individuals' ':' participantID (',' participantID)* ;
+participantID       : ID  ;
+individuals         : 'Individuals' ':' individualID (',' individualID)* ;
+individualID        : participantID hasRole? ;
+hasRole             : 'as' participantID ;
 // Conditions group
 conditions          : 'Conditions' ':'  deadline? votingCondition? ratio? ;
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;

@@ -180,33 +180,6 @@ class Deadline(Condition):
             raise InvalidDeadlineException(self.name)
         self.__date = date
 
-class VotingCondition(Condition):
-    def __init__(self, name: str, minVotes: int, ratio: float):
-        super().__init__(name)
-        self.minVotes = minVotes
-        self.ratio = ratio
-    
-    @property
-    def minVotes(self) -> int:
-        return self.__minVotes
-    
-    @minVotes.setter
-    def minVotes(self, minVotes: int):
-        if minVotes and minVotes < 0:
-            raise InvalidVotesException("Number of votes must be non-negative.")
-        self.__minVotes = minVotes
-    
-    @property
-    def ratio(self) -> float:
-        return self.__ratio
-    
-    @ratio.setter
-    def ratio(self, ratio: float):
-        if ratio and (ratio < 0 or ratio > 1):
-            raise InvalidValueException("ratio", ratio)
-        self.__ratio = ratio
-
-
 # Policy hierarchy
 class Policy(NamedElement):
     """A Policy must have at least one scope."""
@@ -253,37 +226,75 @@ class SinglePolicy(Policy):
 
 
 class VotingPolicy(SinglePolicy):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 scope: Scope, minVotes: int = None, ratio: float = None):
         super().__init__(name, conditions, participants, scope)
+        self.minVotes = minVotes
+        self.ratio = ratio
     
     @classmethod
-    def from_policy(cls, policy: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, minVotes: int = None, ratio: float = None):
         voting = cls(name=policy.name, conditions=policy.conditions, 
-                     participants=policy.participants, scope=policy.scope)
+                     participants=policy.participants, scope=policy.scope,
+                     minVotes=minVotes, ratio=ratio)
         return voting
+    
+    @property
+    def minVotes(self) -> int:
+        return self.__minVotes
+    
+    @minVotes.setter
+    def minVotes(self, minVotes: int):
+        if minVotes and minVotes < 0:
+            raise InvalidVotesException("Number of votes must be non-negative.")
+        self.__minVotes = minVotes
+    
+    @property
+    def ratio(self) -> float:
+        return self.__ratio
+    
+    @ratio.setter
+    def ratio(self, ratio: float):
+        if ratio and (ratio < 0 or ratio > 1):
+            raise InvalidValueException("ratio", ratio)
+        self.__ratio = ratio
 
 
 class MajorityPolicy(VotingPolicy):
     """MajorityPolicy extends VotingPolicy"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
-        super().__init__(name, conditions, participants, scope)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 scope: Scope, minVotes: int = None, ratio: float = None):
+        super().__init__(name, conditions, participants, scope, minVotes, ratio)
     
     @classmethod
-    def from_policy(cls, policy: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, minVotes: int = None, ratio: float = None):
+        if isinstance(policy, VotingPolicy):
+            # Preserve minVotes and ratio if coming from VotingPolicy
+            minVotes = policy.minVotes if minVotes is None else minVotes
+            ratio = policy.ratio if ratio is None else ratio
+        
         majority = cls(name=policy.name, conditions=policy.conditions, 
-                       participants=policy.participants, scope=policy.scope)
+                       participants=policy.participants, scope=policy.scope,
+                       minVotes=minVotes, ratio=ratio)
         return majority
 
 
 class AbsoluteMajorityPolicy(VotingPolicy):
     """AbsoluteMajorityPolicy extends VotingPolicy"""
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
-        super().__init__(name, conditions, participants, scope)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 scope: Scope, minVotes: int = None, ratio: float = None):
+        super().__init__(name, conditions, participants, scope, minVotes, ratio)
     
     @classmethod
-    def from_policy(cls, policy: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, minVotes: int = None, ratio: float = None):
+        if isinstance(policy, VotingPolicy):
+            # Preserve minVotes and ratio if coming from VotingPolicy
+            minVotes = policy.minVotes if minVotes is None else minVotes
+            ratio = policy.ratio if ratio is None else ratio
+        
         abs_majority = cls(name=policy.name, conditions=policy.conditions, 
-                           participants=policy.participants, scope=policy.scope)
+                           participants=policy.participants, scope=policy.scope,
+                           minVotes=minVotes, ratio=ratio)
         return abs_majority
 
 

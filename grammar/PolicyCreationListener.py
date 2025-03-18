@@ -3,12 +3,10 @@ from datetime import timedelta, datetime
 from besser.BUML.metamodel.structural import (
     StringType, IntegerType, FloatType, TimeDeltaType
 ) # TODO: Check if necessary (for attr type validation)
-from utils.exceptions import (
-    InvalidVotesException, 
-    UndefinedAttributeException, 
-    UnsupportedRuleTypeException
-)
 from utils.policy_tree import PolicyNode
+from utils.exceptions import (
+    UndefinedAttributeException
+)
 from utils.gh_extension import (
     ActionEnum, Label, PullRequest
 )
@@ -18,8 +16,7 @@ from utils.attribute_converters import (
 )
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
-    Deadline, Rule, MajorityRule, AbsoluteMajorityRule,
-    LeaderDrivenRule, VotingCondition,
+    Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     PhasedPolicy, OrderEnum, hasRole
 )
 
@@ -44,6 +41,7 @@ class PolicyCreationListener(govdslListener):
         self.__policy_participants_map = {}
         self.__policy_conditions_map = {}
         self.__policy_order_map = {}
+        self.__policy_parameters_map = {}
 
         # Policy tree structure
         self.policy_tree = {}  # Maps policy ID to PolicyNode
@@ -78,12 +76,8 @@ class PolicyCreationListener(govdslListener):
 
         return matching_nodes
     
-    
-
-
     def _construct_policy_objects(self):
         """Construct policy objects from leaves to root"""
-        print("Starting policy object construction")
         # Identify leaf nodes first (no children)
         leaves = [node for node in self.policy_tree.values() if not node.children]
                 
@@ -98,16 +92,8 @@ class PolicyCreationListener(govdslListener):
             if node.policy_id in processed:
                 continue
             
-            # For single policies
-            if node.policy_type == "single":
-                rules = self.__policy_rules_map.get(node.policy_id)
-                scopes = self.__policy_scopes_map.get(node.policy_id)
-                node.policy_object = SinglePolicy(name=node.policy_id, 
-                                                rules=rules, 
-                                                scopes=scopes)
-            
-            # For phased policies
-            elif node.policy_type == "phased":
+            # phased policies
+            if node.policy_type == "phased":
                 # Check if all children are processed
                 if not all(child.policy_id in processed for child in node.children):
                     # Put back in queue and process later
@@ -118,19 +104,40 @@ class PolicyCreationListener(govdslListener):
                 phases = {child.policy_object for child in node.children}
                 order = self.__policy_order_map.get(node.policy_id)
                 # Collect all scopes from direct children
-                combined_scopes = set()
-                if not node.children:
-                    raise Exception(f"Phased policy {node.policy_id} does not have children defined.")
-                for child in node.children:
-                    if hasattr(child.policy_object, 'scopes'):
-                        combined_scopes.update(child.policy_object.scopes)
-                    else:
-                        raise Exception(f"Child policy {child.policy_id} does not have scopes defined.")
+                combined_scopes = set() # TODO: Implement as Jordi suggested "De moment assumim que hi ha una WFR (well-formedness rule) que diu que els scopes de les singlepolicy es el mateix si formen part de la mateixa composedpolicy. Per tant la relació entre composedpolicy i scope és una relació derivada"
+                # if not node.children:
+                #     raise UndefinedAttributeException("phases", f"Phased policy {node.policy_id} does not have children defined.")
+                # for child in node.children:
+                #     if hasattr(child.policy_object, 'scopes'):
+                #         combined_scopes.update(child.policy_object.scopes)
+                #     else:
+                #         raise UndefinedAttributeException("scope", f"Child policy {child.policy_id} does not have scopes defined.")
             
                 node.policy_object = PhasedPolicy(name=node.policy_id,
                                             phases=phases,
                                             order=order,
-                                            scopes=combined_scopes)
+                                            scope=combined_scopes)
+            else: # single policy
+                participants = self.__policy_participants_map.get(node.policy_id)
+                scope = self.__policy_scopes_map.get(node.policy_id)
+                conditions = self.__policy_conditions_map.get(node.policy_id)
+                base_policy = SinglePolicy(name=node.policy_id,
+                                                  conditions=conditions,
+                                                  participants=participants,
+                                                  scope=scope)
+                match node.policy_type:
+                    case "MajorityPolicy": # TODO: Should we evaluate whether the parameters are well defined (i.e., votParams and default)?
+                        parameters = self.__policy_parameters_map.get(node.policy_id)
+                        node.policy_object = MajorityPolicy.from_policy(base_policy, minVotes=parameters.get('minVotes'), ratio=parameters.get('ratio'))
+                    case "AbsoluteMajorityPolicy":
+                        parameters = self.__policy_parameters_map.get(node.policy_id)
+                        node.policy_object = AbsoluteMajorityPolicy.from_policy(base_policy, minVotes=parameters.get('minVotes'), ratio=parameters.get('ratio'))
+                    case "LeaderDrivenPolicy":
+                        parameters = self.__policy_parameters_map.get(node.policy_id)
+                        if 'default' not in parameters:
+                            raise UndefinedAttributeException("default", message="LeaderDrivenPolicy must have a default policy defined.")
+                        default_policy = self.policy_tree.get(parameters['default']).policy_object
+                        node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy) 
             
             # Mark as processed
             processed.add(node.policy_id)
@@ -156,11 +163,11 @@ class PolicyCreationListener(govdslListener):
         current_policy_id = self.policy_stack[-1].policy_id
         
         # Initialize the scopes set for this policy if needed
-        if current_policy_id not in self.__policy_scopes_map:
-            self.__policy_scopes_map[current_policy_id] = set()
+        if current_policy_id in self.__policy_scopes_map:
+            raise Exception("Scope already defined for policy.") # TODO: Handle this case
         
         # Associate the scope with the current policy
-        self.__policy_scopes_map[current_policy_id].add(scope_obj)
+        self.__policy_scopes_map[current_policy_id] = scope_obj
 
     def _register_participant_with_current_policy(self, participant_obj):
         """
@@ -234,7 +241,7 @@ class PolicyCreationListener(govdslListener):
     def enterSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
         """When entering a single policy, create a node and establish relationships"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, "single")
+        node = PolicyNode(policy_id, ctx.policyType().getText())
         self.policy_tree[policy_id] = node
         
         # If we're inside a phased policy, establish parent-child relationship
@@ -251,7 +258,7 @@ class PolicyCreationListener(govdslListener):
     def enterPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
         """When entering a phased policy, create a node"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, "phased")
+        node = PolicyNode(policy_id, ctx.policyType().getText())
         self.policy_tree[policy_id] = node
         
         # If we're inside another phased policy, establish parent-child relationship
@@ -325,8 +332,7 @@ class PolicyCreationListener(govdslListener):
             task = Task(name=task_name, status=status)
         self._register_scope_with_current_policy(task)
     
-    def exitProject(self, ctx:govdslParser.ProjectContext):
-        # For project we do exit to make the relationships. But for now, we are not defining them.
+    def enterProject(self, ctx:govdslParser.ProjectContext):
         project_name = ctx.ID().getText()
         platform_str = ctx.platform().getText()
         platform_enum = str_to_platform_enum(platform_str)
@@ -346,7 +352,7 @@ class PolicyCreationListener(govdslListener):
         individuals = self.find_descendant_nodes_by_type(node=ctx,
                                                             target_type=govdslParser.IndividualIDContext)
         
-        for i in individuals:            
+        for i in individuals:
             i_name = i.participantID().ID().getText()
             individual = Individual(name=i_name)
 
@@ -361,14 +367,12 @@ class PolicyCreationListener(govdslListener):
                         # Get the actual role object from the set
                         role_obj = next(p for p in self.__policy_participants_map[current_policy_id] if p == ref_role)
                     else:
-                        # TODO: Role must not be defined a priori. Or it must?
+                        # Role can be created on the fly if not defined previosuly
                         role_obj = Role(name=role_name)
                         self._register_participant_with_current_policy(role_obj)
 
                     # Create hasRole relationship
-                    # TODO: Discuss Scope multiplicity, if * add grammar ("as role in scope")
-                    # policy_scopes = self.__policy_scopes_map.get(current_policy_id, [])
-                    scope = next(iter(self.__policy_scopes_map.get(current_policy_id, [])), None)
+                    scope = self.__policy_scopes_map.get(current_policy_id)
                     if scope:
                         role_assignment = hasRole(f"{i_name}_{role_name}", role_obj, individual, scope)
                         individual.role = role_assignment
@@ -398,79 +402,37 @@ class PolicyCreationListener(govdslListener):
         deadline = Deadline(name=name, offset=offset, date=date)
         self._register_condition_with_current_policy(deadline)
 
-    def enterVotingCondition(self, ctx:govdslParser.VotingConditionContext):
+    def enterParameters(self, ctx:govdslParser.ParametersContext):
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
         
-        name = ctx.voteConditionID().ID().getText()
-        min_votes = None
-        ratio = None
-        if ctx.minVotes():
-            min_votes = int(ctx.minVotes().SIGNED_INT().getText())
-        if ctx.ratio():
-            ratio = float(ctx.ratio().FLOAT().getText())
-        condition = VotingCondition(name=name, minVotes=min_votes, ratio=ratio)
-        self._register_condition_with_current_policy(condition)
-
-    def enterRule(self, ctx:govdslParser.RuleContext):
-        
-        rule_name = ctx.ruleID().ID().getText()
-        rule_type = ctx.ruleType().getText()
-
         current_policy_id = self.policy_stack[-1].policy_id
-
-                        
-        conditions = set()
-        if ctx.ruleContent().ruleConditions():
-            condition_count = len(ctx.ruleContent().ruleConditions().ID())
-            for i in range(condition_count):
-                c_id = ctx.ruleContent().ruleConditions().ID(i).getText()
-                try:
-                    if current_policy_id in self.__policy_conditions_map: # TODO: Refactor the access to maps with a generic function.
-                        for condition in self.__policy_conditions_map[current_policy_id]:
-                            if condition.name == c_id:
-                                conditions.add(condition)
-                                break  # Found it, no need to continue searching
-                        else:  # This else corresponds to the for loop (executes if no break occurred)
-                            raise UndefinedAttributeException("condition", c_id)
-                    else:
-                        raise Exception("Policy is not inconditions map.")
-                except KeyError as e:
-                    raise UndefinedAttributeException("condition", c_id) from e
-                
-        policy_participants = self.__policy_participants_map.get(current_policy_id)
-        if not policy_participants:
-            raise Exception(f"No participants defined in policy {current_policy_id}")
-
-        # people = {self.__participants[participant.ID().getText()] for participant in self.find_descendant_nodes_by_type(node=ctx.ruleContent(), target_type=govdslParser.ParticipantIDContext)}
-        participants = self.find_descendant_nodes_by_type(node=ctx.ruleContent(),
-                                                           target_type=govdslParser.ParticipantIDContext)
-        people = set()
-        for p in participants:
-            p_id = p.ID().getText()
-            # Search in policy's participants set
-            for participant in policy_participants:
-                if participant.name == p_id:
-                    people.add(participant)
-                    break
-            else:
-                raise UndefinedAttributeException("participant", p_id)
-
-        base_rule = Rule(name=rule_name, conditions=conditions, participants=people)
-
-        # Transform base rule into specific rule type
-        match rule_type:
-            case "Majority":
-                rule = MajorityRule.from_rule(base_rule)
-            case "AbsoluteMajority":
-                rule = AbsoluteMajorityRule.from_rule(base_rule)
-            case "LeaderDriven":
-                default_name = ctx.ruleContent().default().ruleID().ID().getText()
-                if current_policy_id not in self.__policy_rules_map or default_name not in {r.name for r in self.__policy_rules_map[current_policy_id]}:
-                    raise UndefinedAttributeException("rule", default_name)
-                default_rule = next(r for r in self.__policy_rules_map[current_policy_id] if r.name == default_name)
-                rule = LeaderDrivenRule.from_rule(base_rule, default=default_rule)
-            case _:
-                raise UnsupportedRuleTypeException(ctx.ruleType().getText())
-        self._register_rule_with_current_policy(rule)
+        
+        # Initialize the parameters map for this policy if needed
+        if current_policy_id not in self.__policy_parameters_map:
+            self.__policy_parameters_map[current_policy_id] = {}
+        
+        # Extract voting parameters if present
+        if ctx.votParams():
+            vot_params = ctx.votParams()
+            
+            # Extract minVotes if present
+            if vot_params.minVotes():
+                self.__policy_parameters_map[current_policy_id]['minVotes'] = int(vot_params.minVotes().SIGNED_INT().getText())
+            
+            # Extract ratio if present
+            if vot_params.ratio():
+                self.__policy_parameters_map[current_policy_id]['ratio'] = float(vot_params.ratio().FLOAT().getText())
+        
+        # Extract default policy if present (for LeaderDrivenPolicy)
+        elif ctx.default():
+            default_ctx = None
+            if ctx.default().policyContent().singlePolicy():
+                default_ctx = ctx.default().policyContent().singlePolicy().ID().getText()
+            elif ctx.default().policyContent().phasedPolicy():
+                default_ctx = ctx.default().policyContent().phasedPolicy().ID().getText()
+            self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
         """Final policy construction using the tree structure"""

@@ -35,6 +35,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#policyType.
+    def enterPolicyType(self, ctx:govdslParser.PolicyTypeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#policyType.
+    def exitPolicyType(self, ctx:govdslParser.PolicyTypeContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#phasedPolicy.
     def enterPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
         pass
@@ -62,12 +71,12 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#scopes.
-    def enterScopes(self, ctx:govdslParser.ScopesContext):
+    # Enter a parse tree produced by govdslParser#scope.
+    def enterScope(self, ctx:govdslParser.ScopeContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#scopes.
-    def exitScopes(self, ctx:govdslParser.ScopesContext):
+    # Exit a parse tree produced by govdslParser#scope.
+    def exitScope(self, ctx:govdslParser.ScopeContext):
         pass
 
 
@@ -296,21 +305,21 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#votingCondition.
-    def enterVotingCondition(self, ctx:govdslParser.VotingConditionContext):
+    # Enter a parse tree produced by govdslParser#parameters.
+    def enterParameters(self, ctx:govdslParser.ParametersContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#votingCondition.
-    def exitVotingCondition(self, ctx:govdslParser.VotingConditionContext):
+    # Exit a parse tree produced by govdslParser#parameters.
+    def exitParameters(self, ctx:govdslParser.ParametersContext):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#voteConditionID.
-    def enterVoteConditionID(self, ctx:govdslParser.VoteConditionIDContext):
+    # Enter a parse tree produced by govdslParser#votParams.
+    def enterVotParams(self, ctx:govdslParser.VotParamsContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#voteConditionID.
-    def exitVoteConditionID(self, ctx:govdslParser.VoteConditionIDContext):
+    # Exit a parse tree produced by govdslParser#votParams.
+    def exitVotParams(self, ctx:govdslParser.VotParamsContext):
         pass
 
 
@@ -329,87 +338,6 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#ratio.
     def exitRatio(self, ctx:govdslParser.RatioContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#rules.
-    def enterRules(self, ctx:govdslParser.RulesContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#rules.
-    def exitRules(self, ctx:govdslParser.RulesContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#rule.
-    def enterRule(self, ctx:govdslParser.RuleContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#rule.
-    def exitRule(self, ctx:govdslParser.RuleContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#ruleID.
-    def enterRuleID(self, ctx:govdslParser.RuleIDContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#ruleID.
-    def exitRuleID(self, ctx:govdslParser.RuleIDContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#ruleType.
-    def enterRuleType(self, ctx:govdslParser.RuleTypeContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#ruleType.
-    def exitRuleType(self, ctx:govdslParser.RuleTypeContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#ruleContent.
-    def enterRuleContent(self, ctx:govdslParser.RuleContentContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#ruleContent.
-    def exitRuleContent(self, ctx:govdslParser.RuleContentContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#people.
-    def enterPeople(self, ctx:govdslParser.PeopleContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#people.
-    def exitPeople(self, ctx:govdslParser.PeopleContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#rangeType.
-    def enterRangeType(self, ctx:govdslParser.RangeTypeContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#rangeType.
-    def exitRangeType(self, ctx:govdslParser.RangeTypeContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#rangeID.
-    def enterRangeID(self, ctx:govdslParser.RangeIDContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#rangeID.
-    def exitRangeID(self, ctx:govdslParser.RangeIDContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#ruleConditions.
-    def enterRuleConditions(self, ctx:govdslParser.RuleConditionsContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#ruleConditions.
-    def exitRuleConditions(self, ctx:govdslParser.RuleConditionsContext):
         pass
 
 

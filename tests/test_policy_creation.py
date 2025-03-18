@@ -15,8 +15,8 @@ from utils.exceptions import (
     EmptySetException
 )
 from metamodel.governance import (
-    SinglePolicy, Activity, MajorityRule, Task, 
-    Role, Deadline, LeaderDrivenRule, VotingCondition,
+    SinglePolicy, Activity, Task, 
+    Role, Deadline, MajorityPolicy,
     StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum
 )
 from utils.gh_extension import ActionEnum, PullRequest
@@ -40,7 +40,7 @@ class TestPolicyCreation(unittest.TestCase):
         return parser
 
     def test_majority_rule_creation(self):
-        """Test the creation of a policy with a majority rule."""
+        """Test the creation of a policy with majority voting parameters."""
         with open(self.test_cases_path / "valid_examples/majority_policy.txt", "r") as file:
             text = file.read()
             
@@ -55,60 +55,46 @@ class TestPolicyCreation(unittest.TestCase):
             policy = listener.get_policy()
             
             # Assertions
-            self.assertIsInstance(policy, SinglePolicy)
+            self.assertIsInstance(policy, MajorityPolicy)
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 1)
-            scopes = list(policy.scopes)
-
-            # Find and verify the Project scope
-            project_scope = next((s for s in scopes if s.name == "TestProjectGH"), None)
-            self.assertIsNotNone(project_scope, "TestProjectGH scope not found")
-            self.assertIsInstance(project_scope, Project)
-            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(project_scope.project_id, "owner/repo")
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "TestProjectGH")
+            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(scope.project_id, "owner/repo")
             
-            # Test rule content
-            self.assertEqual(len(policy.rules), 1)
-            rule = next(iter(policy.rules))
-            self.assertIsInstance(rule, MajorityRule)
-            self.assertEqual(rule.name, "majorityRule")
+            # Test participants
+            self.assertEqual(len(policy.participants), 2)
             
-            # Test rule's conditions
-            self.assertEqual(len(rule.conditions), 2)
-            
-            # Test Deadline condition
-            deadline_conditions = {c for c in rule.conditions if isinstance(c, Deadline)}
-            self.assertEqual(len(deadline_conditions), 1)
-            deadline = next(iter(deadline_conditions))
-            self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.offset, timedelta(days=14))
-            
-            # Test VotingCondition condition
-            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
-            self.assertEqual(len(voting_conditions), 1)
-            vot_cond = next(iter(voting_conditions))
-            self.assertEqual(vot_cond.name, "votCond")
-            self.assertEqual(vot_cond.minVotes, 2)
-            
-            # Check participants 
-            self.assertEqual(len(rule.participants), 2)
-
-            # Test individuals
-            individuals = {i for i in rule.participants if isinstance(i, Individual)}
+            # Test Individual participant
+            individuals = {p for p in policy.participants if isinstance(p, Individual)}
             self.assertEqual(len(individuals), 1)
             individual = next(iter(individuals))
             self.assertEqual(individual.name, "Joe")
-
-            # Test hasRole
+            
+            # Test role assignment for individual
+            self.assertIsNotNone(individual.role)
             self.assertEqual(individual.role.name, "Joe_Maintainer")
             
-            # Test roles
-            roles = {r for r in rule.participants if isinstance(r, Role)}
+            # Test Role participant
+            roles = {p for p in policy.participants if isinstance(p, Role)}
             self.assertEqual(len(roles), 1)
             role = next(iter(roles))
             self.assertEqual(role.name, "Maintainer")
+            
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "reviewDeadline")
+            self.assertEqual(condition.offset, timedelta(days=14))
+            
+            # Test voting parameters
+            self.assertEqual(policy.minVotes, 2)
+            self.assertEqual(policy.ratio, 0.5)
             
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

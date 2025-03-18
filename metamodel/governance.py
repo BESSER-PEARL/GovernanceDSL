@@ -188,7 +188,7 @@ class Policy(NamedElement):
         self.scope = scope
     
     @property
-    def scope(self) -> set[Scope]:
+    def scope(self) -> Scope:
         return self.__scope
     
     @scope.setter
@@ -246,7 +246,7 @@ class VotingPolicy(SinglePolicy):
     @minVotes.setter
     def minVotes(self, minVotes: int):
         if minVotes and minVotes < 0:
-            raise InvalidVotesException("Number of votes must be non-negative.")
+            raise InvalidVotesException("Number of votes must be positive.")
         self.__minVotes = minVotes
     
     @property

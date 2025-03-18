@@ -1,7 +1,7 @@
 class PolicyNode:
     def __init__(self, policy_id, policy_type):
         self.policy_id = policy_id
-        self.policy_type = policy_type  # "single" or "phased"
+        self.policy_type = policy_type  # "Majority", "AbsoluteMajority", "LeaderDriven" or "phased"
         self.parent = None
         self.children = []
         self.policy_object = None  # The actual policy object (set later)

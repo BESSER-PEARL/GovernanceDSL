@@ -1,15 +1,10 @@
-Policy TestPolicy {
-    Scopes:
+AbsoluteMajorityPolicy TestPolicy {
+    Scope:
         Project TestProject from GitHub : owner/repo
-        Activity TestActivity
     Participants:
         Roles : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
-        VotingCondition votCond : minVotes 2 , ratio 0.7
-    Rules:
-        ratioRule : Majority {
-            people Committers
-            conditions reviewDeadline, votCond
-        }
+    Parameters:
+        minVotes 2, ratio 0.7
 }

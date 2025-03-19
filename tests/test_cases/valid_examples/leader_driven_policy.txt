@@ -1,25 +1,19 @@
-Policy TestPolicy {
-    Scopes:
+LeaderDrivenPolicy TestPolicy {
+    Scope:
         Project TestProject from GitHub : owner/repo
-        Activity TestActivity
-        Task TestTask : Pull request {
-            Action : review
-            Labels : feature
-        }
     Participants:
-        Roles : Maintainers
         Individuals : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
-        VotingCondition votCond : minVotes 2
-    Rules:
-        majorityRule : Majority {
-            people Maintainers
-            conditions votCond
-        }
-        leaderRule : LeaderDriven {
-            people Leader
-            conditions reviewDeadline
-            default majorityRule
+    Parameters:
+        default MajorityPolicy defaultPolicy {
+            Scope:
+                Project TestProject from GitHub : owner/repo
+            Participants:
+                Roles : Maintainers
+            Conditions:
+                Deadline reviewDeadline : 7 days
+            Parameters:
+                minVotes 2
         }
 }

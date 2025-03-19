@@ -16,8 +16,9 @@ from utils.exceptions import (
 )
 from metamodel.governance import (
     SinglePolicy, Activity, Task, 
-    Role, Deadline, MajorityPolicy,
-    StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum
+    Role, Deadline, MajorityPolicy, 
+    StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum,
+    AbsoluteMajorityPolicy, LeaderDrivenPolicy 
 )
 from utils.gh_extension import ActionEnum, PullRequest
 
@@ -125,54 +126,33 @@ class TestPolicyCreation(unittest.TestCase):
             policy = listener.get_policy()
             
             # Assertions
-            self.assertIsInstance(policy, SinglePolicy)
+            self.assertIsInstance(policy, AbsoluteMajorityPolicy)
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 2)
-            scopes = list(policy.scopes)
-
-            # Find and verify the Project scope
-            project_scope = next((s for s in scopes if s.name == "TestProject"), None)
-            self.assertIsNotNone(project_scope, "TestProject scope not found")
-            self.assertIsInstance(project_scope, Project)
-            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(project_scope.project_id, "owner/repo")
-
-            # Find and verify the Activity scope
-            activity_scope = next((s for s in scopes if s.name == "TestActivity"), None)
-            self.assertIsNotNone(activity_scope, "TestActivity scope not found")
-            self.assertIsInstance(activity_scope, Activity)
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(scope.project_id, "owner/repo")
             
-            # Test rule content
-            self.assertEqual(len(policy.rules), 1)
-            rule = next(iter(policy.rules))
-            self.assertIsInstance(rule, MajorityRule)
-            self.assertEqual(rule.name, "ratioRule")
-            
-            # Test rule's participants
-            self.assertEqual(len(rule.participants), 1)
-            participant = next(iter(rule.participants))
+            # Test participants
+            self.assertEqual(len(policy.participants), 1)
+            participant = next(iter(policy.participants))
             self.assertIsInstance(participant, Role)
             self.assertEqual(participant.name, "Committers")
             
-            # Test rule's conditions
-            self.assertEqual(len(rule.conditions), 2)
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "reviewDeadline")
+            self.assertEqual(condition.offset, timedelta(days=7))
             
-            # Test Deadline condition
-            deadline_conditions = {c for c in rule.conditions if isinstance(c, Deadline)}
-            self.assertEqual(len(deadline_conditions), 1)
-            deadline = next(iter(deadline_conditions))
-            self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.offset, timedelta(days=7))
-            
-            # Test VotingCondition condition
-            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
-            self.assertEqual(len(voting_conditions), 1)
-            votCond = next(iter(voting_conditions))
-            self.assertEqual(votCond.name, "votCond")
-            self.assertEqual(votCond.minVotes, 2)
-            self.assertEqual(votCond.ratio, 0.7)
+            # Test voting parameters
+            self.assertEqual(policy.minVotes, 2)
+            self.assertEqual(policy.ratio, 0.7)
 
     def test_leader_driven_rule_creation(self):
         """Test the creation of a policy with a leader driven rule."""
@@ -187,60 +167,51 @@ class TestPolicyCreation(unittest.TestCase):
             policy = listener.get_policy()
             
             # Assertions
-            self.assertIsInstance(policy, SinglePolicy)
+            self.assertIsInstance(policy, LeaderDrivenPolicy)
             self.assertEqual(policy.name, "TestPolicy")
             
             # Test scope
-            self.assertEqual(len(policy.scopes), 3)
-            scopes = list(policy.scopes)
-
-            # Find and verify the Project scope
-            project_scope = next((s for s in scopes if s.name == "TestProject"), None)
-            self.assertIsNotNone(project_scope, "TestProject scope not found")
-            self.assertIsInstance(project_scope, Project)
-            self.assertEqual(project_scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(project_scope.project_id, "owner/repo")
-
-            # Find and verify the Activity scope
-            activity_scope = next((s for s in scopes if s.name == "TestActivity"), None)
-            self.assertIsNotNone(activity_scope, "TestActivity scope not found")
-            self.assertIsInstance(activity_scope, Activity)
-
-            # Find and verify the Task scope
-            task_scope = next((s for s in scopes if s.name == "TestTask"), None)
-            self.assertIsNotNone(task_scope, "TestTask scope not found")
-            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
-            self.assertEqual(task_scope.action, ActionEnum.REVIEW)  # Changed status to action
-            # Check for labels if applicable
-            self.assertIsNotNone(task_scope.labels)
-            self.assertEqual(len(task_scope.labels), 1)
-            label = next(iter(task_scope.labels))
-            self.assertEqual(label.name, "feature")
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(scope.project_id, "owner/repo")
             
-            # Test rules count
-            self.assertEqual(len(policy.rules), 2)
-            
-            # Test majority rule
-            majority_rule = next(r for r in policy.rules if r.name == "majorityRule")
-            self.assertIsInstance(majority_rule, MajorityRule)
-            
-            # Test leader driven rule
-            leader_rule = next(r for r in policy.rules if r.name == "leaderRule")
-            self.assertIsInstance(leader_rule, LeaderDrivenRule)
-            self.assertEqual(leader_rule.default, majority_rule)
-            
-            # Test leader rule's conditions
-            deadline_conditions = {c for c in leader_rule.conditions if isinstance(c, Deadline)}
-            self.assertEqual(len(deadline_conditions), 1)
-            deadline = next(iter(deadline_conditions))
-            self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.offset, timedelta(days=7))
-            
-            # Test leader rule's participants
-            self.assertEqual(len(leader_rule.participants), 1)
-            participant = next(iter(leader_rule.participants))
+            # Test leader participants
+            self.assertEqual(len(policy.participants), 1)
+            participant = next(iter(policy.participants))
             self.assertIsInstance(participant, Individual)
             self.assertEqual(participant.name, "Leader")
+            
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "reviewDeadline")
+            self.assertEqual(condition.offset, timedelta(days=7))
+            
+            # Test default policy
+            self.assertIsNotNone(policy.default)
+            default_policy = policy.default
+            self.assertIsInstance(default_policy, MajorityPolicy)
+            self.assertEqual(default_policy.name, "defaultPolicy")
+            
+            # Test default policy participants
+            self.assertEqual(len(default_policy.participants), 1)
+            default_participant = next(iter(default_policy.participants))
+            self.assertIsInstance(default_participant, Role)
+            self.assertEqual(default_participant.name, "Maintainers")
+            
+            # Test default policy conditions
+            self.assertEqual(len(default_policy.conditions), 1)
+            default_condition = next(iter(default_policy.conditions))
+            self.assertIsInstance(default_condition, Deadline)
+            self.assertEqual(default_condition.name, "reviewDeadline")
+            self.assertEqual(default_condition.offset, timedelta(days=7))
+            
+            # Test default policy parameters
+            self.assertEqual(default_policy.minVotes, 2)
 
     def test_invalid_rule_reference(self):
         """Test the creation of a policy with an invalid rule reference."""

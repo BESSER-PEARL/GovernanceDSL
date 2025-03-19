@@ -47,6 +47,7 @@ class PolicyCreationListener(govdslListener):
         self.policy_tree = {}  # Maps policy ID to PolicyNode
         self.policy_stack = []  # Tracks the current policy context
         self.phased_policy_stack = []  # Tracks the current phased policies
+        self.referenced_policies = set()  # Track policies referenced by others (like default policies)
 
     def get_policy(self):
         """Policy: Retrieves the Policy instance."""
@@ -78,12 +79,23 @@ class PolicyCreationListener(govdslListener):
     
     def _construct_policy_objects(self):
         """Construct policy objects from leaves to root"""
-        # Identify leaf nodes first (no children)
+        # First identify all default policies that need to be processed first
+        default_policies = set()
+        for policy_id, parameters in self.__policy_parameters_map.items():
+            if 'default' in parameters:
+                default_policy_id = parameters['default']
+                if default_policy_id in self.policy_tree:
+                    default_policies.add(default_policy_id)
+        
+        # Identify leaf nodes (no children)
         leaves = [node for node in self.policy_tree.values() if not node.children]
                 
-        # Process nodes in dependency order (leaves first)
+        # Process nodes in dependency order (defaults first, then leaves, then up the tree)
         processed = set()
-        to_process = leaves.copy()
+        # First process all default policies
+        to_process = [self.policy_tree[pid] for pid in default_policies if pid in self.policy_tree]
+        # Then add leaf nodes that aren't default policies
+        to_process.extend([node for node in leaves if node.policy_id not in default_policies])
         
         while to_process:
             node = to_process.pop(0)
@@ -104,15 +116,8 @@ class PolicyCreationListener(govdslListener):
                 phases = {child.policy_object for child in node.children}
                 order = self.__policy_order_map.get(node.policy_id)
                 # Collect all scopes from direct children
-                combined_scopes = set() # TODO: Implement as Jordi suggested "De moment assumim que hi ha una WFR (well-formedness rule) que diu que els scopes de les singlepolicy es el mateix si formen part de la mateixa composedpolicy. Per tant la relació entre composedpolicy i scope és una relació derivada"
-                # if not node.children:
-                #     raise UndefinedAttributeException("phases", f"Phased policy {node.policy_id} does not have children defined.")
-                # for child in node.children:
-                #     if hasattr(child.policy_object, 'scopes'):
-                #         combined_scopes.update(child.policy_object.scopes)
-                #     else:
-                #         raise UndefinedAttributeException("scope", f"Child policy {child.policy_id} does not have scopes defined.")
-            
+                combined_scopes = set()
+                
                 node.policy_object = PhasedPolicy(name=node.policy_id,
                                             phases=phases,
                                             order=order,
@@ -126,7 +131,7 @@ class PolicyCreationListener(govdslListener):
                                                   participants=participants,
                                                   scope=scope)
                 match node.policy_type:
-                    case "MajorityPolicy": # TODO: Should we evaluate whether the parameters are well defined (i.e., votParams and default)?
+                    case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id)
                         node.policy_object = MajorityPolicy.from_policy(base_policy, minVotes=parameters.get('minVotes'), ratio=parameters.get('ratio'))
                     case "AbsoluteMajorityPolicy":
@@ -136,8 +141,27 @@ class PolicyCreationListener(govdslListener):
                         parameters = self.__policy_parameters_map.get(node.policy_id)
                         if 'default' not in parameters:
                             raise UndefinedAttributeException("default", message="LeaderDrivenPolicy must have a default policy defined.")
-                        default_policy = self.policy_tree.get(parameters['default']).policy_object
-                        node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy) 
+                        
+                        default_policy_id = parameters['default']
+                        default_node = self.policy_tree.get(default_policy_id)
+                        
+                        if not default_node:
+                            raise UndefinedAttributeException("default", f"Default policy '{default_policy_id}' not found in policy tree.")
+                            
+                        default_policy = default_node.policy_object
+                        if not default_policy:
+                            # If the default policy hasn't been processed yet, prioritize it
+                            if default_policy_id not in processed:
+                                # Move the default policy to the front of the processing queue
+                                to_process.insert(0, default_node)
+                                # Re-add the current node to process after the default
+                                to_process.append(node)
+                                continue
+                            else:
+                                # This should not happen now with our improved ordering
+                                raise UndefinedAttributeException("default", f"Default policy '{default_policy_id}' exists but has not been properly constructed.")
+                            
+                        node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
             
             # Mark as processed
             processed.add(node.policy_id)
@@ -434,13 +458,42 @@ class PolicyCreationListener(govdslListener):
                 default_ctx = ctx.default().policyContent().phasedPolicy().ID().getText()
             self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
+    def enterDefault(self, ctx:govdslParser.DefaultContext):
+        """When entering a default policy definition, ensure it's added to policy tree"""
+        # Get the current policy context (the LeaderDrivenPolicy)
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        # Extract the default policy ID
+        default_policy_id = None
+        policy_type = None
+        if ctx.policyContent().singlePolicy():
+            default_policy_id = ctx.policyContent().singlePolicy().ID().getText()
+            policy_type = ctx.policyContent().singlePolicy().policyType().getText()
+        elif ctx.policyContent().phasedPolicy():
+            default_policy_id = ctx.policyContent().phasedPolicy().ID().getText()
+            policy_type = "phased"
+        
+        # Create a node for this default policy
+        if default_policy_id and default_policy_id not in self.policy_tree:
+            node = PolicyNode(default_policy_id, policy_type)
+            self.policy_tree[default_policy_id] = node
+            # Mark this policy as referenced so it's not considered a root policy
+            self.referenced_policies.add(default_policy_id)
+            
+            # Set up parent-child relationship
+            if self.policy_stack:
+                current_policy = self.policy_stack[-1]
+                # Don't add as a child to avoid it being processed as a phase
+
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
         """Final policy construction using the tree structure"""
         # Build all objects from the tree (bottom-up)
         self._construct_policy_objects()
         
-        # Set the root policy as the main policy
-        root_policies = [node for node in self.policy_tree.values() if node.parent is None]
+        # Set the root policy as the main policy, excluding referenced policies
+        root_policies = [node for node in self.policy_tree.values() 
+                         if node.parent is None and node.policy_id not in self.referenced_policies]
 
         # Should never enter here, but just in case
         if len(root_policies) > 1:
@@ -449,5 +502,5 @@ class PolicyCreationListener(govdslListener):
         if root_policies:
             self.__policy = root_policies[0].policy_object
         else:
-            raise Exception("No root policy found. Grammar violation.") # Same as if
+            raise Exception("No root policy found. Grammar violation.")
 

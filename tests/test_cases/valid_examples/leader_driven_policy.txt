@@ -7,8 +7,6 @@ LeaderDrivenPolicy TestPolicy {
         Deadline reviewDeadline : 7 days
     Parameters:
         default MajorityPolicy defaultPolicy {
-            Scope:
-                Project TestProject from GitHub : owner/repo
             Participants:
                 Roles : Maintainers
             Conditions:

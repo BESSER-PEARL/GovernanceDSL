@@ -31,7 +31,7 @@ labels              : 'Labels' ':' ID (',' ID)* ;
 // TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 
 // Participants group
-participants        : 'Participants' ':' roles | individuals ;
+participants        : 'Participants' ':' (roles | individuals) ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individualID (',' individualID)* ;
@@ -47,7 +47,7 @@ timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY
 
 // Parameters group
-parameters          : 'Parameters' ':' votParams | default ;
+parameters          : 'Parameters' ':' (votParams | default) ;
 votParams           :  minVotes | ratio | (minVotes ',' ratio);
 minVotes            : 'minVotes' SIGNED_INT ; 
 ratio               : 'ratio' FLOAT ; 

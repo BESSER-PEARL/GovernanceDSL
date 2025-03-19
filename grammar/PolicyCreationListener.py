@@ -17,7 +17,7 @@ from utils.attribute_converters import (
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
-    PhasedPolicy, OrderEnum, hasRole
+    PhasedPolicy, OrderEnum, hasRole, Scope
 )
 
 from .govdslParser import govdslParser
@@ -136,7 +136,7 @@ class PolicyCreationListener(govdslListener):
             is_nested = hasattr(node, 'is_nested') and node.is_nested
             
             # Get scope based on node type
-            parent_scope = None
+            parent_scope = Scope(name="Placeholder", status=None)  # Placeholder scope
             if is_nested and node.parent:
                 # Inherit scope from parent for nested policies
                 if node.parent.policy_id in processed:
@@ -148,7 +148,7 @@ class PolicyCreationListener(govdslListener):
                     in_process.remove(node.policy_id)
                     continue
             else:
-                # For phases in phased policies, try to take scope from parent if it exists
+            # For phases in phased policies, try to take scope from parent if it exists
                 if node.parent and node.parent.policy_id in self.__policy_scopes_map:
                     parent_scope = self.__policy_scopes_map.get(node.parent.policy_id)
                 else:
@@ -177,9 +177,9 @@ class PolicyCreationListener(govdslListener):
                 participants = self.__policy_participants_map.get(node.policy_id)
                 conditions = self.__policy_conditions_map.get(node.policy_id)
                 base_policy = SinglePolicy(name=node.policy_id,
-                                                  conditions=conditions,
-                                                  participants=participants,
-                                                  scope=parent_scope)
+                                            conditions=conditions,
+                                            participants=participants,
+                                            scope=parent_scope)
                 match node.policy_type:
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id)
@@ -508,14 +508,13 @@ class PolicyCreationListener(govdslListener):
         # Extract default policy if present (for LeaderDrivenPolicy)
         elif ctx.default():
             default_ctx = None
-            if ctx.default().policyContent().singlePolicy():
-                default_ctx = ctx.default().policyContent().singlePolicy().ID().getText()
-            elif ctx.default().policyContent().phasedPolicy():
-                default_ctx = ctx.default().policyContent().phasedPolicy().ID().getText()
+            if ctx.default().nestedPolicy().nestedSinglePolicy():
+                default_ctx = ctx.default().nestedPolicy().nestedSinglePolicy().ID().getText()
+            elif ctx.default().nestedPolicy().nestedPhasedPolicy():
+                default_ctx = ctx.default().nestedPolicy().nestedPhasedPolicy().ID().getText()
             self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
     def enterDefault(self, ctx:govdslParser.DefaultContext):
-        """When entering a default policy definition, ensure it's added to policy tree"""
         # Get the current policy context (the LeaderDrivenPolicy)
         if not self.policy_stack:
             raise RuntimeError("Attempting to access policy stack, but it is empty.")
@@ -523,24 +522,33 @@ class PolicyCreationListener(govdslListener):
         # Extract the default policy ID
         default_policy_id = None
         policy_type = None
-        if ctx.policyContent().singlePolicy():
-            default_policy_id = ctx.policyContent().singlePolicy().ID().getText()
-            policy_type = ctx.policyContent().singlePolicy().policyType().getText()
-        elif ctx.policyContent().phasedPolicy():
-            default_policy_id = ctx.policyContent().phasedPolicy().ID().getText()
+        if ctx.nestedPolicy().nestedSinglePolicy():
+            default_policy_id = ctx.nestedPolicy().nestedSinglePolicy().ID().getText()
+            policy_type = ctx.nestedPolicy().nestedSinglePolicy().policyType().getText()
+        elif ctx.nestedPolicy().nestedPhasedPolicy():
+            default_policy_id = ctx.nestedPolicy().nestedPhasedPolicy().ID().getText()
             policy_type = "phased"
         
         # Create a node for this default policy
         if default_policy_id and default_policy_id not in self.policy_tree:
-            node = PolicyNode(default_policy_id, policy_type)
+            # Create the default policy node with is_nested=True to ensure scope inheritance
+            node = PolicyNode(default_policy_id, policy_type, is_nested=True)
+            # Add the is_default attribute to distinguish from phases
+            node.is_default = True
             self.policy_tree[default_policy_id] = node
+            
             # Mark this policy as referenced so it's not considered a root policy
             self.referenced_policies.add(default_policy_id)
             
-            # Set up parent-child relationship
+            # Set up parent-child relationship with the current policy
             if self.policy_stack:
                 current_policy = self.policy_stack[-1]
-                # Don't add as a child to avoid it being processed as a phase
+                current_policy.add_child(node)
+                
+                # Share the scope from parent to default policy
+                if current_policy.policy_id in self.__policy_scopes_map:
+                    parent_scope = self.__policy_scopes_map[current_policy.policy_id]
+                    self.__policy_scopes_map[default_policy_id] = parent_scope
 
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
         """Final policy construction using the tree structure"""
@@ -552,12 +560,10 @@ class PolicyCreationListener(govdslListener):
                          if node.parent is None and node.policy_id not in self.referenced_policies]
 
         # Should never enter here, but just in case
-        if len(root_policies) > 1:
-            raise Exception("No root policy found. Grammar violation.")       
-        else:            
-            self.__policy = root_policies[0].policy_object        
-            if root_policies:                
-                raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")    
+        if len(root_policies) != 1:
+            raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")        
+        
+        self.__policy = root_policies[0].policy_object
     
     def exitNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
         """When exiting a nested single policy, pop from stack"""

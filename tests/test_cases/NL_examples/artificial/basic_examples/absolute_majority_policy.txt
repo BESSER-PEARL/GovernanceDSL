@@ -1,0 +1,1 @@
+Any decision in this repository must be accepted by the Committers, with at least two votes casted and 70% of those in favor, in 7 days.

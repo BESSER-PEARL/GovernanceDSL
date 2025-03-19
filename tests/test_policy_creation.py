@@ -40,7 +40,7 @@ class TestPolicyCreation(unittest.TestCase):
                 
         return parser
 
-    def test_majority_rule_creation(self):
+    def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
         with open(self.test_cases_path / "valid_examples/majority_policy.txt", "r") as file:
             text = file.read()
@@ -113,9 +113,9 @@ class TestPolicyCreation(unittest.TestCase):
             with self.assertRaises(InvalidVotesException):
                 walker.walk(listener, tree)
 
-    def test_ratio_rule_creation(self):
-        """Test the creation of a policy with a ratio majority rule."""
-        with open(self.test_cases_path / "valid_examples/ratio_policy.txt", "r") as file:
+    def test_absolute_majority_policy_creation(self):
+        """Test the creation of a policy with an absolute majority policy."""
+        with open(self.test_cases_path / "valid_examples/absolute_majority_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()
@@ -154,8 +154,8 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.minVotes, 2)
             self.assertEqual(policy.ratio, 0.7)
 
-    def test_leader_driven_rule_creation(self):
-        """Test the creation of a policy with a leader driven rule."""
+    def test_leader_driven_policy_creation(self):
+        """Test the creation of a policy with a leader driven policy."""
         with open(self.test_cases_path / "valid_examples/leader_driven_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
@@ -213,19 +213,6 @@ class TestPolicyCreation(unittest.TestCase):
             # Test default policy parameters
             self.assertEqual(default_policy.minVotes, 2)
 
-    def test_invalid_rule_reference(self):
-        """Test the creation of a policy with an invalid rule reference."""
-        with open(self.test_cases_path / "invalid_examples/invalid_rule_reference.txt", "r") as file:
-            text = file.read()
-            parser = self.setup_parser(text)
-            tree = parser.policy()
-            
-            listener = PolicyCreationListener()
-            walker = ParseTreeWalker()
-            
-            with self.assertRaises(UndefinedAttributeException):
-                walker.walk(listener, tree)
-
     def test_phased_policy_creation(self):
         """Test the creation of a phased policy. Based on the HFC governance policy."""
         with open(self.test_cases_path / "valid_examples/hfc_governance.txt", "r") as file:
@@ -264,7 +251,7 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 1 rule content
             self.assertEqual(len(phase_1.rules), 1)
             rule = next(iter(phase_1.rules))
-            self.assertIsInstance(rule, MajorityRule)
+            self.assertIsInstance(rule, MajorityPolicy)
             self.assertEqual(rule.name, "majorityRule")
             
             # Test phase 1 rule's participants

@@ -1,14 +1,10 @@
-Policy TestPolicy {
-    Scopes:
+MajorityPolicy TestPolicy {
+    Scope:
         Activity TestActivity
     Participants:
         Roles : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
-        VotingCondition votCond : minVotes -1
-    Rules:
-        majorityRule : Majority {
-            people Committers
-            conditions reviewDeadline, votCond
-        }
+    Parameters:
+        minVotes -1
 }

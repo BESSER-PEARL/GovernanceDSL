@@ -1,9 +1,10 @@
 class PolicyNode:
-    def __init__(self, policy_id, policy_type):
+    def __init__(self, policy_id, policy_type, is_nested=False):
         self.policy_id = policy_id
         self.policy_type = policy_type  # "Majority", "AbsoluteMajority", "LeaderDriven" or "phased"
         self.parent = None
         self.children = []
+        self.is_nested = is_nested  # Track if this is a nested policy
         self.policy_object = None  # The actual policy object (set later)
         
     def add_child(self, child_node):

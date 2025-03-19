@@ -210,8 +210,6 @@ class SinglePolicy(Policy):
     
     @conditions.setter
     def conditions(self, conditions: set[Condition]):
-        if not conditions:  # Only check for None or empty
-            raise EmptySetException("Policy must have at least one condition")
         self.__conditions = conditions
 
     @property

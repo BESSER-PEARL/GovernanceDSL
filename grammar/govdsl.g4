@@ -1,16 +1,20 @@
 grammar govdsl;
 
 // Parser rules
-policy              : policyContent EOF ;
-policyContent       : singlePolicy | phasedPolicy ;
-singlePolicy        : policyType ID '{'  attributesSingle*  '}' ;
-policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' ;
-phasedPolicy        : 'PhasedPolicy' ID '{'  attributesPhased*  '}' ;
-attributesSingle    : scope | participants | conditions | parameters ;
-attributesPhased    : order | phases ;
+policy              : (topLevelSinglePolicy | topLevelPhasedPolicy) EOF ;
 
-// Scope group
-scope               : 'Scope' ':'  (project | activity | task) ;
+// Top-level policies (with scope)
+topLevelSinglePolicy: policyType ID '{' scope participants? conditions? parameters? '}' ;
+topLevelPhasedPolicy: 'PhasedPolicy' ID '{' scope order? phases '}' ;
+
+// Nested policies (no scope)
+nestedSinglePolicy  : policyType ID '{' participants? conditions? parameters? '}' ;
+nestedPhasedPolicy  : 'PhasedPolicy' ID '{' order? phases '}' ;
+
+policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' ;
+
+// Scope definition
+scope               : 'Scope' ':' (project | activity | task) ;
 project             : 'Project' ID ('from' platform ':' repoID)? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
@@ -47,13 +51,14 @@ parameters          : 'Parameters' ':' votParams | default ;
 votParams           :  minVotes | ratio | (minVotes ',' ratio);
 minVotes            : 'minVotes' SIGNED_INT ; 
 ratio               : 'ratio' FLOAT ; 
-default             : 'default' policyContent ; // LD TODO: Handle LD case later
+default             : 'default' nestedPolicy ;
 
 // Phased policy 
 order               : 'Order' ':' orderType ('{' orderMode '}')? ; 
 orderType           : 'Sequential' | 'Parallel' ;
 orderMode           : 'exclusive' | 'inclusive' ;
-phases              : 'Phases' '{' (singlePolicy | phasedPolicy)+ '}' ;
+phases              : 'Phases' '{' nestedPolicy+ '}' ;
+nestedPolicy        : nestedSinglePolicy | nestedPhasedPolicy ;
 
 // Lexer rules
 ID              : [a-zA-Z_][a-zA-Z0-9_]* ;

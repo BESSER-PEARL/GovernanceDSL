@@ -17,21 +17,39 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#policyContent.
-    def enterPolicyContent(self, ctx:govdslParser.PolicyContentContext):
+    # Enter a parse tree produced by govdslParser#topLevelSinglePolicy.
+    def enterTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#policyContent.
-    def exitPolicyContent(self, ctx:govdslParser.PolicyContentContext):
+    # Exit a parse tree produced by govdslParser#topLevelSinglePolicy.
+    def exitTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#singlePolicy.
-    def enterSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
+    # Enter a parse tree produced by govdslParser#topLevelPhasedPolicy.
+    def enterTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#singlePolicy.
-    def exitSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
+    # Exit a parse tree produced by govdslParser#topLevelPhasedPolicy.
+    def exitTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#nestedSinglePolicy.
+    def enterNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#nestedSinglePolicy.
+    def exitNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#nestedPhasedPolicy.
+    def enterNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#nestedPhasedPolicy.
+    def exitNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
         pass
 
 
@@ -41,33 +59,6 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#policyType.
     def exitPolicyType(self, ctx:govdslParser.PolicyTypeContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#phasedPolicy.
-    def enterPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#phasedPolicy.
-    def exitPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#attributesSingle.
-    def enterAttributesSingle(self, ctx:govdslParser.AttributesSingleContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#attributesSingle.
-    def exitAttributesSingle(self, ctx:govdslParser.AttributesSingleContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#attributesPhased.
-    def enterAttributesPhased(self, ctx:govdslParser.AttributesPhasedContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#attributesPhased.
-    def exitAttributesPhased(self, ctx:govdslParser.AttributesPhasedContext):
         pass
 
 
@@ -383,6 +374,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#phases.
     def exitPhases(self, ctx:govdslParser.PhasesContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#nestedPolicy.
+    def enterNestedPolicy(self, ctx:govdslParser.NestedPolicyContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#nestedPolicy.
+    def exitNestedPolicy(self, ctx:govdslParser.NestedPolicyContext):
         pass
 
 

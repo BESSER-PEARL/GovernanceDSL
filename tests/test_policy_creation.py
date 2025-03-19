@@ -237,83 +237,60 @@ class TestPolicyCreation(unittest.TestCase):
             # Test first phase
             phase_1 = next((p for p in phases if p.name == "phase_1"), None)
             self.assertIsNotNone(phase_1, "Phase 1 not found")
-            self.assertIsInstance(phase_1, SinglePolicy)
+            self.assertIsInstance(phase_1, MajorityPolicy)
             
             # Test phase 1 scope
-            self.assertEqual(len(phase_1.scopes), 1)
-            task_scope = next(iter(phase_1.scopes))
-            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
+            self.assertIsNotNone(phase_1.scope)
+            task_scope = phase_1.scope
+            self.assertIsInstance(task_scope, PullRequest)
             self.assertEqual(task_scope.name, "TestTask")
-            self.assertEqual(task_scope.action, ActionEnum.REVIEW)  # Changed status to action
+            self.assertEqual(task_scope.action, ActionEnum.REVIEW)
             # Check for labels
             self.assertIsNone(task_scope.labels)
             
-            # Test phase 1 rule content
-            self.assertEqual(len(phase_1.rules), 1)
-            rule = next(iter(phase_1.rules))
-            self.assertIsInstance(rule, MajorityPolicy)
-            self.assertEqual(rule.name, "majorityRule")
-            
-            # Test phase 1 rule's participants
-            self.assertEqual(len(rule.participants), 1)
-            participant = next(iter(rule.participants))
+            # Test phase 1 participants
+            self.assertEqual(len(phase_1.participants), 1)
+            participant = next(iter(phase_1.participants))
             self.assertIsInstance(participant, Role)
             self.assertEqual(participant.name, "Maintainers")
             
-            # Test phase 1 rule's conditions
-            self.assertEqual(len(rule.conditions), 2)
-            
-            # Test Deadline condition
-            deadline_conditions = {c for c in rule.conditions if isinstance(c, Deadline)}
-            self.assertEqual(len(deadline_conditions), 1)
-            deadline = next(iter(deadline_conditions))
+            # Test phase 1 conditions
+            self.assertEqual(len(phase_1.conditions), 1)
+            deadline = next(iter(phase_1.conditions))
+            self.assertIsInstance(deadline, Deadline)
             self.assertEqual(deadline.name, "reviewDeadline")
             self.assertEqual(deadline.offset, timedelta(days=14))
             
-            # Test VotingCondition condition
-            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
-            self.assertEqual(len(voting_conditions), 1)
-            vot_cond = next(iter(voting_conditions))
-            self.assertEqual(vot_cond.name, "votCond")
-            self.assertEqual(vot_cond.minVotes, 2)
-            self.assertEqual(vot_cond.ratio, 1)
+            # Test phase 1 voting parameters
+            self.assertEqual(phase_1.minVotes, 2)
+            self.assertEqual(phase_1.ratio, 1.0)
             
             # Test second phase
             phase_2 = next((p for p in phases if p.name == "phase_2"), None)
             self.assertIsNotNone(phase_2, "Phase 2 not found")
-            self.assertIsInstance(phase_2, SinglePolicy)
+            self.assertIsInstance(phase_2, MajorityPolicy)
             
             # Test phase 2 scope
-            self.assertEqual(len(phase_2.scopes), 1)
-            task_scope = next(iter(phase_2.scopes))
-            self.assertIsInstance(task_scope, PullRequest)  # Updated to PullRequest
+            self.assertIsNotNone(phase_2.scope)
+            task_scope = phase_2.scope
+            self.assertIsInstance(task_scope, PullRequest)
             self.assertEqual(task_scope.name, "TestTask2")
-            self.assertEqual(task_scope.action, ActionEnum.MERGE)  # Changed status to action
+            self.assertEqual(task_scope.action, ActionEnum.MERGE)
             # Check for labels
             self.assertIsNone(task_scope.labels)
             
-            # Test phase 2 rule content
-            self.assertEqual(len(phase_2.rules), 1)
-            rule = next(iter(phase_2.rules))
-            self.assertIsInstance(rule, MajorityRule)
-            self.assertEqual(rule.name, "majorityRule")
-            
-            # Test phase 2 rule's participants
-            self.assertEqual(len(rule.participants), 1)
-            participant = next(iter(rule.participants))
+            # Test phase 2 participants
+            self.assertEqual(len(phase_2.participants), 1)
+            participant = next(iter(phase_2.participants))
             self.assertIsInstance(participant, Role)
             self.assertEqual(participant.name, "Maintainers")
             
-            # Test phase 2 rule's conditions
-            self.assertEqual(len(rule.conditions), 1)
+            # Test phase 2 conditions (none in this phase)
+            self.assertEqual(len(phase_2.conditions), 0)
             
-            # Test VotingCondition condition
-            voting_conditions = {c for c in rule.conditions if isinstance(c, VotingCondition)}
-            self.assertEqual(len(voting_conditions), 1)
-            vot_cond = next(iter(voting_conditions))
-            self.assertEqual(vot_cond.name, "votCond")
-            self.assertEqual(vot_cond.minVotes, 1)
-            self.assertEqual(vot_cond.ratio, 1.0)
+            # Test phase 2 voting parameters
+            self.assertEqual(phase_2.minVotes, 1)
+            self.assertEqual(phase_2.ratio, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

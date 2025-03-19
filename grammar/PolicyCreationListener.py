@@ -78,7 +78,7 @@ class PolicyCreationListener(govdslListener):
         return matching_nodes
     
     def _construct_policy_objects(self):
-        """Construct policy objects from leaves to root"""
+        """Construct policy objects from leaves to root with scope inheritance"""
         # First identify all default policies that need to be processed first
         default_policies = set()
         for policy_id, parameters in self.__policy_parameters_map.items():
@@ -104,6 +104,19 @@ class PolicyCreationListener(govdslListener):
             if node.policy_id in processed:
                 continue
             
+            if node.is_nested and node.parent:
+                # Inherit scope from parent for nested policies
+                parent_scope = None
+                if node.parent.policy_id in processed:
+                    parent_scope = node.parent.policy_object.scope
+                else:
+                    # Parent not processed yet, requeue this node
+                    to_process.append(node)
+                    continue
+            else:
+                # Get scope directly from map for top-level policies
+                parent_scope = self.__policy_scopes_map.get(node.policy_id)
+                
             # phased policies
             if node.policy_type == "phased":
                 # Check if all children are processed
@@ -116,12 +129,12 @@ class PolicyCreationListener(govdslListener):
                 phases = {child.policy_object for child in node.children}
                 order = self.__policy_order_map.get(node.policy_id)
                 # Collect all scopes from direct children
-                combined_scopes = set()
+                combined_scopes = set() # TODO: Implement scope of phased policy
                 
                 node.policy_object = PhasedPolicy(name=node.policy_id,
                                             phases=phases,
                                             order=order,
-                                            scope=combined_scopes)
+                                            scope=parent_scope)  # Use the inherited/direct scope
             else: # single policy
                 participants = self.__policy_participants_map.get(node.policy_id)
                 scope = self.__policy_scopes_map.get(node.policy_id)
@@ -129,7 +142,7 @@ class PolicyCreationListener(govdslListener):
                 base_policy = SinglePolicy(name=node.policy_id,
                                                   conditions=conditions,
                                                   participants=participants,
-                                                  scope=scope)
+                                                  scope=parent_scope)  # Use the inherited/direct scope
                 match node.policy_type:
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id)
@@ -262,34 +275,43 @@ class PolicyCreationListener(govdslListener):
         # Associate the rule with the current policy
         self.__policy_rules_map[current_policy_id].add(rule)
 
-    def enterSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
-        """When entering a single policy, create a node and establish relationships"""
+    def enterTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
+        """When entering a top-level single policy, create a node"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, ctx.policyType().getText())
+        node = PolicyNode(policy_id, ctx.policyType().getText(), is_nested=False)
         self.policy_tree[policy_id] = node
-        
-        # If we're inside a phased policy, establish parent-child relationship
-        if self.phased_policy_stack:
-                        self.phased_policy_stack[-1].add_child(node)
-        
-        # Push to stack to track current context
         self.policy_stack.append(node)
-
-    def exitSinglePolicy(self, ctx:govdslParser.SinglePolicyContext):
-        """When exiting a single policy, pop from stack"""
-        self.policy_stack.pop()
-
-    def enterPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
-        """When entering a phased policy, create a node"""
+        
+    def enterNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
+        """When entering a nested single policy, create a node and establish parent-child relationship"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, ctx.policyType().getText())
+        node = PolicyNode(policy_id, ctx.policyType().getText(), is_nested=True)
         self.policy_tree[policy_id] = node
         
-        # If we're inside another phased policy, establish parent-child relationship
-        if self.phased_policy_stack:
-                        self.phased_policy_stack[-1].add_child(node)
+        # For nested policies, always establish parent-child relationship
+        if self.policy_stack:
+            self.policy_stack[-1].add_child(node)
+            
+        self.policy_stack.append(node)
+    
+    def enterTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
+        """When entering a top-level phased policy, create a node"""
+        policy_id = ctx.ID().getText()
+        node = PolicyNode(policy_id, "phased", is_nested=False)
+        self.policy_tree[policy_id] = node
+        self.policy_stack.append(node)
+        self.phased_policy_stack.append(node)
         
-        # Push to stack to track current context
+    def enterNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
+        """When entering a nested phased policy, create a node and establish parent-child relationship"""
+        policy_id = ctx.ID().getText()
+        node = PolicyNode(policy_id, "phased", is_nested=True)
+        self.policy_tree[policy_id] = node
+        
+        # For nested policies, always establish parent-child relationship
+        if self.policy_stack:
+            self.policy_stack[-1].add_child(node)
+            
         self.policy_stack.append(node)
         self.phased_policy_stack.append(node)
 
@@ -312,11 +334,6 @@ class PolicyCreationListener(govdslListener):
             self.__policy_order_map[current_policy_id] = order
         else:
             raise Exception("Handling of policy_stack is incorrect.")
-
-    def exitPhasedPolicy(self, ctx:govdslParser.PhasedPolicyContext):
-        """When exiting a phased policy, clear current and pop stack"""
-        self.phased_policy_stack.pop()
-        self.policy_stack.pop()
 
     def enterActivity(self, ctx:govdslParser.ActivityContext):
         activity_name = ctx.ID().getText()
@@ -503,4 +520,3 @@ class PolicyCreationListener(govdslListener):
             self.__policy = root_policies[0].policy_object
         else:
             raise Exception("No root policy found. Grammar violation.")
-

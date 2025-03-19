@@ -209,6 +209,14 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(default_condition, Deadline)
             self.assertEqual(default_condition.name, "reviewDeadline")
             self.assertEqual(default_condition.offset, timedelta(days=7))
+
+            # Test default policy scope
+            self.assertIsNotNone(default_policy.scope)
+            scope = default_policy.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
+            self.assertEqual(scope.project_id, "owner/repo")
             
             # Test default policy parameters
             self.assertEqual(default_policy.minVotes, 2)

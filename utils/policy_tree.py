@@ -1,14 +1,16 @@
 class PolicyNode:
+    """A node in the policy tree structure."""
+    
     def __init__(self, policy_id, policy_type, is_nested=False):
         self.policy_id = policy_id
-        self.policy_type = policy_type  # "Majority", "AbsoluteMajority", "LeaderDriven" or "phased"
+        self.policy_type = policy_type
+        self.policy_object = None
         self.parent = None
         self.children = []
-        self.is_nested = is_nested  # Track if this is a nested policy
-        self.policy_object = None  # The actual policy object (set later)
-        
+        self.is_nested = is_nested
+    
     def add_child(self, child_node):
-        """Add a child policy node and establish the parent-child relationship"""
+        """Add a child node to this node."""
         self.children.append(child_node)
         child_node.parent = self
         

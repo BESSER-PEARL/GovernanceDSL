@@ -78,7 +78,7 @@ class PolicyCreationListener(govdslListener):
         return matching_nodes
     
     def _construct_policy_objects(self):
-        """Construct policy objects from leaves to root with scope inheritance"""
+        """Construct policy objects from leaves to root with cycle detection"""
         # First identify all default policies that need to be processed first
         default_policies = set()
         for policy_id, parameters in self.__policy_parameters_map.items():
@@ -92,10 +92,15 @@ class PolicyCreationListener(govdslListener):
                 
         # Process nodes in dependency order (defaults first, then leaves, then up the tree)
         processed = set()
+        in_process = set()  # Track nodes currently being processed to detect cycles
+        requeue_count = {}  # Track how many times we've requeued each node
+        
         # First process all default policies
         to_process = [self.policy_tree[pid] for pid in default_policies if pid in self.policy_tree]
         # Then add leaf nodes that aren't default policies
         to_process.extend([node for node in leaves if node.policy_id not in default_policies])
+        
+        max_requeue = 100  # Safety limit to prevent infinite loops
         
         while to_process:
             node = to_process.pop(0)
@@ -104,45 +109,77 @@ class PolicyCreationListener(govdslListener):
             if node.policy_id in processed:
                 continue
             
-            if node.is_nested and node.parent:
+            # Check for processing cycle
+            if node.policy_id in in_process:
+                # Detected a cycle - handle by force-constructing with placeholder scope
+                print(f"WARNING: Detected cycle involving policy '{node.policy_id}'. Using placeholder scope.")
+                # Handle based on policy type - simplified for demonstration
+                node.policy_object = SinglePolicy(name=node.policy_id, 
+                                                 conditions=self.__policy_conditions_map.get(node.policy_id, set()), 
+                                                 participants=self.__policy_participants_map.get(node.policy_id, set()),
+                                                 scope=None)  # Use None as fallback
+                processed.add(node.policy_id)
+                in_process.remove(node.policy_id)
+                continue
+                
+            # Track that we're processing this node
+            in_process.add(node.policy_id)
+            
+            # Increment requeue count for this node
+            requeue_count[node.policy_id] = requeue_count.get(node.policy_id, 0) + 1
+            
+            # Safety check to prevent infinite loops
+            if requeue_count[node.policy_id] > max_requeue:
+                raise RuntimeError(f"Policy processing appears to be in an infinite loop. Check for circular dependencies involving '{node.policy_id}'")
+
+            # Handle missing is_nested attribute safely
+            is_nested = hasattr(node, 'is_nested') and node.is_nested
+            
+            # Get scope based on node type
+            parent_scope = None
+            if is_nested and node.parent:
                 # Inherit scope from parent for nested policies
-                parent_scope = None
                 if node.parent.policy_id in processed:
                     parent_scope = node.parent.policy_object.scope
                 else:
                     # Parent not processed yet, requeue this node
                     to_process.append(node)
+                    # Remove from in_process since we're deferring it
+                    in_process.remove(node.policy_id)
                     continue
             else:
-                # Get scope directly from map for top-level policies
-                parent_scope = self.__policy_scopes_map.get(node.policy_id)
-                
+                # For phases in phased policies, try to take scope from parent if it exists
+                if node.parent and node.parent.policy_id in self.__policy_scopes_map:
+                    parent_scope = self.__policy_scopes_map.get(node.parent.policy_id)
+                else:
+                    # Get scope directly from map for top-level policies
+                    parent_scope = self.__policy_scopes_map.get(node.policy_id)
+
             # phased policies
             if node.policy_type == "phased":
                 # Check if all children are processed
                 if not all(child.policy_id in processed for child in node.children):
                     # Put back in queue and process later
                     to_process.append(node)
+                    # Remove from in_process since we're deferring it
+                    in_process.remove(node.policy_id)
                     continue
                 
                 # Get phases (child policies) and create phased policy
                 phases = {child.policy_object for child in node.children}
                 order = self.__policy_order_map.get(node.policy_id)
-                # Collect all scopes from direct children
-                combined_scopes = set() # TODO: Implement scope of phased policy
                 
                 node.policy_object = PhasedPolicy(name=node.policy_id,
                                             phases=phases,
                                             order=order,
-                                            scope=parent_scope)  # Use the inherited/direct scope
+                                            scope=parent_scope)
             else: # single policy
                 participants = self.__policy_participants_map.get(node.policy_id)
-                scope = self.__policy_scopes_map.get(node.policy_id)
                 conditions = self.__policy_conditions_map.get(node.policy_id)
                 base_policy = SinglePolicy(name=node.policy_id,
                                                   conditions=conditions,
                                                   participants=participants,
-                                                  scope=parent_scope)  # Use the inherited/direct scope
+                                                  scope=parent_scope)
                 match node.policy_type:
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id)
@@ -169,15 +206,17 @@ class PolicyCreationListener(govdslListener):
                                 to_process.insert(0, default_node)
                                 # Re-add the current node to process after the default
                                 to_process.append(node)
+                                # Remove from in_process since we're deferring it
+                                in_process.remove(node.policy_id)
                                 continue
                             else:
-                                # This should not happen now with our improved ordering
                                 raise UndefinedAttributeException("default", f"Default policy '{default_policy_id}' exists but has not been properly constructed.")
                             
                         node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
             
-            # Mark as processed
+            # Mark as processed and remove from in-process
             processed.add(node.policy_id)
+            in_process.remove(node.policy_id)
             
             # Add parent to processing queue if exists
             if node.parent and node.parent.policy_id not in processed:
@@ -514,9 +553,26 @@ class PolicyCreationListener(govdslListener):
 
         # Should never enter here, but just in case
         if len(root_policies) > 1:
-            raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")
+            raise Exception("No root policy found. Grammar violation.")       
+        else:            
+            self.__policy = root_policies[0].policy_object        
+            if root_policies:                
+                raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")    
     
-        if root_policies:
-            self.__policy = root_policies[0].policy_object
-        else:
-            raise Exception("No root policy found. Grammar violation.")
+    def exitNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
+        """When exiting a nested single policy, pop from stack"""
+        self.policy_stack.pop()
+
+    def exitNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
+        """When exiting a nested phased policy, clear current and pop stack"""
+        self.phased_policy_stack.pop()
+        self.policy_stack.pop()
+
+    def exitTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
+        """When exiting a top-level single policy, pop from stack"""
+        self.policy_stack.pop()
+
+    def exitTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
+        """When exiting a top-level phased policy, clear current and pop stack"""
+        self.phased_policy_stack.pop()
+        self.policy_stack.pop()

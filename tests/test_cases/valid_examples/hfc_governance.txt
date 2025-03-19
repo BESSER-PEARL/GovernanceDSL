@@ -1,13 +1,13 @@
 PhasedPolicy phasedPolicy {
+    Scope:
+        Task TestTask2 : Pull request {
+            Action : merge
+        }
     Order : Sequential {
         exclusive
     }
     Phases {
         MajorityPolicy phase_1 {
-            Scope:
-                Task TestTask : Pull request {
-                    Action : review
-                }
             Participants:
                 Roles : Maintainers
             Conditions:
@@ -16,10 +16,6 @@ PhasedPolicy phasedPolicy {
                 minVotes 2, ratio 1.0
         }
         MajorityPolicy phase_2 {
-            Scope:
-                Task TestTask2 : Pull request {
-                    Action : merge
-                }
             Participants:
                 Roles : Maintainers
             Parameters:

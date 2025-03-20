@@ -17,10 +17,10 @@ from utils.exceptions import (
 from metamodel.governance import (
     SinglePolicy, Activity, Task, 
     Role, Deadline, MajorityPolicy, 
-    StatusEnum, PlatformEnum, Project, Individual, PhasedPolicy, OrderEnum,
+    StatusEnum, Project, Individual, PhasedPolicy, OrderEnum,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy 
 )
-from utils.gh_extension import ActionEnum, PullRequest
+from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
 
 class TestPolicyCreation(unittest.TestCase):
     def setUp(self):
@@ -62,10 +62,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Project)
+            self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProjectGH")
-            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(scope.project_id, "owner/repo")
+            self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test participants
             self.assertEqual(len(policy.participants), 2)
@@ -146,10 +145,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Project)
+            self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProject")
-            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(scope.project_id, "owner/repo")
+            self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test participants
             self.assertEqual(len(policy.participants), 1)
@@ -187,10 +185,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Project)
+            self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProject")
-            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(scope.project_id, "owner/repo")
+            self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test leader participants
             self.assertEqual(len(policy.participants), 1)
@@ -227,10 +224,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test default policy scope
             self.assertIsNotNone(default_policy.scope)
             scope = default_policy.scope
-            self.assertIsInstance(scope, Project)
+            self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProject")
-            self.assertEqual(scope.platform, PlatformEnum.GITHUB)
-            self.assertEqual(scope.project_id, "owner/repo")
+            self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test default policy parameters
             self.assertEqual(default_policy.minVotes, 2)
@@ -264,11 +260,15 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 1 scope
             self.assertIsNotNone(phase_1.scope)
             task_scope = phase_1.scope
-            self.assertIsInstance(task_scope, PullRequest)
+            self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "TestTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            # Check the GitHub element
+            self.assertIsNotNone(task_scope.element)
+            self.assertIsInstance(task_scope.element, PullRequest)
+            self.assertEqual(task_scope.element.name, "TestTask")
             # Check for labels
-            self.assertIsNone(task_scope.labels)
+            self.assertIsNone(task_scope.element.labels)
             
             # Test phase 1 participants
             self.assertEqual(len(phase_1.participants), 1)
@@ -295,11 +295,15 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 2 scope
             self.assertIsNotNone(phase_2.scope)
             task_scope = phase_2.scope
-            self.assertIsInstance(task_scope, PullRequest)
+            self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "TestTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            # Check the GitHub element
+            self.assertIsNotNone(task_scope.element)
+            self.assertIsInstance(task_scope.element, PullRequest)
+            self.assertEqual(task_scope.element.name, "TestTask")
             # Check for labels
-            self.assertIsNone(task_scope.labels)
+            self.assertIsNone(task_scope.element.labels)
             
             # Test phase 2 participants
             self.assertEqual(len(phase_2.participants), 1)

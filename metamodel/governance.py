@@ -8,9 +8,6 @@ from utils.exceptions import (
 )
 
 # Enums
-class PlatformEnum(Enum):
-    GITHUB = 1
-
 class StatusEnum(Enum):
     COMPLETED = 1
     ACCEPTED = 2
@@ -37,29 +34,9 @@ class Scope(NamedElement):
         self.__status = status
 
 class Project(Scope):
-    def __init__(self, name: str, status: StatusEnum, platform: PlatformEnum, project_id: str):
+    def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
-        self.platform = platform
-        self.project_id = project_id
     
-    @property
-    def platform(self) -> PlatformEnum:
-        return self.__platform
-    
-    @platform.setter
-    def platform(self, platform: PlatformEnum):
-        if not isinstance(platform, PlatformEnum):
-            raise UndefinedAttributeException("platform", platform)
-        self.__platform = platform
-    
-    @property
-    def project_id(self) -> str:
-        return self.__project_id
-    
-    @project_id.setter
-    def project_id(self, project_id: str):
-        self.__project_id = project_id
-
 class Activity(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)

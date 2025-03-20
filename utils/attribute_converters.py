@@ -1,5 +1,5 @@
 from datetime import timedelta
-from metamodel.governance import StatusEnum, PlatformEnum
+from metamodel.governance import StatusEnum
 from utils.gh_extension import ActionEnum
 
 def str_to_status_enum(status_str: str) -> StatusEnum:
@@ -19,13 +19,6 @@ def str_to_action_enum(action_str: str) -> ActionEnum:
         'all': ActionEnum.ALL
     }
     return action_map.get(action_str.lower())
-
-def str_to_platform_enum(platform_str: str) -> PlatformEnum:
-    """Convert a string to a PlatformEnum value."""
-    platform_map = {
-        'github': PlatformEnum.GITHUB
-    }
-    return platform_map.get(platform_str.lower())
 
 def deadline_to_timedelta(value: int, unit: str) -> timedelta:
     """Convert a deadline value and unit to a timedelta."""

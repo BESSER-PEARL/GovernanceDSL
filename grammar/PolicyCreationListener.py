@@ -8,18 +8,16 @@ from utils.exceptions import (
     UndefinedAttributeException
 )
 from utils.gh_extension import (
-    ActionEnum, Label, PullRequest
+    ActionEnum, Label, PullRequest, Issue, Patch, Repository, GitHubElement
 )
 from utils.attribute_converters import (
-    str_to_status_enum, str_to_action_enum, deadline_to_timedelta,
-    str_to_platform_enum
+    str_to_status_enum, str_to_action_enum, deadline_to_timedelta
 )
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     PhasedPolicy, OrderEnum, hasRole, Scope
 )
-
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
 
@@ -354,35 +352,68 @@ class PolicyCreationListener(govdslListener):
         
         task = None
         
-        # That's the gh_extension part
+        # Handle GitHub extension elements
         if ctx.taskType():
             task_type_str = ctx.taskType().getText().lower()
-            if ctx.taskContent().status():
-                raise UndefinedAttributeException("action", "This task must have an action defined.")
-            if ctx.taskContent().action():
-                action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
-                labels = None
-            else: # Action with labels
-                action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
+            
+            # Create the GitHub element (PullRequest or Issue)
+            gh_element = None
+            labels = None
+            
+            # Process labels if present
+            if ctx.taskContent().actionWithLabels():
                 label_count = len(ctx.taskContent().actionWithLabels().labels().ID())
                 labels = set()
                 for i in range(label_count):
                     l_id = ctx.taskContent().actionWithLabels().labels().ID(i).getText()
                     labels.add(Label(name=l_id))
-            match task_type_str:
-                case "pull request":
-                    task = PullRequest(name=task_name, status=status, action=action, labels=labels) # TODO: Implement further task types
+            
+            # Create the appropriate GitHub element based on task type
+            if task_type_str == "pull request":
+                gh_element = PullRequest(name=task_name, labels=labels)
+            elif task_type_str == "issue":
+                gh_element = Issue(name=task_name, labels=labels)
+            
+            # Extract action for Patch
+            action = None
+            if ctx.taskContent().action():
+                action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
+            elif ctx.taskContent().actionWithLabels():
+                action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
+            else:
+                raise UndefinedAttributeException("action", "This task must have an action defined.")
+            
+            # Create the Patch object that references the GitHub element
+            if gh_element:
+                task = Patch(name=task_name, status=status, action=action, element=gh_element)
+            else:
+                # Fallback if no matching GitHub element type
+                task = Task(name=task_name, status=status)
         else:
+            # For regular tasks
             task = Task(name=task_name, status=status)
+            
         self._register_scope_with_current_policy(task)
     
     def enterProject(self, ctx:govdslParser.ProjectContext):
         project_name = ctx.ID().getText()
-        platform_str = ctx.platform().getText()
-        platform_enum = str_to_platform_enum(platform_str)
-        repo_id = ctx.repoID().getText()
-        project = Project(name=project_name, platform=platform_enum, project_id=repo_id, status=None) # TODO: relationship with activities, activities=set(self.__project_activities.values())
-        self._register_scope_with_current_policy(project)
+
+        if ctx.platform():
+            platform_str = ctx.platform().getText() # This will be used when we define further platforms
+            id_tokens = ctx.repoID().ID()
+            if len(id_tokens) > 1:  # If there are two IDs (owner/repo format)
+                owner = id_tokens[0].getText()
+                repo = id_tokens[1].getText()
+                repo_id = f"{owner}/{repo}"
+            else:  # If there's just one ID it means it is the user or organization
+                repo_id = id_tokens[0].getText()
+            status = None  # Status is usually set later
+            repository = Repository(name=project_name, status=status, repo_id=repo_id)
+        
+            self._register_scope_with_current_policy(repository)
+        else:
+            project = Project(name=project_name, status=None)
+            self._register_scope_with_current_policy(project)
         
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 

@@ -3,7 +3,7 @@ MajorityPolicy TestPolicy {
         Project TestProjectGH from GitHub : owner/repo
     Participants:
         Roles : Maintainer
-        Individuals : Joe as Maintainer        
+        Individuals : Joe as Maintainer with confidence 0.7    
     Conditions:
         Deadline reviewDeadline : 14 days
     Parameters:

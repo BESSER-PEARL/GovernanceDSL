@@ -35,8 +35,9 @@ participants        : 'Participants' ':' ((roles individuals?) | (individuals ro
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individualID (',' individualID)* ;
-individualID        : participantID hasRole? ;
+individualID        : participantID hasRole? confidence?;
 hasRole             : 'as' participantID ;
+confidence          : 'with confidence' FLOAT ;
 
 // Conditions group
 conditions          : 'Conditions' ':'  deadline? ;

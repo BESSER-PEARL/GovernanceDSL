@@ -1,0 +1,8 @@
+MajorityPolicy TestPolicy {
+    Scope:
+        Activity dev
+    Participants:
+        Individuals : Joe as Maintainer with confidence 1.7    
+    Conditions:
+        Deadline reviewDeadline : 14 days
+}

@@ -12,7 +12,7 @@ from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
     InvalidVotesException, UndefinedAttributeException, 
-    EmptySetException
+    EmptySetException, InvalidValueException
 )
 from metamodel.governance import (
     SinglePolicy, Activity, Task, 
@@ -75,6 +75,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(individuals), 1)
             individual = next(iter(individuals))
             self.assertEqual(individual.name, "Joe")
+            self.assertEqual(individual.confidence, 0.7)
             
             # Test role assignment for individual
             self.assertIsNotNone(individual.role)
@@ -111,6 +112,19 @@ class TestPolicyCreation(unittest.TestCase):
             walker = ParseTreeWalker()
             
             with self.assertRaises(InvalidVotesException):
+                walker.walk(listener, tree)
+                
+    def test_invalid_confidence(self):
+        """Test the creation of a policy with an individual having confidence value outside [0,1]."""
+        with open(self.test_cases_path / "invalid_examples/invalid_confidence.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(InvalidValueException):
                 walker.walk(listener, tree)
 
     def test_absolute_majority_policy_creation(self):

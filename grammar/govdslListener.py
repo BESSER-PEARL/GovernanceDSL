@@ -242,6 +242,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#confidence.
+    def enterConfidence(self, ctx:govdslParser.ConfidenceContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#confidence.
+    def exitConfidence(self, ctx:govdslParser.ConfidenceContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#conditions.
     def enterConditions(self, ctx:govdslParser.ConditionsContext):
         pass

@@ -422,6 +422,9 @@ class PolicyCreationListener(govdslListener):
                         individual.role = role_assignment
                     else:
                         raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Scope must be defined before Participants).")
+                    
+            if i.confidence():
+                individual.confidence = float(i.confidence().FLOAT().getText())
               
             self._register_participant_with_current_policy(individual)
             

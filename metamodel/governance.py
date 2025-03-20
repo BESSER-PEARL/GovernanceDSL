@@ -182,8 +182,8 @@ class Deadline(Condition):
 
 # Policy hierarchy
 class Policy(NamedElement):
-    """A Policy must have at least one scope."""
-    def __init__(self, name: str, scope: Scope):
+    """A Policy must have a scope, but it can be set after initialization."""
+    def __init__(self, name: str, scope: Scope = None):
         super().__init__(name)
         self.scope = scope
     
@@ -193,13 +193,16 @@ class Policy(NamedElement):
     
     @scope.setter
     def scope(self, scope: Scope):
-        if not scope:  # Only check for None or empty
-            raise EmptySetException("Policy must have at least one scope")
         self.__scope = scope
+    
+    def validate(self):
+        """Validates that the policy has all required properties before execution."""
+        if not self.scope:
+            raise EmptySetException("Policy must have a scope before execution")
 
 
 class SinglePolicy(Policy):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope = None):
         super().__init__(name, scope)
         self.conditions = conditions
         self.participants = participants
@@ -299,8 +302,11 @@ class AbsoluteMajorityPolicy(VotingPolicy):
 class LeaderDrivenPolicy(SinglePolicy):
     """LeaderDrivenPolicy extends SinglePolicy and references another SinglePolicy as default"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scope: Scope, default: SinglePolicy):
+                 scope: Scope = None, default: SinglePolicy = None):
+        # Initialize default first to avoid issues during object creation
+        self.__default = None
         super().__init__(name, conditions, participants, scope)
+        # Now set default through the property setter
         self.default = default
     
     @classmethod
@@ -319,14 +325,32 @@ class LeaderDrivenPolicy(SinglePolicy):
         if not default:
             raise EmptySetException("LeaderDrivenPolicy must have a default policy")
         self.__default = default
+        # Only propagate scope after default is set
+        if self.scope:
+            self.default.scope = self.scope
+    
+    def propagate_scope(self):
+        """Propagates the current scope to the default policy if set."""
+        if self.scope and hasattr(self, '_LeaderDrivenPolicy__default') and self.__default:
+            self.default.scope = self.scope
+    
+    @property
+    def scope(self) -> Scope:
+        return super().scope
+    
+    @scope.setter
+    def scope(self, scope: Scope):
+        super(LeaderDrivenPolicy, type(self)).scope.fset(self, scope)
+        self.propagate_scope()
 
 
 class PhasedPolicy(Policy):
     """A PhasedPolicy must have at least one phase."""
-    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scope: Scope):
+    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scope: Scope = None):
         super().__init__(name, scope)
-        self.phases = phases # TODO: Ordered set
+        self.phases = phases
         self.order = order
+        self.propagate_scope()
     
     @property
     def phases(self) -> set[Policy]:
@@ -347,3 +371,18 @@ class PhasedPolicy(Policy):
         if not isinstance(order, OrderEnum):
             raise UndefinedAttributeException("order", order)
         self.__order = order
+    
+    def propagate_scope(self):
+        """Propagates the current scope to all child phases if set."""
+        if self.scope and hasattr(self, '_PhasedPolicy__phases'):
+            for phase in self.phases:
+                phase.scope = self.scope
+    
+    @property
+    def scope(self) -> Scope:
+        return super().scope
+
+    @scope.setter
+    def scope(self, scope: Scope):
+        super(PhasedPolicy, type(self)).scope.fset(self, scope)
+        self.propagate_scope()

@@ -78,10 +78,10 @@ class PolicyCreationListener(govdslListener):
         return matching_nodes
     
     def _construct_policy_objects(self):
-        """Construct policy objects from leaves to root with cycle detection"""
+        """Construct policy objects from leaves to root using the new scope propagation approach"""
         # First identify all default policies that need to be processed first
         default_policies = set()
-        for policy_id, parameters in self.__policy_parameters_map.items():
+        for _, parameters in self.__policy_parameters_map.items():
             if 'default' in parameters:
                 default_policy_id = parameters['default']
                 if default_policy_id in self.policy_tree:
@@ -92,15 +92,11 @@ class PolicyCreationListener(govdslListener):
                 
         # Process nodes in dependency order (defaults first, then leaves, then up the tree)
         processed = set()
-        in_process = set()  # Track nodes currently being processed to detect cycles
-        requeue_count = {}  # Track how many times we've requeued each node
         
         # First process all default policies
         to_process = [self.policy_tree[pid] for pid in default_policies if pid in self.policy_tree]
         # Then add leaf nodes that aren't default policies
         to_process.extend([node for node in leaves if node.policy_id not in default_policies])
-        
-        max_requeue = 100  # Safety limit to prevent infinite loops
         
         while to_process:
             node = to_process.pop(0)
@@ -109,60 +105,15 @@ class PolicyCreationListener(govdslListener):
             if node.policy_id in processed:
                 continue
             
-            # Check for processing cycle
-            if node.policy_id in in_process:
-                # Detected a cycle - handle by force-constructing with placeholder scope
-                print(f"WARNING: Detected cycle involving policy '{node.policy_id}'. Using placeholder scope.")
-                # Handle based on policy type - simplified for demonstration
-                node.policy_object = SinglePolicy(name=node.policy_id, 
-                                                 conditions=self.__policy_conditions_map.get(node.policy_id, set()), 
-                                                 participants=self.__policy_participants_map.get(node.policy_id, set()),
-                                                 scope=None)  # Use None as fallback
-                processed.add(node.policy_id)
-                in_process.remove(node.policy_id)
-                continue
-                
-            # Track that we're processing this node
-            in_process.add(node.policy_id)
+            # Get scope - now we can use None initially and set it later
+            scope = self.__policy_scopes_map.get(node.policy_id)
             
-            # Increment requeue count for this node
-            requeue_count[node.policy_id] = requeue_count.get(node.policy_id, 0) + 1
-            
-            # Safety check to prevent infinite loops
-            if requeue_count[node.policy_id] > max_requeue:
-                raise RuntimeError(f"Policy processing appears to be in an infinite loop. Check for circular dependencies involving '{node.policy_id}'")
-
-            # Handle missing is_nested attribute safely
-            is_nested = hasattr(node, 'is_nested') and node.is_nested
-            
-            # Get scope based on node type
-            parent_scope = Scope(name="Placeholder", status=None)  # Placeholder scope
-            if is_nested and node.parent:
-                # Inherit scope from parent for nested policies
-                if node.parent.policy_id in processed:
-                    parent_scope = node.parent.policy_object.scope
-                else:
-                    # Parent not processed yet, requeue this node
-                    to_process.append(node)
-                    # Remove from in_process since we're deferring it
-                    in_process.remove(node.policy_id)
-                    continue
-            else:
-            # For phases in phased policies, try to take scope from parent if it exists
-                if node.parent and node.parent.policy_id in self.__policy_scopes_map:
-                    parent_scope = self.__policy_scopes_map.get(node.parent.policy_id)
-                else:
-                    # Get scope directly from map for top-level policies
-                    parent_scope = self.__policy_scopes_map.get(node.policy_id)
-
             # phased policies
             if node.policy_type == "phased":
                 # Check if all children are processed
                 if not all(child.policy_id in processed for child in node.children):
                     # Put back in queue and process later
                     to_process.append(node)
-                    # Remove from in_process since we're deferring it
-                    in_process.remove(node.policy_id)
                     continue
                 
                 # Get phases (child policies) and create phased policy
@@ -172,55 +123,68 @@ class PolicyCreationListener(govdslListener):
                 node.policy_object = PhasedPolicy(name=node.policy_id,
                                             phases=phases,
                                             order=order,
-                                            scope=parent_scope)
+                                            scope=scope)
+                
+                # Scope will be automatically propagated to children by the PhasedPolicy class
+            
             else: # single policy
-                participants = self.__policy_participants_map.get(node.policy_id)
-                conditions = self.__policy_conditions_map.get(node.policy_id)
+                participants = self.__policy_participants_map.get(node.policy_id, set())
+                conditions = self.__policy_conditions_map.get(node.policy_id, set())
                 base_policy = SinglePolicy(name=node.policy_id,
                                             conditions=conditions,
                                             participants=participants,
-                                            scope=parent_scope)
+                                            scope=scope)
+                
                 match node.policy_type:
                     case "MajorityPolicy":
-                        parameters = self.__policy_parameters_map.get(node.policy_id)
-                        node.policy_object = MajorityPolicy.from_policy(base_policy, minVotes=parameters.get('minVotes'), ratio=parameters.get('ratio'))
+                        parameters = self.__policy_parameters_map.get(node.policy_id, {})
+                        node.policy_object = MajorityPolicy.from_policy(base_policy, 
+                                                                       minVotes=parameters.get('minVotes'), 
+                                                                       ratio=parameters.get('ratio'))
+                    
                     case "AbsoluteMajorityPolicy":
-                        parameters = self.__policy_parameters_map.get(node.policy_id)
-                        node.policy_object = AbsoluteMajorityPolicy.from_policy(base_policy, minVotes=parameters.get('minVotes'), ratio=parameters.get('ratio'))
+                        parameters = self.__policy_parameters_map.get(node.policy_id, {})
+                        node.policy_object = AbsoluteMajorityPolicy.from_policy(base_policy, 
+                                                                               minVotes=parameters.get('minVotes'), 
+                                                                               ratio=parameters.get('ratio'))
+                    
                     case "LeaderDrivenPolicy":
-                        parameters = self.__policy_parameters_map.get(node.policy_id)
+                        parameters = self.__policy_parameters_map.get(node.policy_id, {})
                         if 'default' not in parameters:
-                            raise UndefinedAttributeException("default", message="LeaderDrivenPolicy must have a default policy defined.")
+                            raise UndefinedAttributeException("default", 
+                                                            message="LeaderDrivenPolicy must have a default policy defined.")
                         
                         default_policy_id = parameters['default']
                         default_node = self.policy_tree.get(default_policy_id)
                         
                         if not default_node:
-                            raise UndefinedAttributeException("default", f"Default policy '{default_policy_id}' not found in policy tree.")
+                            raise UndefinedAttributeException("default", 
+                                                            f"Default policy '{default_policy_id}' not found in policy tree.")
+                        
+                        # If the default policy hasn't been processed yet, prioritize it
+                        if default_policy_id not in processed:
+                            # Move the default policy to the front of the processing queue
+                            to_process.insert(0, default_node)
+                            # Re-add the current node to process after the default
+                            to_process.append(node)
+                            continue
                             
                         default_policy = default_node.policy_object
-                        if not default_policy:
-                            # If the default policy hasn't been processed yet, prioritize it
-                            if default_policy_id not in processed:
-                                # Move the default policy to the front of the processing queue
-                                to_process.insert(0, default_node)
-                                # Re-add the current node to process after the default
-                                to_process.append(node)
-                                # Remove from in_process since we're deferring it
-                                in_process.remove(node.policy_id)
-                                continue
-                            else:
-                                raise UndefinedAttributeException("default", f"Default policy '{default_policy_id}' exists but has not been properly constructed.")
-                            
                         node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
+                        
+                        # Scope will be automatically propagated to default policy by the LeaderDrivenPolicy class
             
-            # Mark as processed and remove from in-process
+            # Mark as processed
             processed.add(node.policy_id)
-            in_process.remove(node.policy_id)
             
-            # Add parent to processing queue if exists
+            # Add parent to processing queue if exists and not processed
             if node.parent and node.parent.policy_id not in processed:
                 to_process.append(node.parent)
+        
+        # Validate all policies to ensure scopes are set correctly
+        for node in self.policy_tree.values():
+            if hasattr(node, 'policy_object') and node.policy_object:
+                node.policy_object.validate()
     
     def _register_scope_with_current_policy(self, scope_obj):
         """

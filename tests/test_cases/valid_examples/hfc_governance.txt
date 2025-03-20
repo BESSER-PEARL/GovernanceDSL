@@ -1,6 +1,6 @@
 PhasedPolicy phasedPolicy {
     Scope:
-        Task TestTask2 : Pull request {
+        Task TestTask : Pull request {
             Action : merge
         }
     Order : Sequential {

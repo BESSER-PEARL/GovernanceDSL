@@ -252,7 +252,7 @@ class TestPolicyCreation(unittest.TestCase):
             task_scope = phase_1.scope
             self.assertIsInstance(task_scope, PullRequest)
             self.assertEqual(task_scope.name, "TestTask")
-            self.assertEqual(task_scope.action, ActionEnum.REVIEW)
+            self.assertEqual(task_scope.action, ActionEnum.MERGE)
             # Check for labels
             self.assertIsNone(task_scope.labels)
             
@@ -282,7 +282,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(phase_2.scope)
             task_scope = phase_2.scope
             self.assertIsInstance(task_scope, PullRequest)
-            self.assertEqual(task_scope.name, "TestTask2")
+            self.assertEqual(task_scope.name, "TestTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
             # Check for labels
             self.assertIsNone(task_scope.labels)

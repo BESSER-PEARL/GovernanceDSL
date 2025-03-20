@@ -31,7 +31,7 @@ labels              : 'Labels' ':' ID (',' ID)* ;
 // TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 
 // Participants group
-participants        : 'Participants' ':' (roles | individuals) ;
+participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individualID (',' individualID)* ;

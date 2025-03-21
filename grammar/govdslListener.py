@@ -224,12 +224,12 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#individualID.
-    def enterIndividualID(self, ctx:govdslParser.IndividualIDContext):
+    # Enter a parse tree produced by govdslParser#individual.
+    def enterIndividual(self, ctx:govdslParser.IndividualContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#individualID.
-    def exitIndividualID(self, ctx:govdslParser.IndividualIDContext):
+    # Exit a parse tree produced by govdslParser#individual.
+    def exitIndividual(self, ctx:govdslParser.IndividualContext):
         pass
 
 
@@ -302,6 +302,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#date.
     def exitDate(self, ctx:govdslParser.DateContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#participantExclusion.
+    def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#participantExclusion.
+    def exitParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
         pass
 
 

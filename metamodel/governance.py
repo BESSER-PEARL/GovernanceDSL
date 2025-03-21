@@ -157,6 +157,21 @@ class Deadline(Condition):
             raise InvalidDeadlineException(self.name)
         self.__date = date
 
+class ParticipantExclusion(Condition):
+    def __init__(self, name: str, participant: Individual):
+        super().__init__(name)
+        self.participant = participant
+    
+    @property
+    def participant(self) -> Individual:
+        return self.__participant
+    
+    @participant.setter
+    def participant(self, participant: Individual):
+        if participant is None:
+            raise UndefinedAttributeException("participant", message="Participant relationship must be defined.")
+        self.__participant = participant
+
 # Policy hierarchy
 class Policy(NamedElement):
     """A Policy must have a scope, but it can be set after initialization."""

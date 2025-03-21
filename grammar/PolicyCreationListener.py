@@ -16,7 +16,7 @@ from utils.attribute_converters import (
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
-    PhasedPolicy, OrderEnum, hasRole, Scope
+    PhasedPolicy, OrderEnum, hasRole, ParticipantExclusion
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -425,7 +425,7 @@ class PolicyCreationListener(govdslListener):
     
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
         individuals = self.find_descendant_nodes_by_type(node=ctx,
-                                                            target_type=govdslParser.IndividualIDContext)
+                                                            target_type=govdslParser.IndividualContext)
         
         for i in individuals:
             i_name = i.participantID().ID().getText()
@@ -479,6 +479,12 @@ class PolicyCreationListener(govdslListener):
         
         deadline = Deadline(name=name, offset=offset, date=date)
         self._register_condition_with_current_policy(deadline)
+    
+    def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
+        # TODO: This condition needs more refinement. We will include primitive types, and multiple individuals
+        individual = Individual(name=ctx.participantID().ID().getText())
+        cond = ParticipantExclusion(name=ctx.ID().getText(), participant=individual)
+        self._register_condition_with_current_policy(cond)
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         # Get the current policy context

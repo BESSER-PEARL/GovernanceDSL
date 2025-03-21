@@ -18,7 +18,7 @@ from metamodel.governance import (
     SinglePolicy, Activity, Task, 
     Role, Deadline, MajorityPolicy, 
     StatusEnum, Project, Individual, PhasedPolicy, OrderEnum,
-    AbsoluteMajorityPolicy, LeaderDrivenPolicy 
+    AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
 
@@ -87,11 +87,21 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(role.name, "Maintainer")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 1)
-            condition = next(iter(policy.conditions))
-            self.assertIsInstance(condition, Deadline)
-            self.assertEqual(condition.name, "reviewDeadline")
-            self.assertEqual(condition.offset, timedelta(days=14))
+            self.assertEqual(len(policy.conditions), 2)
+            
+            # Find and test Deadline condition
+            deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
+            self.assertEqual(len(deadline_conditions), 1)
+            deadline = next(iter(deadline_conditions))
+            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.offset, timedelta(days=14))
+            
+            # Find and test ParticipantExclusion condition
+            exclusion_conditions = {c for c in policy.conditions if isinstance(c, ParticipantExclusion)}
+            self.assertEqual(len(exclusion_conditions), 1)
+            exclusion = next(iter(exclusion_conditions))
+            self.assertEqual(exclusion.name, "partExcl")
+            self.assertEqual(exclusion.participant.name, "Mike")
             
             # Test voting parameters
             self.assertEqual(policy.minVotes, 2)

@@ -16,7 +16,7 @@ from utils.attribute_converters import (
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
-    PhasedPolicy, OrderEnum, hasRole, ParticipantExclusion
+    ComposedPolicy, hasRole, ParticipantExclusion
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -44,7 +44,7 @@ class PolicyCreationListener(govdslListener):
         # Policy tree structure
         self.policy_tree = {}  # Maps policy ID to PolicyNode
         self.policy_stack = []  # Tracks the current policy context
-        self.phased_policy_stack = []  # Tracks the current phased policies
+        self.composed_policy_stack = []  # Tracks the current composed policies
         self.referenced_policies = set()  # Track policies referenced by others (like default policies)
 
     def get_policy(self):
@@ -106,24 +106,26 @@ class PolicyCreationListener(govdslListener):
             # Get scope - now we can use None initially and set it later
             scope = self.__policy_scopes_map.get(node.policy_id)
             
-            # phased policies
-            if node.policy_type == "phased":
+            # composed policies
+            if node.policy_type == "composed":
                 # Check if all children are processed
                 if not all(child.policy_id in processed for child in node.children):
                     # Put back in queue and process later
                     to_process.append(node)
                     continue
                 
-                # Get phases (child policies) and create phased policy
+                # Get phases (child policies) and create composed policy
                 phases = {child.policy_object for child in node.children}
                 order = self.__policy_order_map.get(node.policy_id)
                 
-                node.policy_object = PhasedPolicy(name=node.policy_id,
+                node.policy_object = ComposedPolicy(name=node.policy_id,
                                             phases=phases,
-                                            order=order,
+                                            sequential=order.get('sequential'),
+                                            require_all=order.get('require_all'),
+                                            carry_over=order.get('carry_over'),
                                             scope=scope)
                 
-                # Scope will be automatically propagated to children by the PhasedPolicy class
+                # Scope will be automatically propagated to children by the ComposedPolicy class
             
             else: # single policy
                 participants = self.__policy_participants_map.get(node.policy_id, set())
@@ -295,18 +297,18 @@ class PolicyCreationListener(govdslListener):
             
         self.policy_stack.append(node)
     
-    def enterTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
-        """When entering a top-level phased policy, create a node"""
+    def enterTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
+        """When entering a top-level composed policy, create a node"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, "phased", is_nested=False)
+        node = PolicyNode(policy_id, "composed", is_nested=False)
         self.policy_tree[policy_id] = node
         self.policy_stack.append(node)
-        self.phased_policy_stack.append(node)
+        self.composed_policy_stack.append(node)
         
-    def enterNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
-        """When entering a nested phased policy, create a node and establish parent-child relationship"""
+    def enterNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
+        """When entering a nested composed policy, create a node and establish parent-child relationship"""
         policy_id = ctx.ID().getText()
-        node = PolicyNode(policy_id, "phased", is_nested=True)
+        node = PolicyNode(policy_id, "composed", is_nested=True)
         self.policy_tree[policy_id] = node
         
         # For nested policies, always establish parent-child relationship
@@ -314,25 +316,23 @@ class PolicyCreationListener(govdslListener):
             self.policy_stack[-1].add_child(node)
             
         self.policy_stack.append(node)
-        self.phased_policy_stack.append(node)
+        self.composed_policy_stack.append(node)
 
     def enterOrder(self, ctx:govdslParser.OrderContext):
-        order_type = ctx.orderType().getText()
-        order_mode = ctx.orderMode().getText() if ctx.orderMode() else None
-        order = None
-
-        # Create the appropriate OrderEnum value
-        if order_type == "Sequential":
-            if order_mode == "exclusive":
-                order = OrderEnum.SEQUENTIAL_EXCLUSIVE
-            else: # TODO: Handle case where order mode is not specified
-                order = OrderEnum.SEQUENTIAL_INCLUSIVE
-        # TODO: Add other order types as needed (discuss w/ Jordi and Javi)
-        
-        # Register with current phased policy
+        sequential = ctx.orderType().orderTypeValue().getText().lower() == "sequential"
+        require_all = ctx.orderMode().booleanValue().getText().lower() == "true"
+        carry_over = False  # Default value
+        if ctx.carryOver():
+            carry_over = ctx.carryOver().booleanValue().getText().lower() == "true"
+                
+        # Register with current composed policy
         current_policy_id = self.policy_stack[-1].policy_id if self.policy_stack else None
         if current_policy_id:
-            self.__policy_order_map[current_policy_id] = order
+            self.__policy_order_map[current_policy_id] = {
+                "sequential": sequential, 
+                "require_all": require_all,
+                "carry_over": carry_over
+            }
         else:
             raise Exception("Handling of policy_stack is incorrect.")
 
@@ -514,8 +514,8 @@ class PolicyCreationListener(govdslListener):
             default_ctx = None
             if ctx.default().nestedPolicy().nestedSinglePolicy():
                 default_ctx = ctx.default().nestedPolicy().nestedSinglePolicy().ID().getText()
-            elif ctx.default().nestedPolicy().nestedPhasedPolicy():
-                default_ctx = ctx.default().nestedPolicy().nestedPhasedPolicy().ID().getText()
+            elif ctx.default().nestedPolicy().nestedComposedPolicy():
+                default_ctx = ctx.default().nestedPolicy().nestedComposedPolicy().ID().getText()
             self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
     def enterDefault(self, ctx:govdslParser.DefaultContext):
@@ -529,9 +529,9 @@ class PolicyCreationListener(govdslListener):
         if ctx.nestedPolicy().nestedSinglePolicy():
             default_policy_id = ctx.nestedPolicy().nestedSinglePolicy().ID().getText()
             policy_type = ctx.nestedPolicy().nestedSinglePolicy().policyType().getText()
-        elif ctx.nestedPolicy().nestedPhasedPolicy():
-            default_policy_id = ctx.nestedPolicy().nestedPhasedPolicy().ID().getText()
-            policy_type = "phased"
+        elif ctx.nestedPolicy().nestedComposedPolicy():
+            default_policy_id = ctx.nestedPolicy().nestedComposedPolicy().ID().getText()
+            policy_type = "composed"
         
         # Create a node for this default policy
         if default_policy_id and default_policy_id not in self.policy_tree:
@@ -573,16 +573,16 @@ class PolicyCreationListener(govdslListener):
         """When exiting a nested single policy, pop from stack"""
         self.policy_stack.pop()
 
-    def exitNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
-        """When exiting a nested phased policy, clear current and pop stack"""
-        self.phased_policy_stack.pop()
+    def exitNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
+        """When exiting a nested composed policy, clear current and pop stack"""
+        self.composed_policy_stack.pop()
         self.policy_stack.pop()
 
     def exitTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
         """When exiting a top-level single policy, pop from stack"""
         self.policy_stack.pop()
 
-    def exitTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
-        """When exiting a top-level phased policy, clear current and pop stack"""
-        self.phased_policy_stack.pop()
+    def exitTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
+        """When exiting a top-level composed policy, clear current and pop stack"""
+        self.composed_policy_stack.pop()
         self.policy_stack.pop()

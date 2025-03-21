@@ -13,10 +13,6 @@ class StatusEnum(Enum):
     ACCEPTED = 2
     PARTIAL = 3
 
-class OrderEnum(Enum):
-    SEQUENTIAL_INCLUSIVE = 1
-    SEQUENTIAL_EXCLUSIVE = 2
-
 # Scope hierarchy
 class Scope(NamedElement):
     def __init__(self, name: str, status: StatusEnum):
@@ -336,12 +332,14 @@ class LeaderDrivenPolicy(SinglePolicy):
         self.propagate_scope()
 
 
-class PhasedPolicy(Policy):
-    """A PhasedPolicy must have at least one phase."""
-    def __init__(self, name: str, phases: set[Policy], order: OrderEnum, scope: Scope = None):
+class ComposedPolicy(Policy):
+    """A ComposedPolicy must have at least one phase."""
+    def __init__(self, name: str, phases: set[Policy], sequential: bool, require_all: bool, carry_over: bool, scope: Scope = None):
         super().__init__(name, scope)
         self.phases = phases
-        self.order = order
+        self.sequential = sequential
+        self.require_all = require_all
+        self.carry_over = carry_over # TODO: this does not make sense in parallel phases. Handle this.
         self.propagate_scope()
     
     @property
@@ -351,22 +349,36 @@ class PhasedPolicy(Policy):
     @phases.setter
     def phases(self, phases: set[Policy]):
         if not phases:  # Only check for None or empty
-            raise EmptySetException("PhasedPolicy must have at least one phase.")
+            raise EmptySetException("ComposedPolicy must have at least one phase.")
         self.__phases = phases
     
     @property
-    def order(self) -> OrderEnum:
-        return self.__order
+    def sequential(self) -> bool:
+        return self.__sequential
     
-    @order.setter
-    def order(self, order: OrderEnum):
-        if not isinstance(order, OrderEnum):
-            raise UndefinedAttributeException("order", order)
-        self.__order = order
+    @sequential.setter
+    def sequential(self, sequential: bool):
+        self.__sequential = sequential
+
+    @property
+    def require_all(self) -> bool:
+        return self.__require_all
+    
+    @require_all.setter
+    def require_all(self, require_all: bool):
+        self.__require_all = require_all
+
+    @property
+    def carry_over(self) -> bool:
+        return self.__carry_over
+    
+    @carry_over.setter
+    def carry_over(self, carry_over: bool):
+        self.__carry_over = carry_over
     
     def propagate_scope(self):
         """Propagates the current scope to all child phases if set."""
-        if self.scope and hasattr(self, '_PhasedPolicy__phases'):
+        if self.scope and hasattr(self, '_ComposedPolicy__phases'):
             for phase in self.phases:
                 phase.scope = self.scope
     
@@ -376,5 +388,5 @@ class PhasedPolicy(Policy):
 
     @scope.setter
     def scope(self, scope: Scope):
-        super(PhasedPolicy, type(self)).scope.fset(self, scope)
+        super(ComposedPolicy, type(self)).scope.fset(self, scope)
         self.propagate_scope()

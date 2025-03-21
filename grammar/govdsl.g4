@@ -1,15 +1,15 @@
 grammar govdsl;
 
 // Parser rules
-policy              : (topLevelSinglePolicy | topLevelPhasedPolicy) EOF ;
+policy              : (topLevelSinglePolicy | topLevelComposedPolicy) EOF ;
 
 // Top-level policies (with scope)
-topLevelSinglePolicy: policyType ID '{' scope participants? conditions? parameters? '}' ;
-topLevelPhasedPolicy: 'PhasedPolicy' ID '{' scope order? phases '}' ;
+topLevelSinglePolicy    : policyType ID '{' scope participants? conditions? parameters? '}' ;
+topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 
 // Nested policies (no scope)
-nestedSinglePolicy  : policyType ID '{' participants? conditions? parameters? '}' ;
-nestedPhasedPolicy  : 'PhasedPolicy' ID '{' order? phases '}' ;
+nestedSinglePolicy      : policyType ID '{' participants? conditions? parameters? '}' ;
+nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' ;
 
@@ -35,7 +35,7 @@ participants        : 'Participants' ':' ((roles individuals?) | (individuals ro
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individual (',' individual)* ;
-individual          : participantID hasRole? confidence?;
+individual          : participantID hasRole? confidence? ;
 hasRole             : 'as' participantID ;
 confidence          : 'with confidence' FLOAT ;
 
@@ -56,11 +56,14 @@ ratio               : 'ratio' FLOAT ;
 default             : 'default' nestedPolicy ;
 
 // Phased policy 
-order               : 'Order' ':' orderType ('{' orderMode '}')? ; 
-orderType           : 'Sequential' | 'Parallel' ;
-orderMode           : 'exclusive' | 'inclusive' ;
+order               : 'Order' ':' ( orderType orderMode carryOver? ) ; 
+orderType           : 'Execution' ':' orderTypeValue ;
+orderTypeValue      : 'sequential' | 'parallel' ;
+orderMode           : 'RequireAll' ':' booleanValue ;
+carryOver           : 'CarryOver' ':' booleanValue ;
+booleanValue        : 'true' | 'false' ;
 phases              : 'Phases' '{' nestedPolicy+ '}' ;
-nestedPolicy        : nestedSinglePolicy | nestedPhasedPolicy ;
+nestedPolicy        : nestedSinglePolicy | nestedComposedPolicy ;
 
 // Lexer rules
 ID              : [a-zA-Z_][a-zA-Z0-9_]* ;

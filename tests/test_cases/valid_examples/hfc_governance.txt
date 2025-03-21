@@ -1,11 +1,12 @@
-PhasedPolicy phasedPolicy {
+ComposedPolicy phasedPolicy {
     Scope:
         Task TestTask : Pull request {
             Action : merge
         }
-    Order : Sequential {
-        exclusive
-    }
+    Order :
+        Execution : sequential
+        RequireAll : false
+        CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
             Participants:

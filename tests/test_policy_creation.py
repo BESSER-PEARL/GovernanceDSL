@@ -17,7 +17,7 @@ from utils.exceptions import (
 from metamodel.governance import (
     SinglePolicy, Activity, Task, 
     Role, Deadline, MajorityPolicy, 
-    StatusEnum, Project, Individual, PhasedPolicy, OrderEnum,
+    StatusEnum, Project, Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
@@ -241,8 +241,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Test default policy parameters
             self.assertEqual(default_policy.minVotes, 2)
 
-    def test_phased_policy_creation(self):
-        """Test the creation of a phased policy. Based on the HFC governance policy."""
+
+    def test_composed_policy_creation(self):
+        """Test the creation of a composed policy. Based on the HFC governance policy."""
         with open(self.test_cases_path / "valid_examples/hfc_governance.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
@@ -254,9 +255,13 @@ class TestPolicyCreation(unittest.TestCase):
             policy = listener.get_policy()
             
             # Assertions
-            self.assertIsInstance(policy, PhasedPolicy)
+            self.assertIsInstance(policy, ComposedPolicy)
             self.assertEqual(policy.name, "phasedPolicy")
-            self.assertEqual(policy.order, OrderEnum.SEQUENTIAL_EXCLUSIVE)
+            
+            # Test order properties
+            self.assertTrue(policy.sequential, "Policy should be sequential")
+            self.assertFalse(policy.require_all, "Policy should not require all phases to pass")
+            self.assertTrue(policy.carry_over, "Policy should carry over results between phases")
             
             # Test phases count
             self.assertEqual(len(policy.phases), 2)

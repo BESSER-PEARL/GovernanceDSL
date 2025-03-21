@@ -26,12 +26,12 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#topLevelPhasedPolicy.
-    def enterTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
+    # Enter a parse tree produced by govdslParser#topLevelComposedPolicy.
+    def enterTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#topLevelPhasedPolicy.
-    def exitTopLevelPhasedPolicy(self, ctx:govdslParser.TopLevelPhasedPolicyContext):
+    # Exit a parse tree produced by govdslParser#topLevelComposedPolicy.
+    def exitTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
         pass
 
 
@@ -44,12 +44,12 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#nestedPhasedPolicy.
-    def enterNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
+    # Enter a parse tree produced by govdslParser#nestedComposedPolicy.
+    def enterNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#nestedPhasedPolicy.
-    def exitNestedPhasedPolicy(self, ctx:govdslParser.NestedPhasedPolicyContext):
+    # Exit a parse tree produced by govdslParser#nestedComposedPolicy.
+    def exitNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
         pass
 
 
@@ -377,12 +377,39 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#orderTypeValue.
+    def enterOrderTypeValue(self, ctx:govdslParser.OrderTypeValueContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#orderTypeValue.
+    def exitOrderTypeValue(self, ctx:govdslParser.OrderTypeValueContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#orderMode.
     def enterOrderMode(self, ctx:govdslParser.OrderModeContext):
         pass
 
     # Exit a parse tree produced by govdslParser#orderMode.
     def exitOrderMode(self, ctx:govdslParser.OrderModeContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#carryOver.
+    def enterCarryOver(self, ctx:govdslParser.CarryOverContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#carryOver.
+    def exitCarryOver(self, ctx:govdslParser.CarryOverContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#booleanValue.
+    def enterBooleanValue(self, ctx:govdslParser.BooleanValueContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#booleanValue.
+    def exitBooleanValue(self, ctx:govdslParser.BooleanValueContext):
         pass
 
 

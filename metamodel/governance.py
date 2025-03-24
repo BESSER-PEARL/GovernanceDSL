@@ -1,6 +1,6 @@
 from enum import Enum
 from datetime import timedelta, datetime  
-from besser.BUML.metamodel.structural import NamedElement
+from besser.BUML.metamodel.structural import Element
 from utils.exceptions import (
     InvalidVotesException, EmptySetException,
     InvalidValueException, InvalidDeadlineException,
@@ -14,11 +14,19 @@ class StatusEnum(Enum):
     PARTIAL = 3
 
 # Scope hierarchy
-class Scope(NamedElement):
+class Scope(Element):
     def __init__(self, name: str, status: StatusEnum):
-        super().__init__(name)
+        self.name = name
         self.status = status
     
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+
     @property
     def status(self) -> StatusEnum:
         return self.__status
@@ -42,9 +50,17 @@ class Task(Scope):
         super().__init__(name, status)
 
 # Participant
-class Participant(NamedElement):
+class Participant(Element):
     def __init__(self, name: str):
-        super().__init__(name)
+        self.name = name
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
 
     def __eq__(self, value):
         if not isinstance(value, Participant):
@@ -82,12 +98,20 @@ class Role(Participant):
     def __init__(self, name: str):
         super().__init__(name)
 
-class hasRole(NamedElement):
+class hasRole(Element):
     def __init__(self, name: str, role: Role, individual: Individual, scope: Scope):
-        super().__init__(name)
+        self.name = name
         self.role = role
         self.individual = individual
         self.scope = scope
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
     
     @property
     def role(self) -> Role:
@@ -121,9 +145,17 @@ class hasRole(NamedElement):
 
 
 # Condition
-class Condition(NamedElement):
+class Condition(Element):
     def __init__(self, name: str):
-        super().__init__(name)
+        self.name = name
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
 
 class Deadline(Condition):
     def __init__(self, name: str, offset: timedelta, date: datetime):
@@ -169,12 +201,20 @@ class ParticipantExclusion(Condition):
         self.__participant = participant
 
 # Policy hierarchy
-class Policy(NamedElement):
+class Policy(Element):
     """A Policy must have a scope, but it can be set after initialization."""
     def __init__(self, name: str, scope: Scope = None):
-        super().__init__(name)
+        self.name = name
         self.scope = scope
     
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+        
     @property
     def scope(self) -> Scope:
         return self.__scope

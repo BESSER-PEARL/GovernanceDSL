@@ -1,5 +1,5 @@
 from enum import Enum
-from besser.BUML.metamodel.structural import NamedElement
+from besser.BUML.metamodel.structural import Element
 from metamodel.governance import Task, StatusEnum, Project
 
 class ActionEnum(Enum):
@@ -7,16 +7,32 @@ class ActionEnum(Enum):
     REVIEW = 2
     ALL = 3
 
-class Label(NamedElement):
+class Label(Element):
     def __init__(self, name: str):
-        super().__init__(name)
+        self.name = name
+    
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
 
-class GitHubElement(NamedElement):
+class GitHubElement(Element):
     """Base class for GitHub elements like PullRequest and Issue"""
     def __init__(self, name: str, labels: set[Label] = None):
-        super().__init__(name)
+        self.name = name
         self.labels = labels
     
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+        
     @property
     def labels(self):
         return self.__labels

@@ -1,2 +1,0 @@
-Two project maintainers must approve a pull request before the pull request can be merged.
-One project maintainer approval is enough if the pull request has been open for more than 14 days.

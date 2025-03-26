@@ -1,0 +1,7 @@
+The decision of accepting (or rejecting) a pull request will be taken by the group of project maintainers. The decision will be based on the following criteria:
+
+* All project maintainers must approve a pull request before the pull request can be merged. 
+* One project maintainer approval is enough if the pull request has been open for more than 14 days.
+* Approving a pull request indicates that the contributor accepts
+responsibility for the change. 
+* If a project maintainer opposes a pull request, the pull request cannot be merged (i.e., _veto_ behavior). Often, discussions or further changes result in collaborators removing their opposition.

@@ -1,0 +1,2 @@
+Have look at the governance deployed at the Cargo project in github:
+https://github.com/rust-lang/cargo/blob/master/triagebot.toml

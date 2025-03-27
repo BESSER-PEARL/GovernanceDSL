@@ -1,0 +1,32 @@
+ComposedPolicy pr_merge {
+    Scope:
+        Task TestTask : Pull request {
+            Action : merge
+        }
+    Order :
+        Execution : sequential
+        RequireAll : false
+        CarryOver : true
+    Phases {
+        MajorityPolicy phase_1 {
+            Participants:
+                Roles : Maintainers
+            Conditions:
+                Deadline reviewDeadline : 14 days
+            Parameters:
+                minVotes 2, ratio 1.0
+        }
+        MajorityPolicy phase_2 {
+            Participants:
+                Roles : Maintainers
+            Parameters:
+                minVotes 1, ratio 1.0
+        }
+        MajorityPolicy phase_3 {
+            Participants:
+                Roles: TSC
+            Parameters:
+                minVotes 1
+        }
+    }
+}

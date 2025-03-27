@@ -1,0 +1,10 @@
+MajorityPolicy golang_cr {
+    Scope:
+        Activity Contribution # ADEM: Could we join all contribution under Activity class? 
+    Participants:
+        Roles : Maintainer   
+    Conditions:
+        Veto Here? or with ratio 1.0, is understood?
+    Parameters:
+        ratio 1.0
+}

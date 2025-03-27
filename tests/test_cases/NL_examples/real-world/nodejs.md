@@ -3,7 +3,7 @@
 **Access date**: 25/03/2025 08:25h
 
 **Further info**: 
-    - They have [governance.md file]( https://github.com/nodejs/node/blob/main/GOVERNANCE.md)
+    - They have a [governance.md file](https://github.com/nodejs/node/blob/main/GOVERNANCE.md)
     - Roles: Triagers, Collaborators, Technical Steering Commitee
         - Triagers in charge of assessing newly-opened issues and PRs.
         - Collaborators are contributors to the project.
@@ -16,15 +16,15 @@
 **Reporter**: Adem
 
 **Policy**: 
-  - PR merge:
+  - PR merge: (Implemented)
         - Two collaborators must approve a pull request before the pull request can land. (Rule)
         - (One collaborator approval is enough if the pull request has been open for more than 7 days.) (Rule)
-        - Approving a pull request indicates that the collaborator accepts responsibility for the change. (Irrelevant)
+        - ~~Approving a pull request indicates that the collaborator accepts responsibility for the change.~~ (Irrelevant)
         - Approval must be from collaborators who are not authors of the change.(Rule condition)
-        - If a collaborator opposes a proposed change, then the change cannot land. (Veto right)
-        - The exception is if the TSC votes to approve the change despite the opposition. (Double veto?)
-        - Usually, involving the TSC is unnecessary. (Irrelevant)
-        - Often, discussions or further changes result in collaborators removing their opposition. (Irrelevant)
+        - If a collaborator opposes a proposed change, then the change cannot land. (ratio 100%? We could have also a Lazy Consensus in Voting Policies?)
+        - The exception is if the TSC votes to approve the change despite the opposition. (Votes of TSC overcome ratio != 100%; could be a new phase)
+        - ~~Usually, involving the TSC is unnecessary.~~ (Irrelevant)
+        - ~~Often, discussions or further changes result in collaborators removing their opposition.~~ (Irrelevant)
     - Collaborator:
         - A collaborator is automatically made emeritus (and removed from active collaborator status) if it has been more than 12 months since the collaborator has authored or approved a commit that has landed. (I don't see it as a rule)
     - TSC:

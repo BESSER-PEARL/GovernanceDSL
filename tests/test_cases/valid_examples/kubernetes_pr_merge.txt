@@ -1,0 +1,24 @@
+ComposedPolicy pr_merge {
+    Scope:
+        Task TestTask : Pull request {
+            Action : merge
+        }
+    Order :
+        Execution : sequential
+        RequireAll : true
+        CarryOver : true
+    Phases {
+        AbsoluteMajorityPolicy phase_1 {
+            Participants:
+                Roles : Reviewers
+            Parameters:
+                ratio 1.0
+        }
+        AbsoluteMajorityPolicy phase_2 {
+            Participants:
+                Roles : Approvers
+            Parameters:
+                ratio 1.0
+        }
+    }
+}

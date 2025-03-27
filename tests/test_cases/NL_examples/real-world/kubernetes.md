@@ -24,14 +24,14 @@
         - If the code changes look good to them, a **reviewer** types `/lgtm` in a PR comment or review;
             if they change their mind, they `/lgtm cancel`
         - Once a **reviewer** has `/lgtm`'ed, [prow](https://prow.k8s.io)
-            ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) applies an `lgtm` label to the PR
+            ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) applies an `lgtm` label to the PR. (ADEM: No specification on amount of needed lgtm. Should be all of the reviewers assigned to my understanding. Thus, is this Absolute Majority with ratio 100%?)
     - **Phase 2**: Humans approve the PR
         - The PR **author** `/assign`'s all suggested **approvers** to the PR, and optionally notifies
             them (eg: "pinging @foo for approval")
         - Only people listed in the relevant OWNERS files, either directly or through an alias, as [described
             above](#owners_aliases), can act as **approvers**, including the individual who opened the PR.
         - **Approvers** look for holistic acceptance criteria, including dependencies with other features,
-            forwards/backwards compatibility, API and flag definitions, etc
+            forwards/backwards compatibility, API and flag definitions, etc.
         - If the code changes look good to them, an **approver** types `/approve` in a PR comment or
             review; if they change their mind, they `/approve cancel`
         - [prow](https://prow.k8s.io) ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) updates its
@@ -39,12 +39,11 @@
         - Once all **approvers** (one from each of the previously identified OWNERS files) have approved,
             [prow](https://prow.k8s.io) ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) applies an
             `approved` label
-    - **Phase 3**: Automation merges the PR:
+    - **Phase 3**: Automation merges the PR: (ADEM: To represent this we should have ad-hoc conditions, right? Like LabelCondition, or )
         - If all of the following are true:
             - All required labels are present (eg: `lgtm`, `approved`)
             - Any blocking labels are missing (eg: there is no `do-not-merge/hold`, `needs-rebase`)
         - And if any of the following are true:
             - there are no presubmit prow jobs configured for this repo
-            - there are presubmit prow jobs configured for this repo, and they all pass after automatically
-            being re-run one last time
+            - there are presubmit prow jobs configured for this repo, and they all pass after automatically being re-run one last time
         - Then the PR will automatically be merged

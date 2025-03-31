@@ -1,0 +1,26 @@
+ComposedPolicy phasedPolicy {
+    Scope:
+        Task TestTask : Pull request {
+            Action : merge
+        }
+    Order :
+        Execution : sequential
+        RequireAll : true
+        CarryOver : true
+    Phases {
+        MajorityPolicy phase_1 {
+            Participants:
+                Roles : Reviewer
+            Conditions:
+                TestsCondition # ADEM: So a conditions is that they pass all the tests. So we could add a Condition (under the GH extension)
+            Parameters:
+                minVotes 1, ratio 1.0
+        }
+        MajorityPolicy phase_2 {
+            Participants:
+                Roles : Owners
+            Parameters:
+                minVotes 1, ratio 1.0
+        }
+    }
+}

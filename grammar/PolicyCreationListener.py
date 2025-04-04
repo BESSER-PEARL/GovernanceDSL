@@ -17,7 +17,7 @@ from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
-    ConsensusPolicy, MinimumParticipant
+    ConsensusPolicy, MinimumParticipant, VetoRight
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -498,6 +498,29 @@ class PolicyCreationListener(govdslListener):
         condition = MinimumParticipant(name="minParticipantsCondition",
                                     min_participants=min_participants_value)
         self._register_condition_with_current_policy(condition)
+
+    def enterVetoRight(self, ctx:govdslParser.VetoRightContext):
+        vetoers = self.find_descendant_nodes_by_type(node=ctx,
+                                                target_type=govdslParser.ParticipantIDContext)
+        vetoer_obj = set()
+        # Vetoers might not be participants of the current policy
+        for v in vetoers:
+            # Check if the vetoer is already registered
+            vetoer_name = v.ID().getText()
+            vetoer = None
+            if vetoer_name in self.__policy_participants_map:
+                # Get the existing participant object
+                vetoer = next(p for p in self.__policy_participants_map if p.name == vetoer_name)
+            else:
+                # We create a Role by default
+                vetoer = Role(name=vetoer_name)
+            vetoer_obj.add(vetoer)
+        
+        # Create the VetoRight object
+        veto_right_obj = VetoRight(name="VetoRightCondition", vetoers=vetoer_obj)
+        
+        # Register with current policy
+        self._register_condition_with_current_policy(veto_right_obj)
 
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):

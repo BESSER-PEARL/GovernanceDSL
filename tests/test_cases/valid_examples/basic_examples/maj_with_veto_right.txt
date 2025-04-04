@@ -1,0 +1,8 @@
+MajorityPolicy TestPolicy {
+    Scope:
+        Project TestProjectGH from GitHub : owner/repo
+    Participants:
+        Roles : Maintainer   
+    Conditions:
+        VetoRight : ProjectOwner
+}

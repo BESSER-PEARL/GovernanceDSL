@@ -323,6 +323,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#vetoRight.
+    def enterVetoRight(self, ctx:govdslParser.VetoRightContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#vetoRight.
+    def exitVetoRight(self, ctx:govdslParser.VetoRightContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#parameters.
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         pass

@@ -215,6 +215,19 @@ class MinimumParticipant(Condition):
             raise InvalidParticipantException(min_participants)
         self.__min_participants = min_participants
 
+class VetoRight(Condition):
+    def __init__(self, name: str, vetoers: set[Participant]):
+        super().__init__(name)
+        self.vetoers = vetoers
+    
+    @property
+    def vetoers(self) -> set[Participant]:
+        return self.__vetoers
+    
+    @vetoers.setter
+    def vetoers(self, vetoers: set[Participant]):
+        self.__vetoers = vetoers
+
 # Policy hierarchy
 class Policy(Element):
     """A Policy must have a scope, but it can be set after initialization."""

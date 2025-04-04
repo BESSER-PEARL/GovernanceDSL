@@ -18,7 +18,7 @@ from metamodel.governance import (
     Role, Deadline, MajorityPolicy, 
     Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
-    LazyConsensusPolicy, MinimumParticipant
+    LazyConsensusPolicy, MinimumParticipant, VetoRight
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
 
@@ -160,6 +160,56 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.5)
+            
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_majority_policy_with_veto_right_creation(self):
+        """Test the creation of a policy with a veto right condition."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/maj_with_veto_right.txt", "r") as file:
+            text = file.read()
+            
+            # Setup parser and create model
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            self.assertIsNotNone(tree)
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Assertions
+            self.assertIsInstance(policy, MajorityPolicy)
+            self.assertEqual(policy.name, "TestPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "TestProjectGH")
+            self.assertEqual(scope.repo_id, "owner/repo")
+            
+            # Test participants
+            self.assertEqual(len(policy.participants), 1)
+            
+            # Test Role participant
+            participant = next(iter(policy.participants))
+            self.assertIsInstance(participant, Role)
+            self.assertEqual(participant.name, "Maintainer")
+            
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            
+            # Find and test VetoRight condition
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, VetoRight)
+            self.assertEqual(condition.name, "VetoRightCondition")
+            
+            # Verify vetoers set
+            self.assertEqual(len(condition.vetoers), 1)
+            vetoer = next(iter(condition.vetoers))
+            self.assertEqual(vetoer.name, "ProjectOwner")
             
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
@@ -415,7 +465,6 @@ class TestPolicyCreation(unittest.TestCase):
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
-
 
 
 if __name__ == '__main__':

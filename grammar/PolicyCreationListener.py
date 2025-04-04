@@ -17,7 +17,7 @@ from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
-    ConsensusPolicy
+    ConsensusPolicy, MinimumParticipant
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -147,14 +147,12 @@ class PolicyCreationListener(govdslListener):
                         node.policy_object = LazyConsensusPolicy.from_policy(base_policy)
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id, {})
-                        node.policy_object = MajorityPolicy.from_policy(base_policy, 
-                                                                       minVotes=parameters.get('minVotes'), 
+                        node.policy_object = MajorityPolicy.from_policy(base_policy,  
                                                                        ratio=parameters.get('ratio'))
                     
                     case "AbsoluteMajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id, {})
                         node.policy_object = AbsoluteMajorityPolicy.from_policy(base_policy, 
-                                                                               minVotes=parameters.get('minVotes'), 
                                                                                ratio=parameters.get('ratio'))
                     
                     case "LeaderDrivenPolicy":
@@ -495,6 +493,13 @@ class PolicyCreationListener(govdslListener):
         cond = ParticipantExclusion(name=ctx.ID().getText(), participant=individual)
         self._register_condition_with_current_policy(cond)
 
+    def enterMinParticipant(self, ctx:govdslParser.MinParticipantContext):
+        min_participants_value = int(ctx.SIGNED_INT().getText())
+        condition = MinimumParticipant(name="minParticipantsCondition",
+                                    min_participants=min_participants_value)
+        self._register_condition_with_current_policy(condition)
+
+
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         # Get the current policy context
         if not self.policy_stack:
@@ -510,9 +515,8 @@ class PolicyCreationListener(govdslListener):
         if ctx.votParams():
             vot_params = ctx.votParams()
             
-            # Extract minVotes if present
-            if vot_params.minVotes():
-                self.__policy_parameters_map[current_policy_id]['minVotes'] = int(vot_params.minVotes().SIGNED_INT().getText())
+            # I had here minVotes. Since we created the minParticipants condition, it is no longer necessary.
+            # However, I keep this structure for if we want to add more parameters in the future.
             
             # Extract ratio if present
             if vot_params.ratio():

@@ -6,5 +6,5 @@ AbsoluteMajorityPolicy TestPolicy {
     Conditions:
         Deadline reviewDeadline : 7 days
     Parameters:
-        minVotes 2, ratio 0.7
+        ratio 0.7
 }

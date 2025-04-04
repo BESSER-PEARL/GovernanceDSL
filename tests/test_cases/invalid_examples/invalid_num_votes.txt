@@ -5,6 +5,5 @@ MajorityPolicy TestPolicy {
         Roles : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
-    Parameters:
-        minVotes -1
+        MinParticipants : -1
 }

@@ -40,18 +40,18 @@ hasRole             : 'as' participantID ;
 confidence          : 'with confidence' FLOAT ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? participantExclusion? ;
+conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? ;
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY
 participantExclusion: 'ParticipantExclusion' ID ':' participantID ; // TODO: For now only one exclusion, but allow more in the future
+minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 
 // Parameters group
 parameters          : 'Parameters' ':' (votParams | default) ;
-votParams           :  minVotes | ratio | (minVotes ',' ratio);
-minVotes            : 'minVotes' SIGNED_INT ; 
+votParams           :  ratio ; 
 ratio               : 'ratio' FLOAT ; 
 default             : 'default' nestedPolicy ;
 

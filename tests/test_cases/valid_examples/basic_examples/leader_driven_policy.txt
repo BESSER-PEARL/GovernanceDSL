@@ -11,7 +11,5 @@ LeaderDrivenPolicy TestPolicy {
                 Roles : Maintainers
             Conditions:
                 Deadline reviewDeadline : 7 days
-            Parameters:
-                minVotes 2
         }
 }

@@ -11,15 +11,14 @@ from grammar.govdslParser import govdslParser
 from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
-    InvalidVotesException, UndefinedAttributeException, 
-    EmptySetException, InvalidValueException
+    InvalidParticipantException, UndefinedAttributeException, 
+    InvalidValueException
 )
 from metamodel.governance import (
-    SinglePolicy, Activity, Task, 
     Role, Deadline, MajorityPolicy, 
-    StatusEnum, Project, Individual, ComposedPolicy,
+    Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
-    LazyConsensusPolicy, ConsensusPolicy
+    LazyConsensusPolicy, MinimumParticipant
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
 
@@ -51,7 +50,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             
-            with self.assertRaises(InvalidVotesException) as raised_exception:
+            with self.assertRaises(InvalidParticipantException) as raised_exception:
                 walker.walk(listener, tree)
             
             exception_message = str(raised_exception.exception)
@@ -136,7 +135,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(role.name, "Maintainer")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 2)
+            self.assertEqual(len(policy.conditions), 3)
             
             # Find and test Deadline condition
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
@@ -151,9 +150,15 @@ class TestPolicyCreation(unittest.TestCase):
             exclusion = next(iter(exclusion_conditions))
             self.assertEqual(exclusion.name, "partExcl")
             self.assertEqual(exclusion.participant.name, "Mike")
+
+            # Find and test MinimumParticipant condition
+            min_part_conditions = {c for c in policy.conditions if isinstance(c, MinimumParticipant)}
+            self.assertEqual(len(min_part_conditions), 1)
+            min_part = next(iter(min_part_conditions))
+            self.assertEqual(min_part.name, "minParticipantsCondition")
+            self.assertEqual(min_part.min_participants, 2)
             
             # Test voting parameters
-            self.assertEqual(policy.minVotes, 2)
             self.assertEqual(policy.ratio, 0.5)
             
             # Check parser errors
@@ -196,7 +201,6 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(condition.offset, timedelta(days=7))
             
             # Test voting parameters
-            self.assertEqual(policy.minVotes, 2)
             self.assertEqual(policy.ratio, 0.7)
 
             # Check parser errors
@@ -263,9 +267,6 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProject")
             self.assertEqual(scope.repo_id, "owner/repo")
-            
-            # Test default policy parameters
-            self.assertEqual(default_policy.minVotes, 2)
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
@@ -321,14 +322,23 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(participant.name, "Maintainers")
             
             # Test phase 1 conditions
-            self.assertEqual(len(phase_1.conditions), 1)
-            deadline = next(iter(phase_1.conditions))
+            self.assertEqual(len(phase_1.conditions), 2)
+
+            # Find and test Deadline condition
+            deadline_conditions = {c for c in phase_1.conditions if isinstance(c, Deadline)}
+            deadline = next(iter(deadline_conditions))
             self.assertIsInstance(deadline, Deadline)
             self.assertEqual(deadline.name, "reviewDeadline")
             self.assertEqual(deadline.offset, timedelta(days=14))
+
+            # Find and test MinimumParticipant condition
+            min_part_conditions = {c for c in phase_1.conditions if isinstance(c, MinimumParticipant)}
+            self.assertEqual(len(min_part_conditions), 1)
+            min_part = next(iter(min_part_conditions))
+            self.assertEqual(min_part.name, "minParticipantsCondition")
+            self.assertEqual(min_part.min_participants, 2)
             
             # Test phase 1 voting parameters
-            self.assertEqual(phase_1.minVotes, 2)
             self.assertEqual(phase_1.ratio, 1.0)
             
             # Test second phase
@@ -355,11 +365,14 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(participant, Role)
             self.assertEqual(participant.name, "Maintainers")
             
-            # Test phase 2 conditions (none in this phase)
-            self.assertEqual(len(phase_2.conditions), 0)
+            # Test phase 2 conditions
+            self.assertEqual(len(phase_2.conditions), 1)
+            min_part = next(iter(phase_2.conditions))
+            self.assertIsInstance(min_part, MinimumParticipant)
+            self.assertEqual(min_part.name, "minParticipantsCondition")
+            self.assertEqual(min_part.min_participants, 1)
             
             # Test phase 2 voting parameters
-            self.assertEqual(phase_2.minVotes, 1)
             self.assertEqual(phase_2.ratio, 1.0)
 
             # Check parser errors

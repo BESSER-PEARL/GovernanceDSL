@@ -1,12 +1,12 @@
 class InvalidVotesException(Exception):
     """Exception raised for invalid number of votes."""
-    def __init__(self, votes, message="Invalid number of votes. It must be non-negative."):
-        self.votes = votes
+    def __init__(self, votes, message="Invalid number of votes. It must be positive."):
         self.message = message
         super().__init__(self.message)
+        self.message = f"Invalid number of votes. It must be positive, but got {votes}."
 
     def __str__(self):
-        return f'{self.votes} -> {self.message}'
+        return f'Number of votes -> {self.message}'
 
 class InsufficientPhasesException(Exception):
     """Exception raised when a phased policy has fewer than two phases."""

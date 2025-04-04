@@ -11,7 +11,7 @@ topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 nestedSinglePolicy      : policyType ID '{' participants? conditions? parameters? '}' ;
 nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
-policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' ;
+policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
 
 // Scope definition
 scope               : 'Scope' ':' (project | activity | task) ;

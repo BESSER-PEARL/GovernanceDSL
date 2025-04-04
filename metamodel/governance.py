@@ -254,6 +254,28 @@ class SinglePolicy(Policy):
         self.__participants = participants
 
 
+class ConsensusPolicy(SinglePolicy):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, conditions, participants, scope)
+
+    @classmethod
+    def from_policy(cls, policy: SinglePolicy):
+        consensus = cls(name=policy.name, conditions=policy.conditions, 
+                        participants=policy.participants, scope=policy.scope)
+        return consensus
+    
+
+class LazyConsensusPolicy(SinglePolicy):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
+        super().__init__(name, conditions, participants, scope)
+
+    @classmethod
+    def from_policy(cls, policy: SinglePolicy):
+        lazy_consensus = cls(name=policy.name, conditions=policy.conditions, 
+                             participants=policy.participants, scope=policy.scope)
+        return lazy_consensus
+
+
 class VotingPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
                  scope: Scope, minVotes: int = None, ratio: float = None):
@@ -275,7 +297,7 @@ class VotingPolicy(SinglePolicy):
     @minVotes.setter
     def minVotes(self, minVotes: int):
         if minVotes and minVotes < 0:
-            raise InvalidVotesException("Number of votes must be positive.")
+            raise InvalidVotesException(votes=minVotes)
         self.__minVotes = minVotes
     
     @property

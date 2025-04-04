@@ -16,7 +16,8 @@ from utils.attribute_converters import (
 from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
-    ComposedPolicy, hasRole, ParticipantExclusion
+    ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
+    ConsensusPolicy
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -30,8 +31,6 @@ class PolicyCreationListener(govdslListener):
     def __init__(self):
         super().__init__()
         self.__policy = None
-        self.__policy_scopes = {}
-        self.__rules = {}
 
         # Maps to track attributes by policy ID
         self.__policy_rules_map = {}        # So we have a set for each policy. Maybe we could use a dict with the rule name as key. Same for following maps.
@@ -136,6 +135,16 @@ class PolicyCreationListener(govdslListener):
                                             scope=scope)
                 
                 match node.policy_type:
+                    case "ConsensusPolicy":
+                        if len(self.__policy_parameters_map.get(node.policy_id, {})) > 0:
+                            raise UndefinedAttributeException("parameters",
+                                                            message="ConsensusPolicy cannot have parameters.")
+                        node.policy_object = ConsensusPolicy.from_policy(base_policy)
+                    case "LazyConsensusPolicy":
+                        if len(self.__policy_parameters_map.get(node.policy_id, {})) > 0:
+                            raise UndefinedAttributeException("parameters",
+                                                            message="LazyConsensusPolicy cannot have parameters.")
+                        node.policy_object = LazyConsensusPolicy.from_policy(base_policy)
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id, {})
                         node.policy_object = MajorityPolicy.from_policy(base_policy, 

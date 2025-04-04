@@ -18,7 +18,8 @@ from metamodel.governance import (
     SinglePolicy, Activity, Task, 
     Role, Deadline, MajorityPolicy, 
     StatusEnum, Project, Individual, ComposedPolicy,
-    AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion
+    AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
+    LazyConsensusPolicy, ConsensusPolicy
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
 
@@ -40,9 +41,57 @@ class TestPolicyCreation(unittest.TestCase):
                 
         return parser
 
+    def test_invalid_num_votes(self):
+        """Test the creation of a policy with a majority rule having negative votes."""
+        with open(self.test_cases_path / "invalid_examples/invalid_num_votes.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(InvalidVotesException) as raised_exception:
+                walker.walk(listener, tree)
+            
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+                
+    def test_invalid_confidence(self):
+        """Test the creation of a policy with an individual having confidence value outside [0,1]."""
+        with open(self.test_cases_path / "invalid_examples/invalid_confidence.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(InvalidValueException) as raised_exception:
+                walker.walk(listener, tree)
+
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+
+    def test_invalid_consensus_with_parameters(self):
+        """Test the creation of a consensus policy having parameters."""
+        with open(self.test_cases_path / "invalid_examples/consensus_with_parameters.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
-        with open(self.test_cases_path / "valid_examples/majority_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/majority_policy.txt", "r") as file:
             text = file.read()
             
             # Setup parser and create model
@@ -110,35 +159,9 @@ class TestPolicyCreation(unittest.TestCase):
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
-    def test_invalid_num_votes(self):
-        """Test the creation of a policy with a majority rule having negative votes."""
-        with open(self.test_cases_path / "invalid_examples/invalid_num_votes.txt", "r") as file:
-            text = file.read()
-            parser = self.setup_parser(text)
-            tree = parser.policy()
-            
-            listener = PolicyCreationListener()
-            walker = ParseTreeWalker()
-            
-            with self.assertRaises(InvalidVotesException):
-                walker.walk(listener, tree)
-                
-    def test_invalid_confidence(self):
-        """Test the creation of a policy with an individual having confidence value outside [0,1]."""
-        with open(self.test_cases_path / "invalid_examples/invalid_confidence.txt", "r") as file:
-            text = file.read()
-            parser = self.setup_parser(text)
-            tree = parser.policy()
-            
-            listener = PolicyCreationListener()
-            walker = ParseTreeWalker()
-            
-            with self.assertRaises(InvalidValueException):
-                walker.walk(listener, tree)
-
     def test_absolute_majority_policy_creation(self):
         """Test the creation of a policy with an absolute majority policy."""
-        with open(self.test_cases_path / "valid_examples/absolute_majority_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/absolute_majority_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()
@@ -176,9 +199,12 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(policy.minVotes, 2)
             self.assertEqual(policy.ratio, 0.7)
 
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
     def test_leader_driven_policy_creation(self):
         """Test the creation of a policy with a leader driven policy."""
-        with open(self.test_cases_path / "valid_examples/leader_driven_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()
@@ -241,10 +267,13 @@ class TestPolicyCreation(unittest.TestCase):
             # Test default policy parameters
             self.assertEqual(default_policy.minVotes, 2)
 
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
 
     def test_composed_policy_creation(self):
         """Test the creation of a composed policy. Based on the HFC governance policy."""
-        with open(self.test_cases_path / "valid_examples/hfc_governance.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/real_world/hfc_governance.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()
@@ -332,6 +361,49 @@ class TestPolicyCreation(unittest.TestCase):
             # Test phase 2 voting parameters
             self.assertEqual(phase_2.minVotes, 1)
             self.assertEqual(phase_2.ratio, 1.0)
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_lazy_consensus_policy_creation(self):
+        """Test the creation of a policy with a consensus voting."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/lazy_consensus_policy.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Assertions
+            self.assertIsInstance(policy, LazyConsensusPolicy)
+            self.assertEqual(policy.name, "TestPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+            
+            # Test participants
+            self.assertEqual(len(policy.participants), 1)
+            
+            # Test Role participant
+            roles = {p for p in policy.participants if isinstance(p, Role)}
+            self.assertEqual(len(roles), 1)
+            role = next(iter(roles))
+            self.assertEqual(role.name, "Maintainer")
+            
+            # Test conditions (none in this policy)
+            self.assertEqual(len(policy.conditions), 0)
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()

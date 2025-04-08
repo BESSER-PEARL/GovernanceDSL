@@ -1,6 +1,6 @@
 from enum import Enum
 from besser.BUML.metamodel.structural import Element
-from metamodel.governance import Task, StatusEnum, Project
+from metamodel.governance import Task, StatusEnum, Project, Condition
 
 class ActionEnum(Enum):
     MERGE = 1
@@ -87,3 +87,8 @@ class Patch(Task):
     @element.setter
     def element(self, element: GitHubElement):
         self.__element = element
+
+class PassedTests(Condition):
+    """Represents the condition of passed tests for a GitHub element"""
+    def __init__(self, name: str):
+        super().__init__(name)

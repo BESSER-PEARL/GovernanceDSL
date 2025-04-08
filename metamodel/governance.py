@@ -186,19 +186,19 @@ class Deadline(Condition):
         self.__date = date
 
 class ParticipantExclusion(Condition):
-    def __init__(self, name: str, participant: Individual):
+    def __init__(self, name: str, excluded: set[Individual]):
         super().__init__(name)
-        self.participant = participant
+        self.excluded = excluded
     
     @property
-    def participant(self) -> Individual:
-        return self.__participant
+    def excluded(self) -> set[Individual]:
+        return self.__excluded
     
-    @participant.setter
-    def participant(self, participant: Individual):
-        if participant is None:
-            raise UndefinedAttributeException("participant", message="Participant relationship must be defined.")
-        self.__participant = participant
+    @excluded.setter
+    def excluded(self, excluded: set[Individual]):
+        if excluded is None:
+            raise UndefinedAttributeException("excluded", message="Participant relationship (excluded) must be defined.")
+        self.__excluded = excluded
 
 class MinimumParticipant(Condition):
     def __init__(self, name: str, min_participants: int):
@@ -387,11 +387,9 @@ class LeaderDrivenPolicy(SinglePolicy):
     
     @default.setter
     def default(self, default: SinglePolicy):
-        if not default:
-            raise EmptySetException("LeaderDrivenPolicy must have a default policy")
         self.__default = default
         # Only propagate scope after default is set
-        if self.scope:
+        if self.scope and default:
             self.default.scope = self.scope
     
     def propagate_scope(self):

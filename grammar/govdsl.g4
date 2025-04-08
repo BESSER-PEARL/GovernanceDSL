@@ -40,15 +40,17 @@ hasRole             : 'as' participantID ;
 confidence          : 'with confidence' FLOAT ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? ;
+conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? ;
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY
-participantExclusion: 'ParticipantExclusion' ID ':' participantID ; // TODO: For now only one exclusion, but allow more in the future
+participantExclusion: 'ParticipantExclusion' ':' participantID (',' participantID)* ;
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' participantID (',' participantID)* ; 
+passedTests         : 'PassedTests' ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+
 // Parameters group
 parameters          : 'Parameters' ':' (votParams | default) ;
 votParams           :  ratio ; 

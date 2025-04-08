@@ -368,6 +368,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#passedTests.
+    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#passedTests.
+    def exitPassedTests(self, ctx:govdslParser.PassedTestsContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#order.
     def enterOrder(self, ctx:govdslParser.OrderContext):
         pass

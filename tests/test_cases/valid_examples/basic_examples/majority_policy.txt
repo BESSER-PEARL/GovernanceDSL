@@ -6,7 +6,7 @@ MajorityPolicy TestPolicy {
         Individuals : Joe as Maintainer with confidence 0.7    
     Conditions:
         Deadline reviewDeadline : 14 days
-        ParticipantExclusion partExcl : Mike
+        ParticipantExclusion : Mike
         MinParticipants : 2
     Parameters:
         ratio 0.5

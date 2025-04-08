@@ -8,7 +8,8 @@ from utils.exceptions import (
     UndefinedAttributeException
 )
 from utils.gh_extension import (
-    ActionEnum, Label, PullRequest, Issue, Patch, Repository, GitHubElement
+    ActionEnum, Label, PullRequest, Issue, Patch, Repository, GitHubElement,
+    PassedTests
 )
 from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
@@ -157,26 +158,25 @@ class PolicyCreationListener(govdslListener):
                     
                     case "LeaderDrivenPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id, {})
-                        if 'default' not in parameters:
-                            raise UndefinedAttributeException("default", 
-                                                            message="LeaderDrivenPolicy must have a default policy defined.")
+                        default_policy_id = parameters.get('default')
                         
-                        default_policy_id = parameters['default']
-                        default_node = self.policy_tree.get(default_policy_id)
-                        
-                        if not default_node:
-                            raise UndefinedAttributeException("default", 
+                        default_policy = None
+                        if default_policy_id:
+                            default_node = self.policy_tree.get(default_policy_id)
+                            if not default_node:
+                                raise UndefinedAttributeException("default", 
                                                             f"Default policy '{default_policy_id}' not found in policy tree.")
                         
-                        # If the default policy hasn't been processed yet, prioritize it
-                        if default_policy_id not in processed:
-                            # Move the default policy to the front of the processing queue
-                            to_process.insert(0, default_node)
-                            # Re-add the current node to process after the default
-                            to_process.append(node)
-                            continue
+                            # If the default policy hasn't been processed yet, prioritize it
+                            if default_policy_id not in processed:
+                                # Move the default policy to the front of the processing queue
+                                to_process.insert(0, default_node)
+                                # Re-add the current node to process after the default
+                                to_process.append(node)
+                                continue
                             
-                        default_policy = default_node.policy_object
+                            default_policy = default_node.policy_object
+
                         node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
                         
                         # Scope will be automatically propagated to default policy by the LeaderDrivenPolicy class
@@ -488,9 +488,25 @@ class PolicyCreationListener(govdslListener):
         self._register_condition_with_current_policy(deadline)
     
     def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
-        # TODO: This condition needs more refinement. We will include primitive types, and multiple individuals
-        individual = Individual(name=ctx.participantID().ID().getText())
-        cond = ParticipantExclusion(name=ctx.ID().getText(), participant=individual)
+        # TODO: This condition needs more refinement. We will include primitive types.
+        excluded = self.find_descendant_nodes_by_type(node=ctx,
+                                                target_type=govdslParser.ParticipantIDContext)
+        
+        excluded_objs = set()
+        for e in excluded:
+            excluded_name = e.ID().getText()
+            excluded_participant = None
+            if excluded_name in self.__policy_participants_map:
+                # Get the existing individual object; 
+                # Check also if it is an Individual for name collision with Roles (which should not happen, though)
+                excluded_participant = next(p for p in self.__policy_participants_map if p.name == excluded_name and isinstance(p, Individual)) 
+            else:
+                # We create an Individual (TODO: Maybe add primitive types)
+                excluded_participant = Individual(name=excluded_name)
+            excluded_objs.add(excluded_participant)
+
+        # we just put a name by default
+        cond = ParticipantExclusion(name="partExcl", excluded=excluded_objs)
         self._register_condition_with_current_policy(cond)
 
     def enterMinParticipant(self, ctx:govdslParser.MinParticipantContext):
@@ -522,6 +538,11 @@ class PolicyCreationListener(govdslListener):
         # Register with current policy
         self._register_condition_with_current_policy(veto_right_obj)
 
+    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+        
+        if ctx.booleanValue().getText().lower() == "true":
+            test_condition = PassedTests(name="passedTestsCondition")
+            self._register_condition_with_current_policy(test_condition)
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         # Get the current policy context

@@ -20,7 +20,7 @@ from metamodel.governance import (
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
     LazyConsensusPolicy, MinimumParticipant, VetoRight
 )
-from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch
+from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch, PassedTests
 
 class TestPolicyCreation(unittest.TestCase):
     def setUp(self):
@@ -149,7 +149,12 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(exclusion_conditions), 1)
             exclusion = next(iter(exclusion_conditions))
             self.assertEqual(exclusion.name, "partExcl")
-            self.assertEqual(exclusion.participant.name, "Mike")
+            excluded_participants = exclusion.excluded
+            self.assertEqual(len(excluded_participants), 1)
+            self.assertIsInstance(excluded_participants, set)
+            excluded_participant = next(iter(excluded_participants))
+            self.assertIsInstance(excluded_participant, Individual)
+            self.assertEqual(excluded_participant.name, "Mike")
 
             # Find and test MinimumParticipant condition
             min_part_conditions = {c for c in policy.conditions if isinstance(c, MinimumParticipant)}
@@ -244,12 +249,21 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(participant.name, "Committers")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 1)
-            condition = next(iter(policy.conditions))
-            self.assertIsInstance(condition, Deadline)
-            self.assertEqual(condition.name, "reviewDeadline")
-            self.assertEqual(condition.offset, timedelta(days=7))
-            
+            self.assertEqual(len(policy.conditions), 2)
+
+            # Find and test Deadline condition
+            deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
+            deadline = next(iter(deadline_conditions))
+            self.assertIsInstance(deadline, Deadline)
+            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.offset, timedelta(days=7))
+
+            # Find and test PassedTests condition
+            passed_tests_conditions = {c for c in policy.conditions if isinstance(c, PassedTests)}
+            passed_tests = next(iter(passed_tests_conditions))
+            self.assertIsInstance(passed_tests, PassedTests)
+            self.assertEqual(passed_tests.name, "passedTestsCondition")
+
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.7)
 
@@ -317,6 +331,48 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(scope, Repository)
             self.assertEqual(scope.name, "TestProject")
             self.assertEqual(scope.repo_id, "owner/repo")
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_leader_driven_no_default_policy_creation(self):
+        """Test the creation of a policy with a leader driven policy without a default policy."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_no_default.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.policy()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+            
+            # Assertions
+            self.assertIsInstance(policy, LeaderDrivenPolicy)
+            self.assertEqual(policy.name, "TestPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+            
+            # Test leader participants
+            self.assertEqual(len(policy.participants), 1)
+            participant = next(iter(policy.participants))
+            self.assertIsInstance(participant, Individual)
+            self.assertEqual(participant.name, "Leader")
+            
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "reviewDeadline")
+            self.assertEqual(condition.offset, timedelta(days=7))
+            
+            # Test default policy
+            self.assertIsNone(policy.default)
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

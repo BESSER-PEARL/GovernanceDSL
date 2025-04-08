@@ -1,11 +1,8 @@
-AbsoluteMajorityPolicy TestPolicy {
+LeaderDrivenPolicy TestPolicy {
     Scope:
         Project TestProject from GitHub : owner/repo
     Participants:
-        Roles : Committers
+        Individuals : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
-        PassedTests: true
-    Parameters:
-        ratio 0.7
 }

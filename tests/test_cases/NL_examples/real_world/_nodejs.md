@@ -16,11 +16,11 @@
 **Reporter**: Adem
 
 **Policy**: 
-  - PR merge: (Implemented)
+  - PR merge: (Implemented: [nodejs_pr_merge.txt](../../valid_examples/real_world/nodejs_pr_merge.txt))
         - Two collaborators must approve a pull request before the pull request can land. (Rule)
         - (One collaborator approval is enough if the pull request has been open for more than 7 days.) (Rule)
         - ~~Approving a pull request indicates that the collaborator accepts responsibility for the change.~~ (Irrelevant)
-        - Approval must be from collaborators who are not authors of the change.(Rule condition)
+        - Approval must be from collaborators who are not authors of the change.(Rule condition: PartExclusion)
         - If a collaborator opposes a proposed change, then the change cannot land. (ratio 100%? We could have also a Lazy Consensus in Voting Policies?)
         - The exception is if the TSC votes to approve the change despite the opposition. (Votes of TSC overcome ratio != 100%; could be a new phase)
         - ~~Usually, involving the TSC is unnecessary.~~ (Irrelevant)

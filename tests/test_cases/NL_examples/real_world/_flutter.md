@@ -14,7 +14,7 @@
 
 They have further docs on [Getting a code review](https://github.com/flutter/flutter/blob/master/docs/contributing/Tree-hygiene.md#getting-a-code-review). 
 However, here they do not mention how they are closing the PR (other than the above mentioned points 8 and 9).
-Further info that might be valuable for the definition of the policy could be the following statement: "*Once you are satisfied with the contribution, and only once you are satisfied, use the GitHub "Approval" mechanism (an "LGTM" comment is not sufficient).*"
+Further info that might be valuable for the definition of the policy could be the following statement: "Once you are satisfied with the contribution, and only once you are satisfied, use the GitHub "Approval" mechanism (an "LGTM" comment is not sufficient)."
 
 **Policy**: 
 

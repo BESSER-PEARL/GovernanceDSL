@@ -12,5 +12,5 @@
 
 - To be submitted, a change must have a Code-Review +2 from a maintainer. 
 - Maintainers can also apply a Hold +1 vote to the change, to mark a change that should not be submitted now.
-- To be submitted, a change must not have any Hold +1 votes from a maintainer. (This would be veto right, right?)
+- To be submitted, a change must not have any Hold +1 votes from a maintainer. (<ins>*This would be veto right, right?*</ins>)
 - Finally, to be submitted, a change must have the involvement of two Google employees, either as the uploader of the change or as a reviewer voting at least Code-Review +1. This requirement is for compliance and supply chain security reasons. 

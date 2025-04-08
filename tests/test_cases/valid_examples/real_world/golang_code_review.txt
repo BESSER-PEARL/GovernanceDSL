@@ -4,7 +4,8 @@ MajorityPolicy golang_cr {
     Participants:
         Roles : Maintainer   
     Conditions:
-        Veto Here? or with ratio 1.0, is understood?
+        VetoRight : Maintainer
+        minParticipants : 1 
     Parameters:
         ratio 1.0
 }

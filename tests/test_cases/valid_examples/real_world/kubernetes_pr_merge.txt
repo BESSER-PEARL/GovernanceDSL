@@ -20,5 +20,11 @@ ComposedPolicy pr_merge {
             Parameters:
                 ratio 1.0
         }
+        LeaderDrivenPolicy phase_3 {
+            Participants:
+                Agent
+            Conditions:
+                Labels¿?
+        }
     }
 }

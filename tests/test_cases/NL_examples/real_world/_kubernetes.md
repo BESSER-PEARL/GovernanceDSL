@@ -39,7 +39,7 @@
         - Once all **approvers** (one from each of the previously identified OWNERS files) have approved,
             [prow](https://prow.k8s.io) ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) applies an
             `approved` label
-    - **Phase 3**: Automation merges the PR: (ADEM: To represent this we should have ad-hoc conditions, right? Like LabelCondition, or )
+    - **Phase 3**: Automation merges the PR: (<ins>*ADEM: To represent this we should have ad-hoc conditions, right? Like LabelCondition</ins>*)
         - If all of the following are true:
             - All required labels are present (eg: `lgtm`, `approved`)
             - Any blocking labels are missing (eg: there is no `do-not-merge/hold`, `needs-rebase`)

@@ -1,0 +1,6 @@
+* Anyone can send an issue
+* Only team developers can vote with +1, 0 or -1
+* The issue is accepted if there are more +1 votes than -1 votes
+* Project manager can veto the issue
+* Accepted issues are identified as development tasks and may become pull requests
+* Pull requests are reviewed by at least two team developers

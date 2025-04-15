@@ -115,7 +115,7 @@ class PolicyCreationListener(govdslListener):
                     continue
                 
                 # Get phases (child policies) and create composed policy
-                phases = {child.policy_object for child in node.children}
+                phases = [child.policy_object for child in node.children]
                 order = self.__policy_order_map.get(node.policy_id)
                 
                 node.policy_object = ComposedPolicy(name=node.policy_id,

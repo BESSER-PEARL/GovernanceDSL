@@ -401,10 +401,13 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Test phases count
             self.assertEqual(len(policy.phases), 2)
-            phases = list(policy.phases)
+            
+            # Test phases order - new test for order preservation
+            self.assertEqual(policy.phases[0].name, "phase_1", "First phase should be phase_1")
+            self.assertEqual(policy.phases[1].name, "phase_2", "Second phase should be phase_2")
             
             # Test first phase
-            phase_1 = next((p for p in phases if p.name == "phase_1"), None)
+            phase_1 = policy.phases[0]
             self.assertIsNotNone(phase_1, "Phase 1 not found")
             self.assertIsInstance(phase_1, MajorityPolicy)
             
@@ -420,6 +423,11 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(task_scope.element.name, "TestTask")
             # Check for labels
             self.assertIsNone(task_scope.element.labels)
+
+            # Test phase 1 parent
+            self.assertIsNotNone(phase_1.parent)
+            self.assertIsInstance(phase_1.parent, ComposedPolicy)
+            self.assertEqual(phase_1.parent.name, "phasedPolicy")
             
             # Test phase 1 participants
             self.assertEqual(len(phase_1.participants), 1)
@@ -448,7 +456,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(phase_1.ratio, 1.0)
             
             # Test second phase
-            phase_2 = next((p for p in phases if p.name == "phase_2"), None)
+            phase_2 = policy.phases[1]
             self.assertIsNotNone(phase_2, "Phase 2 not found")
             self.assertIsInstance(phase_2, MajorityPolicy)
             
@@ -464,6 +472,11 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(task_scope.element.name, "TestTask")
             # Check for labels
             self.assertIsNone(task_scope.element.labels)
+
+            # Test phase 2 parent
+            self.assertIsNotNone(phase_2.parent)
+            self.assertIsInstance(phase_2.parent, ComposedPolicy)
+            self.assertEqual(phase_2.parent.name, "phasedPolicy")
             
             # Test phase 2 participants
             self.assertEqual(len(phase_2.participants), 1)

@@ -234,6 +234,7 @@ class Policy(Element):
     def __init__(self, name: str, scope: Scope = None):
         self.name = name
         self.scope = scope
+        self.__parent = None
     
     @property
     def name(self) -> str:
@@ -250,6 +251,14 @@ class Policy(Element):
     @scope.setter
     def scope(self, scope: Scope):
         self.__scope = scope
+
+    @property
+    def parent(self) -> 'ComposedPolicy | None':  # String literal for forward reference
+        return self.__parent
+    
+    @parent.setter
+    def parent(self, parent: 'ComposedPolicy | None'):
+        self.__parent = parent
     
     def validate(self):
         """Validates that the policy has all required properties before execution."""
@@ -409,7 +418,7 @@ class LeaderDrivenPolicy(SinglePolicy):
 
 class ComposedPolicy(Policy):
     """A ComposedPolicy must have at least one phase."""
-    def __init__(self, name: str, phases: set[Policy], sequential: bool, require_all: bool, carry_over: bool, scope: Scope = None):
+    def __init__(self, name: str, phases: list[Policy], sequential: bool, require_all: bool, carry_over: bool, scope: Scope = None):
         super().__init__(name, scope)
         self.phases = phases
         self.sequential = sequential
@@ -418,14 +427,18 @@ class ComposedPolicy(Policy):
         self.propagate_scope()
     
     @property
-    def phases(self) -> set[Policy]:
+    def phases(self) -> list[Policy]:
         return self.__phases
     
     @phases.setter
-    def phases(self, phases: set[Policy]):
+    def phases(self, phases: list[Policy]):
         if not phases:  # Only check for None or empty
             raise EmptySetException("ComposedPolicy must have at least one phase.")
         self.__phases = phases
+
+        # Set the parent reference for each phase
+        for phase in phases:
+            phase.parent = self
     
     @property
     def sequential(self) -> bool:

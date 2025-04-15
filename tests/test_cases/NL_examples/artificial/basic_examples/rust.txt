@@ -1,0 +1,4 @@
+Have look at the governance deployed at the Rust project in github:
+https://github.com/rust-lang/rust/blob/master/triagebot.toml
+
+They use the rustbot: https://github.com/rustbot

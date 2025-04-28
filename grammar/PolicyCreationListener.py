@@ -18,7 +18,7 @@ from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
-    ConsensusPolicy, MinimumParticipant, VetoRight
+    ConsensusPolicy, MinimumParticipant, VetoRight, Agent
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -430,41 +430,72 @@ class PolicyCreationListener(govdslListener):
             role = Role(name=r.ID().getText())
             self._register_participant_with_current_policy(role) # WARNING: This might generate conflict if there is a role with the same name as a individual
     
-    def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
-        individuals = self.find_descendant_nodes_by_type(node=ctx,
-                                                            target_type=govdslParser.IndividualContext)
-        
-        for i in individuals:
-            i_name = i.participantID().ID().getText()
-            individual = Individual(name=i_name)
+    def enterIndividual(self, ctx:govdslParser.IndividualContext):
+        name = ctx.participantID().ID().getText()
+        individual = Individual(name=name)
 
-            if i.hasRole():
-                role_name = i.hasRole().participantID().ID().getText()
-                # Find the role object, if already defined
-                current_policy_id = self.policy_stack[-1].policy_id
-                if current_policy_id in self.__policy_participants_map:
-                    ref_role = Role(name=role_name)
-                    # Check if the role exists in the set
-                    if ref_role in self.__policy_participants_map[current_policy_id]:
-                        # Get the actual role object from the set
-                        role_obj = next(p for p in self.__policy_participants_map[current_policy_id] if p == ref_role)
-                    else:
-                        # Role can be created on the fly if not defined previosuly
-                        role_obj = Role(name=role_name)
-                        self._register_participant_with_current_policy(role_obj)
+        if ctx.hasRole():
+            role_name = ctx.hasRole().participantID().ID().getText()
+            # Find the role object, if already defined
+            current_policy_id = self.policy_stack[-1].policy_id
+            if current_policy_id in self.__policy_participants_map:
+                ref_role = Role(name=role_name)
+                # Check if the role exists in the set
+                if ref_role in self.__policy_participants_map[current_policy_id]:
+                    # Get the actual role object from the set
+                    role_obj = next(p for p in self.__policy_participants_map[current_policy_id] if p == ref_role)
+                else:
+                    # Role can be created on the fly if not defined previosuly
+                    role_obj = Role(name=role_name)
+                    self._register_participant_with_current_policy(role_obj)
 
-                    # Create hasRole relationship
-                    scope = self.__policy_scopes_map.get(current_policy_id)
-                    if scope:
-                        role_assignment = hasRole(f"{i_name}_{role_name}", role_obj, individual, scope)
-                        individual.role = role_assignment
-                    else:
-                        raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Scope must be defined before Participants).")
-                    
-            if i.confidence():
-                individual.confidence = float(i.confidence().FLOAT().getText())
-              
-            self._register_participant_with_current_policy(individual)
+                # Create hasRole relationship
+                scope = self.__policy_scopes_map.get(current_policy_id)
+                if scope:
+                    role_assignment = hasRole(f"{name}_{role_name}", role_obj, individual, scope)
+                    individual.role = role_assignment
+                else:
+                    raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Scope must be defined before Participants).")
+                
+        if ctx.voteValue():
+            individual.vote_value = float(ctx.voteValue().FLOAT().getText())
+            
+        self._register_participant_with_current_policy(individual)
+
+    def enterAgent(self, ctx:govdslParser.AgentContext):
+        name = ctx.participantID().ID().getText()
+        agent = Agent(name=name)
+
+        if ctx.hasRole():
+            role_name = ctx.hasRole().participantID().ID().getText()
+            # Find the role object, if already defined
+            current_policy_id = self.policy_stack[-1].policy_id
+            if current_policy_id in self.__policy_participants_map:
+                ref_role = Role(name=role_name)
+                # Check if the role exists in the set
+                if ref_role in self.__policy_participants_map[current_policy_id]:
+                    # Get the actual role object from the set
+                    role_obj = next(p for p in self.__policy_participants_map[current_policy_id] if p == ref_role)
+                else:
+                    # Role can be created on the fly if not defined previosuly
+                    role_obj = Role(name=role_name)
+                    self._register_participant_with_current_policy(role_obj)
+
+                # Create hasRole relationship
+                scope = self.__policy_scopes_map.get(current_policy_id)
+                if scope:
+                    role_assignment = hasRole(f"{name}_{role_name}", role_obj, agent, scope)
+                    agent.role = role_assignment
+                else:
+                    raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Scope must be defined before Participants).")
+                
+        if ctx.voteValue():
+            agent.vote_value = float(ctx.voteValue().FLOAT().getText())
+        if ctx.confidence():
+            agent.confidence = float(ctx.confidence().FLOAT().getText())
+            
+        self._register_participant_with_current_policy(agent)
+
             
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
         name = ctx.deadlineID().ID().getText()

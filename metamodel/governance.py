@@ -71,10 +71,10 @@ class Participant(Element):
         return hash(self.name)
 
 class Individual(Participant):
-    def __init__(self, name: str, confidence: float = 1.0):
+    def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name)
         self.__role = None
-        self.confidence = confidence
+        self.vote_value = vote_value 
     
     @property
     def role(self) -> 'hasRole':
@@ -83,6 +83,20 @@ class Individual(Participant):
     @role.setter
     def role(self, role_assignement: 'hasRole'):
         self.__role = role_assignement
+
+    @property
+    def vote_value(self) -> float:
+        return self.__vote_value
+    
+    @vote_value.setter
+    def vote_value(self, vote_value: float):
+        if vote_value < 0:
+            raise InvalidValueException("vote_value", vote_value)
+        self.__vote_value = vote_value
+
+class Agent(Individual):
+    def __init__(self, name: str, confidence: float = 1.0):
+        super().__init__(name, confidence)
 
     @property
     def confidence(self) -> float:

@@ -56,9 +56,9 @@ class TestPolicyCreation(unittest.TestCase):
             exception_message = str(raised_exception.exception)
             print(f"\nException message: {exception_message}")
                 
-    def test_invalid_confidence(self):
-        """Test the creation of a policy with an individual having confidence value outside [0,1]."""
-        with open(self.test_cases_path / "invalid_examples/invalid_confidence.txt", "r") as file:
+    def test_invalid_vote_value(self):
+        """Test the creation of a policy with an individual having vote value outside allowed range."""
+        with open(self.test_cases_path / "invalid_examples/invalid_vote_value.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.policy()
@@ -115,18 +115,27 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test participants
-            self.assertEqual(len(policy.participants), 2)
+            self.assertEqual(len(policy.participants), 3)
             
             # Test Individual participant
-            individuals = {p for p in policy.participants if isinstance(p, Individual)}
-            self.assertEqual(len(individuals), 1)
-            individual = next(iter(individuals))
+            individuals = [p for p in policy.participants if isinstance(p, Individual)]
+            self.assertEqual(len(individuals), 2)
+            # Individuals are not ordered
+            individual = next((ind for ind in individuals if ind.name == "Joe"), None)
+            self.assertIsNotNone(individual, "Joe not found")
             self.assertEqual(individual.name, "Joe")
-            self.assertEqual(individual.confidence, 0.7)
-            
-            # Test role assignment for individual
+            self.assertEqual(individual.vote_value, 0.7)
             self.assertIsNotNone(individual.role)
             self.assertEqual(individual.role.name, "Joe_Maintainer")
+
+            agent = next((ind for ind in individuals if ind.name == "Mike"), None)
+            self.assertIsNotNone(agent, "Mike not found")
+            self.assertEqual(agent.name, "Mike")
+            self.assertEqual(agent.vote_value, 1.0) # This is the default value
+            self.assertEqual(agent.confidence, 0.8)
+            self.assertIsNotNone(agent.role)
+            self.assertEqual(agent.role.name, "Mike_Maintainer")
+            
             
             # Test Role participant
             roles = {p for p in policy.participants if isinstance(p, Role)}

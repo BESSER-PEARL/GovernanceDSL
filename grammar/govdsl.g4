@@ -34,9 +34,12 @@ labels              : 'Labels' ':' ID (',' ID)* ;
 participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
-individuals         : 'Individuals' ':' individual (',' individual)* ;
-individual          : participantID hasRole? confidence? ;
+individuals         : 'Individuals' ':' individualEntry (',' individualEntry)* ;
+individualEntry     : individual | agent ;
+individual          : participantID hasRole? voteValue? ;
 hasRole             : 'as' participantID ;
+voteValue           : 'with vote value' FLOAT ;
+agent               : '(Agent)' participantID hasRole? voteValue? confidence? ;
 confidence          : 'with confidence' FLOAT ;
 
 // Conditions group
@@ -70,5 +73,5 @@ nestedPolicy        : nestedSinglePolicy | nestedComposedPolicy ;
 // Lexer rules
 ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 SIGNED_INT      : '-'? [0-9]+ ; // Just to cover the case where the user might use a negative number
-FLOAT           : [0-9]+ '.' [0-9]+ ;
+FLOAT           : '-'? [0-9]+ '.' [0-9]+ ;
 WS              : (' ' | '\t' | '\r'? '\n')+ -> skip ;

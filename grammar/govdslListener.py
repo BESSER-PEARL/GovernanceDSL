@@ -10,444 +10,335 @@ class govdslListener(ParseTreeListener):
 
     # Enter a parse tree produced by govdslParser#policy.
     def enterPolicy(self, ctx:govdslParser.PolicyContext):
-        pass
+        print(f"Enter policy: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#policy.
     def exitPolicy(self, ctx:govdslParser.PolicyContext):
-        pass
+        print(f"Exit policy: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#topLevelSinglePolicy.
     def enterTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
-        pass
+        print(f"Enter topLevelSinglePolicy: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#topLevelSinglePolicy.
     def exitTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
-        pass
+        print(f"Exit topLevelSinglePolicy: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#topLevelComposedPolicy.
     def enterTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
-        pass
+        print(f"Enter topLevelComposedPolicy: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#topLevelComposedPolicy.
     def exitTopLevelComposedPolicy(self, ctx:govdslParser.TopLevelComposedPolicyContext):
-        pass
+        print(f"Exit topLevelComposedPolicy: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#nestedSinglePolicy.
     def enterNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
-        pass
+        print(f"Enter nestedSinglePolicy: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#nestedSinglePolicy.
     def exitNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
-        pass
+        print(f"Exit nestedSinglePolicy: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#nestedComposedPolicy.
     def enterNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
-        pass
+        print(f"Enter nestedComposedPolicy: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#nestedComposedPolicy.
     def exitNestedComposedPolicy(self, ctx:govdslParser.NestedComposedPolicyContext):
-        pass
+        print(f"Exit nestedComposedPolicy: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#policyType.
     def enterPolicyType(self, ctx:govdslParser.PolicyTypeContext):
-        pass
+        print(f"Enter policyType: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#policyType.
     def exitPolicyType(self, ctx:govdslParser.PolicyTypeContext):
-        pass
+        print(f"Exit policyType: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#scope.
     def enterScope(self, ctx:govdslParser.ScopeContext):
-        pass
+        print(f"Enter scope: {ctx.getText()}")
 
     # Exit a parse tree produced by govdslParser#scope.
     def exitScope(self, ctx:govdslParser.ScopeContext):
-        pass
+        print(f"Exit scope: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#project.
     def enterProject(self, ctx:govdslParser.ProjectContext):
-        pass
+        print(f"Enter project: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#project.
     def exitProject(self, ctx:govdslParser.ProjectContext):
-        pass
+        print(f"Exit project: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#platform.
     def enterPlatform(self, ctx:govdslParser.PlatformContext):
-        pass
+        print(f"Enter platform: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#platform.
     def exitPlatform(self, ctx:govdslParser.PlatformContext):
-        pass
+        print(f"Exit platform: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#repoID.
     def enterRepoID(self, ctx:govdslParser.RepoIDContext):
-        pass
+        print(f"Enter repoID: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#repoID.
     def exitRepoID(self, ctx:govdslParser.RepoIDContext):
-        pass
+        print(f"Exit repoID: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#activity.
     def enterActivity(self, ctx:govdslParser.ActivityContext):
-        pass
+        print(f"Enter activity: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#activity.
     def exitActivity(self, ctx:govdslParser.ActivityContext):
-        pass
+        print(f"Exit activity: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#task.
     def enterTask(self, ctx:govdslParser.TaskContext):
-        pass
+        print(f"Enter task: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#task.
     def exitTask(self, ctx:govdslParser.TaskContext):
-        pass
+        print(f"Exit task: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#taskType.
     def enterTaskType(self, ctx:govdslParser.TaskTypeContext):
-        pass
+        print(f"Enter taskType: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#taskType.
     def exitTaskType(self, ctx:govdslParser.TaskTypeContext):
-        pass
+        print(f"Exit taskType: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#taskContent.
     def enterTaskContent(self, ctx:govdslParser.TaskContentContext):
-        pass
+        print(f"Enter taskContent: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#taskContent.
     def exitTaskContent(self, ctx:govdslParser.TaskContentContext):
-        pass
+        print(f"Exit taskContent: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#actionWithLabels.
     def enterActionWithLabels(self, ctx:govdslParser.ActionWithLabelsContext):
-        pass
+        print(f"Enter actionWithLabels: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#actionWithLabels.
     def exitActionWithLabels(self, ctx:govdslParser.ActionWithLabelsContext):
-        pass
+        print(f"Exit actionWithLabels: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#status.
     def enterStatus(self, ctx:govdslParser.StatusContext):
-        pass
+        print(f"Enter status: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#status.
     def exitStatus(self, ctx:govdslParser.StatusContext):
-        pass
+        print(f"Exit status: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#statusEnum.
     def enterStatusEnum(self, ctx:govdslParser.StatusEnumContext):
-        pass
+        print(f"Enter statusEnum: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#statusEnum.
     def exitStatusEnum(self, ctx:govdslParser.StatusEnumContext):
-        pass
+        print(f"Exit statusEnum: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#action.
     def enterAction(self, ctx:govdslParser.ActionContext):
-        pass
+        print(f"Enter action: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#action.
     def exitAction(self, ctx:govdslParser.ActionContext):
-        pass
+        print(f"Exit action: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#actionEnum.
     def enterActionEnum(self, ctx:govdslParser.ActionEnumContext):
-        pass
+        print(f"Enter actionEnum: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#actionEnum.
     def exitActionEnum(self, ctx:govdslParser.ActionEnumContext):
-        pass
+        print(f"Exit actionEnum: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#labels.
     def enterLabels(self, ctx:govdslParser.LabelsContext):
-        pass
+        print(f"Enter labels: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#labels.
     def exitLabels(self, ctx:govdslParser.LabelsContext):
-        pass
+        print(f"Exit labels: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#participants.
     def enterParticipants(self, ctx:govdslParser.ParticipantsContext):
-        pass
+        print(f"Enter participants: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#participants.
     def exitParticipants(self, ctx:govdslParser.ParticipantsContext):
-        pass
+        print(f"Exit participants: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#roles.
     def enterRoles(self, ctx:govdslParser.RolesContext):
-        pass
+        print(f"Enter roles: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#roles.
     def exitRoles(self, ctx:govdslParser.RolesContext):
-        pass
+        print(f"Exit roles: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#participantID.
     def enterParticipantID(self, ctx:govdslParser.ParticipantIDContext):
-        pass
+        print(f"Enter participantID: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#participantID.
     def exitParticipantID(self, ctx:govdslParser.ParticipantIDContext):
-        pass
+        print(f"Exit participantID: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#individuals.
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
-        pass
+        print(f"Enter individuals: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#individuals.
     def exitIndividuals(self, ctx:govdslParser.IndividualsContext):
-        pass
+        print(f"Exit individuals: {ctx.getText()}")
 
+    def enterIndividualEntry(self, ctx:govdslParser.IndividualEntryContext):
+        print(f"Enter individualEntry: {ctx.getText()}")
 
-    # Enter a parse tree produced by govdslParser#individual.
+    def exitIndividualEntry(self, ctx:govdslParser.IndividualEntryContext):
+        print(f"Exit individualEntry: {ctx.getText()}")
+
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
-        pass
+        print(f"Enter individual: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#individual.
     def exitIndividual(self, ctx:govdslParser.IndividualContext):
-        pass
+        print(f"Exit individual: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#hasRole.
     def enterHasRole(self, ctx:govdslParser.HasRoleContext):
-        pass
+        print(f"Enter hasRole: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#hasRole.
     def exitHasRole(self, ctx:govdslParser.HasRoleContext):
-        pass
+        print(f"Exit hasRole: {ctx.getText()}")
 
+    def enterVoteValue(self, ctx:govdslParser.VoteValueContext):
+        print(f"Enter voteValue: {ctx.getText()}")
 
-    # Enter a parse tree produced by govdslParser#confidence.
+    def exitVoteValue(self, ctx:govdslParser.VoteValueContext):
+        print(f"Exit voteValue: {ctx.getText()}")
+
+    def enterAgent(self, ctx:govdslParser.AgentContext):
+        print(f"Enter agent: {ctx.getText()}")
+
+    def exitAgent(self, ctx:govdslParser.AgentContext):
+        print(f"Exit agent: {ctx.getText()}")
+
     def enterConfidence(self, ctx:govdslParser.ConfidenceContext):
-        pass
+        print(f"Enter confidence: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#confidence.
     def exitConfidence(self, ctx:govdslParser.ConfidenceContext):
-        pass
+        print(f"Exit confidence: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#conditions.
     def enterConditions(self, ctx:govdslParser.ConditionsContext):
-        pass
+        print(f"Enter conditions: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#conditions.
     def exitConditions(self, ctx:govdslParser.ConditionsContext):
-        pass
+        print(f"Exit conditions: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#deadline.
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
-        pass
+        print(f"Enter deadline: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#deadline.
     def exitDeadline(self, ctx:govdslParser.DeadlineContext):
-        pass
+        print(f"Exit deadline: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#offset.
     def enterOffset(self, ctx:govdslParser.OffsetContext):
-        pass
+        print(f"Enter offset: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#offset.
     def exitOffset(self, ctx:govdslParser.OffsetContext):
-        pass
+        print(f"Exit offset: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#deadlineID.
     def enterDeadlineID(self, ctx:govdslParser.DeadlineIDContext):
-        pass
+        print(f"Enter deadlineID: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#deadlineID.
     def exitDeadlineID(self, ctx:govdslParser.DeadlineIDContext):
-        pass
+        print(f"Exit deadlineID: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#timeUnit.
     def enterTimeUnit(self, ctx:govdslParser.TimeUnitContext):
-        pass
+        print(f"Enter timeUnit: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#timeUnit.
     def exitTimeUnit(self, ctx:govdslParser.TimeUnitContext):
-        pass
+        print(f"Exit timeUnit: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#date.
     def enterDate(self, ctx:govdslParser.DateContext):
-        pass
+        print(f"Enter date: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#date.
     def exitDate(self, ctx:govdslParser.DateContext):
-        pass
+        print(f"Exit date: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#participantExclusion.
     def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
-        pass
+        print(f"Enter participantExclusion: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#participantExclusion.
     def exitParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
-        pass
+        print(f"Exit participantExclusion: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#minParticipant.
     def enterMinParticipant(self, ctx:govdslParser.MinParticipantContext):
-        pass
+        print(f"Enter minParticipant: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#minParticipant.
     def exitMinParticipant(self, ctx:govdslParser.MinParticipantContext):
-        pass
+        print(f"Exit minParticipant: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#vetoRight.
     def enterVetoRight(self, ctx:govdslParser.VetoRightContext):
-        pass
+        print(f"Enter vetoRight: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#vetoRight.
     def exitVetoRight(self, ctx:govdslParser.VetoRightContext):
-        pass
+        print(f"Exit vetoRight: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#parameters.
-    def enterParameters(self, ctx:govdslParser.ParametersContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#parameters.
-    def exitParameters(self, ctx:govdslParser.ParametersContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#votParams.
-    def enterVotParams(self, ctx:govdslParser.VotParamsContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#votParams.
-    def exitVotParams(self, ctx:govdslParser.VotParamsContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#ratio.
-    def enterRatio(self, ctx:govdslParser.RatioContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#ratio.
-    def exitRatio(self, ctx:govdslParser.RatioContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#default.
-    def enterDefault(self, ctx:govdslParser.DefaultContext):
-        pass
-
-    # Exit a parse tree produced by govdslParser#default.
-    def exitDefault(self, ctx:govdslParser.DefaultContext):
-        pass
-
-
-    # Enter a parse tree produced by govdslParser#passedTests.
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
-        pass
+        print(f"Enter passedTests: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#passedTests.
     def exitPassedTests(self, ctx:govdslParser.PassedTestsContext):
-        pass
+        print(f"Exit passedTests: {ctx.getText()}")
 
+    def enterParameters(self, ctx:govdslParser.ParametersContext):
+        print(f"Enter parameters: {ctx.getText()}")
 
-    # Enter a parse tree produced by govdslParser#order.
+    def exitParameters(self, ctx:govdslParser.ParametersContext):
+        print(f"Exit parameters: {ctx.getText()}")
+
+    def enterVotParams(self, ctx:govdslParser.VotParamsContext):
+        print(f"Enter votParams: {ctx.getText()}")
+
+    def exitVotParams(self, ctx:govdslParser.VotParamsContext):
+        print(f"Exit votParams: {ctx.getText()}")
+
+    def enterRatio(self, ctx:govdslParser.RatioContext):
+        print(f"Enter ratio: {ctx.getText()}")
+
+    def exitRatio(self, ctx:govdslParser.RatioContext):
+        print(f"Exit ratio: {ctx.getText()}")
+
+    def enterDefault(self, ctx:govdslParser.DefaultContext):
+        print(f"Enter default: {ctx.getText()}")
+
+    def exitDefault(self, ctx:govdslParser.DefaultContext):
+        print(f"Exit default: {ctx.getText()}")
+
     def enterOrder(self, ctx:govdslParser.OrderContext):
-        pass
+        print(f"Enter order: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#order.
     def exitOrder(self, ctx:govdslParser.OrderContext):
-        pass
+        print(f"Exit order: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#orderType.
     def enterOrderType(self, ctx:govdslParser.OrderTypeContext):
-        pass
+        print(f"Enter orderType: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#orderType.
     def exitOrderType(self, ctx:govdslParser.OrderTypeContext):
-        pass
+        print(f"Exit orderType: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#orderTypeValue.
     def enterOrderTypeValue(self, ctx:govdslParser.OrderTypeValueContext):
-        pass
+        print(f"Enter orderTypeValue: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#orderTypeValue.
     def exitOrderTypeValue(self, ctx:govdslParser.OrderTypeValueContext):
-        pass
+        print(f"Exit orderTypeValue: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#orderMode.
     def enterOrderMode(self, ctx:govdslParser.OrderModeContext):
-        pass
+        print(f"Enter orderMode: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#orderMode.
     def exitOrderMode(self, ctx:govdslParser.OrderModeContext):
-        pass
+        print(f"Exit orderMode: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#carryOver.
     def enterCarryOver(self, ctx:govdslParser.CarryOverContext):
-        pass
+        print(f"Enter carryOver: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#carryOver.
     def exitCarryOver(self, ctx:govdslParser.CarryOverContext):
-        pass
+        print(f"Exit carryOver: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#booleanValue.
     def enterBooleanValue(self, ctx:govdslParser.BooleanValueContext):
-        pass
+        print(f"Enter booleanValue: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#booleanValue.
     def exitBooleanValue(self, ctx:govdslParser.BooleanValueContext):
-        pass
+        print(f"Exit booleanValue: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#phases.
     def enterPhases(self, ctx:govdslParser.PhasesContext):
-        pass
+        print(f"Enter phases: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#phases.
     def exitPhases(self, ctx:govdslParser.PhasesContext):
-        pass
+        print(f"Exit phases: {ctx.getText()}")
 
-
-    # Enter a parse tree produced by govdslParser#nestedPolicy.
     def enterNestedPolicy(self, ctx:govdslParser.NestedPolicyContext):
-        pass
+        print(f"Enter nestedPolicy: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#nestedPolicy.
     def exitNestedPolicy(self, ctx:govdslParser.NestedPolicyContext):
-        pass
-
+        print(f"Exit nestedPolicy: {ctx.getText()}")
 
 
 del govdslParser

@@ -1,16 +1,24 @@
+Scopes:
+    Project NodeProject from GitHub {
+        activities :
+            TestActivity {
+                tasks :
+                    TestTask : Pull request {
+                        Action : merge
+                    }
+            }
+    }
+Participants:
+    Roles : Maintainers, TSC, Author
 ComposedPolicy pr_merge {
-    Scope:
-        Task TestTask : Pull request {
-            Action : merge
-        }
+    Scope: TestTask
     Order :
         Execution : sequential
         RequireAll : false
         CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
-            Participants:
-                Roles : Maintainers
+            Participant list : Maintainers
             Conditions:
                 Deadline reviewDeadline : 14 days
                 ParticipantExclusion : Author
@@ -18,16 +26,14 @@ ComposedPolicy pr_merge {
                 minVotes 2, ratio 1.0
         }
         MajorityPolicy phase_2 {
-            Participants:
-                Roles : Maintainers
+            Participant list : Maintainers
             Conditions:
                 ParticipantExclusion : Author
             Parameters:
                 minVotes 1, ratio 1.0
         }
         MajorityPolicy phase_3 {
-            Participants:
-                Roles: TSC
+            Participant list : TSC
             Parameters:
                 minVotes 1
         }

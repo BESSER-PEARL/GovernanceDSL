@@ -8,11 +8,12 @@ Scopes:
                     }
             }
     }
+Participants:
+    Roles : Maintainer
+    Individuals : Joe with vote value 0.7, (Agent) Mike with confidence 0.8
 MajorityPolicy TestPolicy {
     Scope: myTask
-    Participants:
-        Roles : Maintainer
-        Individuals : Joe as Maintainer with vote value 0.7, (Agent) Mike as Maintainer with confidence 0.8
+    Participant list : Maintainer, Joe as Maintainer, Mike as Maintainer
     Conditions:
         Deadline reviewDeadline : 14 days
         ParticipantExclusion : Mike

@@ -3,13 +3,14 @@ Scopes:
         activities :
             Contribution
     }
+Participants:
+    Roles : Maintainer
 MajorityPolicy golang_cr {
-    Scope: Contribution # ADEM: Could we join all contribution under Activity class? 
-    Participants:
-        Roles : Maintainer   
+    Scope: Contribution 
+    Participant list : Maintainer
     Conditions:
         VetoRight : Maintainer
-        minParticipants : 1 
+        MinParticipants : 1 
     Parameters:
         ratio 1.0
 }

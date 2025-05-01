@@ -1,9 +1,10 @@
 Scopes: 
     Project TestProject from GitHub : owner/repo
+Participants:
+    Individuals : Leader
 LeaderDrivenPolicy TestPolicy {
     Scope: TestProject
-    Participants:
-        Individuals : Leader
+    Participant list : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
 }

@@ -8,6 +8,9 @@ Scopes:
                     }
             }
     }
+Participants:
+    Roles : Reviewers, Approvers
+    Individuals : Agent
 ComposedPolicy pr_merge {
     Scope: TestTask
     Order :
@@ -16,22 +19,19 @@ ComposedPolicy pr_merge {
         CarryOver : true
     Phases {
         AbsoluteMajorityPolicy phase_1 {
-            Participants:
-                Roles : Reviewers
+            Participant list : Reviewers
             Parameters:
                 ratio 1.0
         }
         AbsoluteMajorityPolicy phase_2 {
-            Participants:
-                Roles : Approvers
+            Participant list : Approvers
             Parameters:
                 ratio 1.0
         }
         LeaderDrivenPolicy phase_3 {
-            Participants:
-                Agent
+            Participant list : Agent
             Conditions:
-                Labels¿?
+                Labels
         }
     }
 }

@@ -1,9 +1,10 @@
 Scopes: 
     Project TestProject from GitHub : owner/repo
+Participants:
+    Roles : Committers
 AbsoluteMajorityPolicy TestPolicy {
     Scope: TestProject
-    Participants:
-        Roles : Committers
+    Participant list : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
         PassedTests: true

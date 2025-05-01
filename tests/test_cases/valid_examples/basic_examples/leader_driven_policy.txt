@@ -1,15 +1,16 @@
 Scopes: 
     Project TestProject from GitHub : owner/repo
+Participants:
+    Individuals : Leader
+    Roles : Maintainers
 LeaderDrivenPolicy TestPolicy {
     Scope: TestProject
-    Participants:
-        Individuals : Leader
+    Participant list : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
     Parameters:
         default MajorityPolicy defaultPolicy {
-            Participants:
-                Roles : Maintainers
+            Participant list : Maintainers
             Conditions:
                 Deadline reviewDeadline : 7 days
         }

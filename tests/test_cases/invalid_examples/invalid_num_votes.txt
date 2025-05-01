@@ -3,10 +3,11 @@ Scopes:
         activities :
             TestActivity
     }
+Participants:
+    Roles : Committers
 MajorityPolicy TestPolicy {
     Scope: TestActivity
-    Participants:
-        Roles : Committers
+    Participant list : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
         MinParticipants : -1

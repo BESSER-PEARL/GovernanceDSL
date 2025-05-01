@@ -8,6 +8,8 @@ Scopes:
                     }
             }
     }
+Participants:
+    Roles : Maintainers
 ComposedPolicy phasedPolicy {
     Scope: TestTask
     Order :
@@ -16,8 +18,7 @@ ComposedPolicy phasedPolicy {
         CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
-            Participants:
-                Roles : Maintainers
+            Participant list : Maintainers
             Conditions:
                 Deadline reviewDeadline : 14 days
                 MinParticipants : 2
@@ -25,8 +26,7 @@ ComposedPolicy phasedPolicy {
                 ratio 1.0
         }
         MajorityPolicy phase_2 {
-            Participants:
-                Roles : Maintainers
+            Participant list : Maintainers
             Conditions:
                 MinParticipants : 1
             Parameters:

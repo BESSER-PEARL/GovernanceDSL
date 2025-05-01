@@ -8,6 +8,9 @@ Scopes:
                     }
             }
     }
+Participants:
+    Roles : Reviewer, Owners
+    Individuals : Agent
 ComposedPolicy phasedPolicy {
     Scope: TestTask
     Order :
@@ -16,20 +19,17 @@ ComposedPolicy phasedPolicy {
         CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
-            Participants:
-                Roles : Reviewer
+            Participant list : Reviewer
             Parameters:
                 minVotes 1, ratio 1.0
         }
         LeaderDrivenPolicy phase_2 {
-            Participants:
-                Agent?
+            Participant list : Agent
             Conditions:
-                PassedTests
+                PassedTests: true
         }
         MajorityPolicy phase_3 {
-            Participants:
-                Roles : Owners
+            Participant list : Owners
             Parameters:
                 minVotes 1, ratio 1.0
         }

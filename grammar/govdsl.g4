@@ -1,15 +1,15 @@
 grammar govdsl;
 
 // Parser rules
-governance          : (scopes policy) EOF ;
+governance          : (scopes participants policy) EOF ;
 policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)
-topLevelSinglePolicy    : policyType ID '{' scope participants? conditions? parameters? '}' ;
+topLevelSinglePolicy    : policyType ID '{' scope policyParticipants? conditions? parameters? '}' ;
 topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 
 // Nested policies (no scope)
-nestedSinglePolicy      : policyType ID '{' participants? conditions? parameters? '}' ;
+nestedSinglePolicy      : policyType ID '{' policyParticipants? conditions? parameters? '}' ;
 nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
@@ -33,14 +33,16 @@ labels              : 'Labels' ':' ID (',' ID)* ;
 
 // Participants group
 participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;
+policyParticipants  : 'Participant list' ':' partID (',' partID)* ;
+partID              : ID hasRole? ;
 roles               : 'Roles' ':' participantID (',' participantID)* ;
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individualEntry (',' individualEntry)* ;
 individualEntry     : individual | agent ;
-individual          : participantID hasRole? voteValue? ;
+individual          : participantID voteValue? ;
 hasRole             : 'as' participantID ;
 voteValue           : 'with vote value' FLOAT ;
-agent               : '(Agent)' participantID hasRole? voteValue? confidence? ;
+agent               : '(Agent)' participantID voteValue? confidence? ;
 confidence          : 'with confidence' FLOAT ;
 
 // Conditions group

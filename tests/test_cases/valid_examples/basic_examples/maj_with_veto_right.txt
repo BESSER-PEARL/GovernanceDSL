@@ -1,6 +1,7 @@
+Scopes: 
+    Project TestProjectGH from GitHub : owner/repo
 MajorityPolicy TestPolicy {
-    Scope:
-        Project TestProjectGH from GitHub : owner/repo
+    Scope: TestProjectGH
     Participants:
         Roles : Maintainer   
     Conditions:

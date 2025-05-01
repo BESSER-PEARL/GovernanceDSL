@@ -14,4 +14,4 @@ build
 *.tokens
 *.interp
 .vscode/settings.json
-grammar/prints_listener_regex
+grammar/prints_listener_regex.txt

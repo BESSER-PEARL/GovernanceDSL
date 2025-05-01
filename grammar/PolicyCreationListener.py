@@ -666,7 +666,7 @@ class PolicyCreationListener(govdslListener):
                 self.__policy_parameters_map[current_policy_id]['ratio'] = float(vot_params.ratio().FLOAT().getText())
         
         # Extract default policy if present (for LeaderDrivenPolicy)
-        elif ctx.default():
+        if ctx.default():
             default_ctx = None
             if ctx.default().nestedPolicy().nestedSinglePolicy():
                 default_ctx = ctx.default().nestedPolicy().nestedSinglePolicy().ID().getText()

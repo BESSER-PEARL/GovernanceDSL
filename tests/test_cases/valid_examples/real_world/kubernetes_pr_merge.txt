@@ -1,8 +1,15 @@
+Scopes: 
+    Project K8sProject from GitHub {
+        activities :
+            TestActivity {
+                tasks :
+                    TestTask : Pull request {
+                        Action : merge
+                    }
+            }
+    }
 ComposedPolicy pr_merge {
-    Scope:
-        Task TestTask : Pull request {
-            Action : merge
-        }
+    Scope: TestTask
     Order :
         Execution : sequential
         RequireAll : true

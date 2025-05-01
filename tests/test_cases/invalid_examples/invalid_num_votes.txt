@@ -1,6 +1,10 @@
+Scopes: 
+    Project TestProject from GitHub : owner/repo {
+        activities :
+            TestActivity
+    }
 MajorityPolicy TestPolicy {
-    Scope:
-        Activity TestActivity
+    Scope: TestActivity
     Participants:
         Roles : Committers
     Conditions:

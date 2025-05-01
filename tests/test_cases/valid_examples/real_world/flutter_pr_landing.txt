@@ -1,8 +1,15 @@
+Scopes: 
+    Project FlutterProject from GitHub {
+        activities :
+            TestActivity {
+                tasks :
+                    TestTask : Pull request {
+                        Action : merge
+                    }
+            }
+    }
 ComposedPolicy phasedPolicy {
-    Scope:
-        Task TestTask : Pull request {
-            Action : merge
-        }
+    Scope: TestTask
     Order :
         Execution : sequential
         RequireAll : true

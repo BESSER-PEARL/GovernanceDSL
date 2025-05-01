@@ -46,7 +46,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "invalid_examples/invalid_num_votes.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -62,7 +62,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "invalid_examples/invalid_vote_value.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -78,7 +78,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "invalid_examples/consensus_with_parameters.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -193,7 +193,7 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Setup parser and create model
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             self.assertIsNotNone(tree)
             
             listener = PolicyCreationListener()
@@ -241,7 +241,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "valid_examples/basic_examples/absolute_majority_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -292,7 +292,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -357,7 +357,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_no_default.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -400,7 +400,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "valid_examples/real_world/hfc_governance.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
@@ -410,6 +410,23 @@ class TestPolicyCreation(unittest.TestCase):
             # Assertions
             self.assertIsInstance(policy, ComposedPolicy)
             self.assertEqual(policy.name, "phasedPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Patch)
+            self.assertEqual(scope.name, "TestTask")
+            self.assertEqual(scope.action, ActionEnum.MERGE)
+            # Test the relationship with activity
+            activity_scope = scope.activity
+            self.assertIsNotNone(activity_scope)
+            self.assertIsInstance(activity_scope, Activity)
+            self.assertEqual(activity_scope.name, "TestActivity")
+            # Test the relationship with project
+            project_scope = activity_scope.project
+            self.assertIsNotNone(project_scope)
+            self.assertIsInstance(project_scope, Repository)
+            self.assertEqual(project_scope.name, "HFCProject")
             
             # Test order properties
             self.assertTrue(policy.sequential, "Policy should be sequential")
@@ -434,6 +451,16 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "TestTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            # Test the relationship with activity
+            activity_scope = task_scope.activity
+            self.assertIsNotNone(activity_scope)
+            self.assertIsInstance(activity_scope, Activity)
+            self.assertEqual(activity_scope.name, "TestActivity")
+            # Test the relationship with project
+            project_scope = activity_scope.project
+            self.assertIsNotNone(project_scope)
+            self.assertIsInstance(project_scope, Repository)
+            self.assertEqual(project_scope.name, "HFCProject")
             # Check the GitHub element
             self.assertIsNotNone(task_scope.element)
             self.assertIsInstance(task_scope.element, PullRequest)
@@ -483,6 +510,16 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "TestTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            # Test the relationship with activity
+            activity_scope = task_scope.activity
+            self.assertIsNotNone(activity_scope)
+            self.assertIsInstance(activity_scope, Activity)
+            self.assertEqual(activity_scope.name, "TestActivity")
+            # Test the relationship with project
+            project_scope = activity_scope.project
+            self.assertIsNotNone(project_scope)
+            self.assertIsInstance(project_scope, Repository)
+            self.assertEqual(project_scope.name, "HFCProject")
             # Check the GitHub element
             self.assertIsNotNone(task_scope.element)
             self.assertIsInstance(task_scope.element, PullRequest)
@@ -519,7 +556,7 @@ class TestPolicyCreation(unittest.TestCase):
         with open(self.test_cases_path / "valid_examples/basic_examples/lazy_consensus_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()

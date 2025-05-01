@@ -1,6 +1,7 @@
+Scopes: 
+    Project TestProject from GitHub : owner/repo
 LazyConsensusPolicy TestPolicy {
-    Scope:
-        Project TestProject from GitHub : owner/repo
+    Scope: TestProject
     Participants:
         Roles : Maintainer
 }

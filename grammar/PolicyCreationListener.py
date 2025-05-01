@@ -41,6 +41,9 @@ class PolicyCreationListener(govdslListener):
         self.__policy_order_map = {}
         self.__policy_parameters_map = {}
 
+        # Maps to track scopes predefined
+        self.__scopes_map = {}
+
         # Policy tree structure
         self.policy_tree = {}  # Maps policy ID to PolicyNode
         self.policy_stack = []  # Tracks the current policy context
@@ -343,67 +346,71 @@ class PolicyCreationListener(govdslListener):
         else:
             raise Exception("Handling of policy_stack is incorrect.")
 
-    def enterActivity(self, ctx:govdslParser.ActivityContext):
-        activity_name = ctx.ID().getText()
-        activity = Activity(name=activity_name, status=None) # TODO: relationship with tasks, tasks=activity_tasks)
-        # self.__project_activities[activity_name] = activity # TODO: work in relationships
-        self._register_scope_with_current_policy(activity)
+    def enterScope(self, ctx:govdslParser.ScopeContext):
+        self._register_scope_with_current_policy(self.__scopes_map[ctx.ID().getText()])
+
+    # def enterActivity(self, ctx:govdslParser.ActivityContext):
+    #     activity_name = ctx.ID().getText()
+    #     activity = Activity(name=activity_name, status=None) # TODO: relationship with tasks, tasks=activity_tasks)
+    #     # self.__project_activities[activity_name] = activity # TODO: work in relationships
+    #     self._register_scope_with_current_policy(activity)
     
-    def enterTask(self, ctx:govdslParser.TaskContext):
-        task_name = ctx.ID().getText()
+    # def enterTask(self, ctx:govdslParser.TaskContext):
+    #     task_name = ctx.ID().getText()
         
-        # Extract status if present
-        status = None
-        if ctx.taskContent().status():
-            status = str_to_status_enum(ctx.taskContent().status().statusEnum().getText())
+    #     # Extract status if present
+    #     status = None
+    #     if ctx.taskContent().status():
+    #         status = str_to_status_enum(ctx.taskContent().status().statusEnum().getText())
         
-        task = None
+    #     task = None
         
-        # Handle GitHub extension elements
-        if ctx.taskType():
-            task_type_str = ctx.taskType().getText().lower()
+    #     # Handle GitHub extension elements
+    #     if ctx.taskType():
+    #         task_type_str = ctx.taskType().getText().lower()
             
-            # Create the GitHub element (PullRequest or Issue)
-            gh_element = None
-            labels = None
+    #         # Create the GitHub element (PullRequest or Issue)
+    #         gh_element = None
+    #         labels = None
             
-            # Process labels if present
-            if ctx.taskContent().actionWithLabels():
-                label_count = len(ctx.taskContent().actionWithLabels().labels().ID())
-                labels = set()
-                for i in range(label_count):
-                    l_id = ctx.taskContent().actionWithLabels().labels().ID(i).getText()
-                    labels.add(Label(name=l_id))
+    #         # Process labels if present
+    #         if ctx.taskContent().actionWithLabels():
+    #             label_count = len(ctx.taskContent().actionWithLabels().labels().ID())
+    #             labels = set()
+    #             for i in range(label_count):
+    #                 l_id = ctx.taskContent().actionWithLabels().labels().ID(i).getText()
+    #                 labels.add(Label(name=l_id))
             
-            # Create the appropriate GitHub element based on task type
-            if task_type_str == "pull request":
-                gh_element = PullRequest(name=task_name, labels=labels)
-            elif task_type_str == "issue":
-                gh_element = Issue(name=task_name, labels=labels)
+    #         # Create the appropriate GitHub element based on task type
+    #         if task_type_str == "pull request":
+    #             gh_element = PullRequest(name=task_name, labels=labels)
+    #         elif task_type_str == "issue":
+    #             gh_element = Issue(name=task_name, labels=labels)
             
-            # Extract action for Patch
-            action = None
-            if ctx.taskContent().action():
-                action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
-            elif ctx.taskContent().actionWithLabels():
-                action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
-            else:
-                raise UndefinedAttributeException("action", "This task must have an action defined.")
+    #         # Extract action for Patch
+    #         action = None
+    #         if ctx.taskContent().action():
+    #             action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
+    #         elif ctx.taskContent().actionWithLabels():
+    #             action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
+    #         else:
+    #             raise UndefinedAttributeException("action", "This task must have an action defined.")
             
-            # Create the Patch object that references the GitHub element
-            if gh_element:
-                task = Patch(name=task_name, status=status, action=action, element=gh_element)
-            else:
-                # Fallback if no matching GitHub element type
-                task = Task(name=task_name, status=status)
-        else:
-            # For regular tasks
-            task = Task(name=task_name, status=status)
+    #         # Create the Patch object that references the GitHub element
+    #         if gh_element:
+    #             task = Patch(name=task_name, status=status, action=action, element=gh_element)
+    #         else:
+    #             # Fallback if no matching GitHub element type
+    #             task = Task(name=task_name, status=status)
+    #     else:
+    #         # For regular tasks
+    #         task = Task(name=task_name, status=status)
             
-        self._register_scope_with_current_policy(task)
+    #     self._register_scope_with_current_policy(task)
     
     def enterProject(self, ctx:govdslParser.ProjectContext):
         project_name = ctx.ID().getText()
+        project = Project(name=project_name, status=None)
 
         if ctx.platform():
             platform_str = ctx.platform().getText() # This will be used when we define further platforms
@@ -414,13 +421,74 @@ class PolicyCreationListener(govdslListener):
                 repo_id = f"{owner}/{repo}"
             else:  # If there's just one ID it means it is the user or organization
                 repo_id = id_tokens[0].getText()
-            status = None  # Status is usually set later
-            repository = Repository(name=project_name, status=status, repo_id=repo_id)
+            project = Repository.from_project(project=project, repo_id=repo_id)
+        if ctx.activity():
+            activities = set()
+            for act in ctx.activity():
+                activity = Activity(name=act.ID().getText(), status=None)
+                tasks = set()
+                if act.task():
+                    for t in act.task():
+                        task_name = t.ID().getText()
         
-            self._register_scope_with_current_policy(repository)
-        else:
-            project = Project(name=project_name, status=None)
-            self._register_scope_with_current_policy(project)
+                        # Extract status if present
+                        status = None
+                        if t.taskContent().status():
+                            status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
+                        
+                        task = None
+                        
+                        # Handle GitHub extension elements
+                        if t.taskType():
+                            task_type_str = t.taskType().getText().lower()
+                            
+                            # Create the GitHub element (PullRequest or Issue)
+                            gh_element = None
+                            labels = None
+                            
+                            # Process labels if present
+                            if t.taskContent().actionWithLabels():
+                                label_count = len(t.taskContent().actionWithLabels().labels().ID())
+                                labels = set()
+                                for i in range(label_count):
+                                    l_id = t.taskContent().actionWithLabels().labels().ID(i).getText()
+                                    labels.add(Label(name=l_id))
+                            
+                            # Create the appropriate GitHub element based on task type
+                            if task_type_str == "pull request":
+                                gh_element = PullRequest(name=task_name, labels=labels)
+                            elif task_type_str == "issue":
+                                gh_element = Issue(name=task_name, labels=labels)
+                            
+                            # Extract action for Patch
+                            action = None
+                            if t.taskContent().action():
+                                action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
+                            elif t.taskContent().actionWithLabels():
+                                action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
+                            else:
+                                raise UndefinedAttributeException("action", "This task must have an action defined.")
+                            
+                            # Create the Patch object that references the GitHub element
+                            if gh_element:
+                                task = Patch(name=task_name, status=status, action=action, element=gh_element)
+                            else:
+                                # Fallback if no matching GitHub element type
+                                task = Task(name=task_name, status=status)
+                        else:
+                            # For regular tasks
+                            task = Task(name=task_name, status=status)
+                        task.activity = activity
+                        tasks.add(task)
+                        self.__scopes_map[task_name] = task
+                            
+                    activity.tasks = tasks
+                activity.project = project
+                activities.add(activity)
+                self.__scopes_map[activity.name] = activity
+            project.activities = activities         
+        
+        self.__scopes_map[project_name] = project
         
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 

@@ -1,7 +1,8 @@
 grammar govdsl;
 
 // Parser rules
-policy              : (topLevelSinglePolicy | topLevelComposedPolicy) EOF ;
+governance          : (scopes policy) EOF ;
+policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)
 topLevelSinglePolicy    : policyType ID '{' scope participants? conditions? parameters? '}' ;
@@ -14,12 +15,13 @@ nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
 
 // Scope definition
-scope               : 'Scope' ':' (project | activity | task) ;
-project             : 'Project' ID ('from' platform ':' repoID)? ;
+scopes              : 'Scopes' ':' project ; // Definition from upper element
+scope               : 'Scope' ':' ID ; // reference from policy
+project             : 'Project' ID ('from' platform ':' repoID)? ('{' 'activities' ':' activity+ '}')? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
-activity            : 'Activity' ID ;
-task                : 'Task' ID (':' taskType)? '{' taskContent '}' ;
+activity            : ID ('{' 'tasks' ':' task+ '}')? ;
+task                : ID (':' taskType)? '{' taskContent '}' ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
 taskContent         : status | action | actionWithLabels ;
 actionWithLabels    : action labels ;
@@ -28,7 +30,6 @@ statusEnum          : 'completed' | 'accepted' | 'partial' ;
 action              : 'Action' ':' actionEnum ;
 actionEnum          : 'merge' | 'review' | 'release' ;
 labels              : 'Labels' ':' ID (',' ID)* ;
-// TODO: We could also use the "when" keyword to define the stage of the task (e.g., merge, review, etc.)
 
 // Participants group
 participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;

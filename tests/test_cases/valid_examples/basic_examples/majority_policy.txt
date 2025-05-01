@@ -1,6 +1,15 @@
+Scopes: 
+    Project TestProjectGH from GitHub : owner/repo {
+        activities : 
+            myActivity {
+                tasks : 
+                    myTask : Pull request {
+                        Action : merge
+                    }
+            }
+    }
 MajorityPolicy TestPolicy {
-    Scope:
-        Project TestProjectGH from GitHub : owner/repo
+    Scope: myTask
     Participants:
         Roles : Maintainer
         Individuals : Joe as Maintainer with vote value 0.7, (Agent) Mike as Maintainer with confidence 0.8

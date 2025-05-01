@@ -56,6 +56,12 @@ class Repository(Project):
     def __init__(self, name: str, status: StatusEnum, repo_id: str):
         super().__init__(name, status)
         self.repo_id = repo_id
+
+    @classmethod
+    def from_project(cls, project: Project, repo_id: str):
+        repo = cls(name=project.name, status=project.status, 
+                        repo_id=repo_id)
+        return repo
     
     @property
     def repo_id(self) -> str:

@@ -18,7 +18,8 @@ from metamodel.governance import (
     Role, Deadline, MajorityPolicy, 
     Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
-    LazyConsensusPolicy, MinimumParticipant, VetoRight
+    LazyConsensusPolicy, MinimumParticipant, VetoRight, 
+    Activity
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch, PassedTests
 
@@ -95,7 +96,7 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Setup parser and create model
             parser = self.setup_parser(text)
-            tree = parser.policy()
+            tree = parser.governance()
             self.assertIsNotNone(tree)
             
             listener = PolicyCreationListener()
@@ -110,9 +111,16 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProjectGH")
-            self.assertEqual(scope.repo_id, "owner/repo")
+            self.assertIsInstance(scope, Patch)
+            self.assertEqual(scope.name, "myTask")
+            self.assertEqual(scope.action, ActionEnum.MERGE)
+            activity_scope = scope.activity
+            self.assertIsInstance(activity_scope, Activity)
+            self.assertEqual(activity_scope.name, "myActivity")
+            project_scope = activity_scope.project 
+            self.assertIsInstance(project_scope, Repository)
+            self.assertEqual(project_scope.name, "TestProjectGH")
+            self.assertEqual(project_scope.repo_id, "owner/repo")
             
             # Test participants
             self.assertEqual(len(policy.participants), 3)

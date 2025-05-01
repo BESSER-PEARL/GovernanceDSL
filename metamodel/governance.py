@@ -40,14 +40,51 @@ class Scope(Element):
 class Project(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
+        self.__activities = None
+
+    @property
+    def activities(self) -> set['Activity']:
+        return self.__activities
+    
+    @activities.setter
+    def activities(self, activities: set['Activity']):
+        self.__activities = activities
     
 class Activity(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
+        self.__tasks = None
+        self.__project = None
+
+    @property
+    def tasks(self) -> set['Task']:
+        return self.__tasks
+    
+    @tasks.setter
+    def tasks(self, tasks: set['Task']):
+        self.__tasks = tasks
+
+    @property
+    def project(self) -> Project:
+        return self.__project
+    
+    @project.setter
+    def project(self, project: Project):
+        self.__project = project
+    
 
 class Task(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
+        self.__activity = None
+
+    @property
+    def activity(self) -> Activity:
+        return self.__activity
+    
+    @activity.setter
+    def activity(self, activity: Activity):
+        self.__activity = activity
 
 # Participant
 class Participant(Element):

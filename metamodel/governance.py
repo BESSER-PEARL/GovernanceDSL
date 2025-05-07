@@ -110,16 +110,16 @@ class Participant(Element):
 class Individual(Participant):
     def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name)
-        self.__role = None
+        self.__role_assignement = None
         self.vote_value = vote_value 
     
     @property
-    def role(self) -> 'hasRole':
-        return self.__role
+    def role_assignement(self) -> 'hasRole':
+        return self.__role_assignement
     
-    @role.setter
+    @role_assignement.setter
     def role(self, role_assignement: 'hasRole'):
-        self.__role = role_assignement
+        self.__role_assignement = role_assignement
 
     @property
     def vote_value(self) -> float:
@@ -148,6 +148,15 @@ class Agent(Individual):
 class Role(Participant):
     def __init__(self, name: str):
         super().__init__(name)
+        self.__individuals = None
+    
+    @property
+    def individuals(self) -> set[Individual]:
+        return self.__individuals
+    
+    @individuals.setter
+    def individuals(self, individuals: set[Individual]):
+        self.__individuals = individuals
 
 class hasRole(Element):
     def __init__(self, name: str, role: Role, individual: Individual, scope: Scope):

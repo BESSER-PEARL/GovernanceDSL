@@ -9,11 +9,11 @@ Scopes:
             }
     }
 Participants:
-    Roles : Maintainer
+    Roles : Maintainer; Reviewer composed of : Mike, Alexander; Owner
     Individuals : Joe with vote value 0.7, (Agent) Mike with confidence 0.8
 MajorityPolicy TestPolicy {
     Scope: myTask
-    Participant list : Maintainer, Joe as Maintainer, Mike as Maintainer
+    Participant list : Maintainer, Joe as Maintainer, Mike as Maintainer, Reviewer
     Conditions:
         Deadline reviewDeadline : 14 days
         ParticipantExclusion : Mike

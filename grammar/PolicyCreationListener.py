@@ -518,14 +518,22 @@ class PolicyCreationListener(govdslListener):
             self._register_participant_with_current_policy(participant)
                 
         
-    def enterRoles(self, ctx:govdslParser.RolesContext): 
+    def enterRoleID(self, ctx:govdslParser.RolesContext): 
 
-        roles = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.ParticipantIDContext)
-        for r in roles:
-            role = Role(name=r.ID().getText())
-            self.__participants_map[r.ID().getText()] = role # WARNING: This might generate conflict if there is a role with the same name as a individual
-    
+        roleID = ctx.ID().getText()
+        role = Role(name=roleID)
+        if ctx.participantID():
+            individuals = set()
+            for p in ctx.participantID():
+                participant = self.__participants_map.get(p.ID().getText())
+                if not participant:
+                    # Individual might not be defined yet, so we create it; Can be enriched later
+                    participant = Individual(name=p.ID().getText())
+                    self.__participants_map[participant.name] = participant
+                individuals.add(participant)
+            role.individuals = individuals
+        self.__participants_map[roleID] = role
+     
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
         name = ctx.participantID().ID().getText()
         individual = Individual(name=name)

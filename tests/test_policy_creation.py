@@ -123,7 +123,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(project_scope.repo_id, "owner/repo")
             
             # Test participants
-            self.assertEqual(len(policy.participants), 3)
+            self.assertEqual(len(policy.participants), 4) 
             
             # Test Individual participant
             individuals = [p for p in policy.participants if isinstance(p, Individual)]
@@ -133,23 +133,40 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(individual, "Joe not found")
             self.assertEqual(individual.name, "Joe")
             self.assertEqual(individual.vote_value, 0.7)
-            self.assertIsNotNone(individual.role)
-            self.assertEqual(individual.role.name, "Joe_Maintainer")
+            self.assertIsNotNone(individual.role_assignement)
+            self.assertEqual(individual.role_assignement.name, "Joe_Maintainer")
 
             agent = next((ind for ind in individuals if ind.name == "Mike"), None)
             self.assertIsNotNone(agent, "Mike not found")
             self.assertEqual(agent.name, "Mike")
             self.assertEqual(agent.vote_value, 1.0) # This is the default value
             self.assertEqual(agent.confidence, 0.8)
-            self.assertIsNotNone(agent.role)
-            self.assertEqual(agent.role.name, "Mike_Maintainer")
+            self.assertIsNotNone(agent.role_assignement)
+            self.assertEqual(agent.role_assignement.name, "Mike_Maintainer")
             
             
-            # Test Role participant
-            roles = {p for p in policy.participants if isinstance(p, Role)}
-            self.assertEqual(len(roles), 1)
-            role = next(iter(roles))
-            self.assertEqual(role.name, "Maintainer")
+            # Test Role participants
+            roles = [p for p in policy.participants if isinstance(p, Role)]
+            self.assertEqual(len(roles), 2)
+            
+            # Test Maintainer role
+            maintainer_role = next((r for r in roles if r.name == "Maintainer"), None)
+            self.assertIsNotNone(maintainer_role, "Maintainer role not found")
+            self.assertEqual(maintainer_role.name, "Maintainer")
+            
+            # Test Reviewer role with composed individuals
+            reviewer_role = next((r for r in roles if r.name == "Reviewer"), None)
+            self.assertIsNotNone(reviewer_role, "Reviewer role not found")
+            self.assertEqual(reviewer_role.name, "Reviewer")
+            
+            # Check the individuals composed in the Reviewer role
+            self.assertIsNotNone(reviewer_role.individuals, "Reviewer role should have individuals")
+            self.assertEqual(len(reviewer_role.individuals), 2, "Reviewer should have 2 individuals")
+            
+            # Check individual members of the Reviewer role
+            individuals_names = {ind.name for ind in reviewer_role.individuals}
+            self.assertIn("Mike", individuals_names, "Mike should be in Reviewer role")
+            self.assertIn("Alexander", individuals_names, "Alexander should be in Reviewer role")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 3)

@@ -1,7 +1,7 @@
 Scopes: 
     Project TestProjectGH from GitHub : owner/repo
 Participants:
-    Roles : Maintainer, ProjectOwner
+    Roles : Maintainer; ProjectOwner
 MajorityPolicy TestPolicy {
     Scope: TestProjectGH
     Participant list : Maintainer

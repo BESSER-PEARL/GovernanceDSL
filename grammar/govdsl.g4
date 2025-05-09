@@ -52,7 +52,7 @@ deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' da
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
-date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY
+date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; This can be improved with a lexer rule
 participantExclusion: 'ParticipantExclusion' ':' participantID (',' participantID)* ;
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' participantID (',' participantID)* ; 

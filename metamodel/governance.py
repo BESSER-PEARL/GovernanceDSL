@@ -13,6 +13,11 @@ class StatusEnum(Enum):
     ACCEPTED = 2
     PARTIAL = 3
 
+class EvaluationMode(Enum):
+    PRE = 1
+    POST = 2
+    CONCURRENT = 3
+
 # Scope hierarchy
 class Scope(Element):
     def __init__(self, name: str, status: StatusEnum):
@@ -206,8 +211,9 @@ class hasRole(Element):
 
 # Condition
 class Condition(Element):
-    def __init__(self, name: str):
+    def __init__(self, name: str, evaluation_mode: EvaluationMode = None):
         self.name = name
+        self.evaluation_mode = evaluation_mode
 
     @property
     def name(self) -> str:
@@ -216,6 +222,14 @@ class Condition(Element):
     @name.setter
     def name(self, name: str):
         self.__name = name
+
+    @property
+    def evaluation_mode(self) -> EvaluationMode:
+        return self.__evaluation_mode
+    
+    @evaluation_mode.setter
+    def evaluation_mode(self, evaluation_mode: EvaluationMode):
+        self.__evaluation_mode = evaluation_mode
 
 class Deadline(Condition):
     def __init__(self, name: str, offset: timedelta, date: datetime):

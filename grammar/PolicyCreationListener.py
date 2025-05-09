@@ -19,7 +19,7 @@ from metamodel.governance import (
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
-    ElementList, StringList
+    ElementList, StringList, EvaluationMode
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -619,7 +619,18 @@ class PolicyCreationListener(govdslListener):
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
         
         if ctx.booleanValue().getText().lower() == "true":
-            test_condition = PassedTests(name="passedTestsCondition")
+            evaluation_mode = None
+            if ctx.evaluationMode():
+                evaluation_mode = ctx.evaluationMode().getText()
+                match evaluation_mode:
+                    case "pre":
+                        evaluation_mode = EvaluationMode.PRE
+                    case "post":
+                        evaluation_mode = EvaluationMode.POST
+                    case "concurrent":
+                        evaluation_mode = EvaluationMode.CONCURRENT
+            # Create the PassedTests object
+            test_condition = PassedTests(name="passedTestsCondition", evaluation_mode=evaluation_mode)
             self._register_condition_with_current_policy(test_condition)
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):

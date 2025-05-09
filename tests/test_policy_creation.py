@@ -17,7 +17,7 @@ from utils.exceptions import (
 from metamodel.governance import (
     Role, Deadline, MajorityPolicy, 
     Individual, ComposedPolicy,
-    AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
+    AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
 )
@@ -327,6 +327,8 @@ class TestPolicyCreation(unittest.TestCase):
             passed_tests = next(iter(passed_tests_conditions))
             self.assertIsInstance(passed_tests, PassedTests)
             self.assertEqual(passed_tests.name, "passedTestsCondition")
+            # Add check for evaluation_mode
+            self.assertEqual(passed_tests.evaluation_mode, EvaluationMode.PRE)
 
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.7)

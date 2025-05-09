@@ -8,7 +8,7 @@ AbsoluteMajorityPolicy TestPolicy {
     Participant list : Committers
     Conditions:
         Deadline reviewDeadline : 7 days
-        PassedTests: true
+        PassedTests pre: true
     Parameters:
         ratio 0.7
 }

@@ -449,6 +449,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#evaluationMode.
+    def enterEvaluationMode(self, ctx:govdslParser.EvaluationModeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#evaluationMode.
+    def exitEvaluationMode(self, ctx:govdslParser.EvaluationModeContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#parameters.
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         pass

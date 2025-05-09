@@ -62,7 +62,8 @@ date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; 
 participantExclusion: 'ParticipantExclusion' ':' participantID (',' participantID)* ;
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' participantID (',' participantID)* ; 
-passedTests         : 'PassedTests' ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 
 // Parameters group
 parameters          : 'Parameters' ':' (votParams | default) ;

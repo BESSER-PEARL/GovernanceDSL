@@ -5,11 +5,11 @@ governance          : (scopes participants policy) EOF ;
 policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)
-topLevelSinglePolicy    : policyType ID '{' scope policyParticipants? conditions? parameters? '}' ;
+topLevelSinglePolicy    : policyType ID '{' scope decisionType policyParticipants? conditions? parameters? '}' ;
 topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 
 // Nested policies (no scope)
-nestedSinglePolicy      : policyType ID '{' policyParticipants? conditions? parameters? '}' ;
+nestedSinglePolicy      : policyType ID '{' decisionType policyParticipants? conditions? parameters? '}' ;
 nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
@@ -30,6 +30,12 @@ statusEnum          : 'completed' | 'accepted' | 'partial' ;
 action              : 'Action' ':' actionEnum ;
 actionEnum          : 'merge' | 'review' | 'release' ;
 labels              : 'Labels' ':' ID (',' ID)* ;
+
+// Decision type
+decisionType        : 'DecisionType' 'as' (booleanDecision | stringList | elementList) ;
+booleanDecision     : 'BooleanDecision' ;
+stringList          : 'StringList' ':' ID (',' ID)* ;
+elementList         : 'ElementList' ':' ID (',' ID)* ;
 
 // Participants group
 participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;

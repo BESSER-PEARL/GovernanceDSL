@@ -4,6 +4,7 @@ Participants:
     Individuals : Leader
 LeaderDrivenPolicy TestPolicy {
     Scope: TestProject
+    DecisionType as BooleanDecision
     Participant list : Leader
     Conditions:
         Deadline reviewDeadline : 7 days

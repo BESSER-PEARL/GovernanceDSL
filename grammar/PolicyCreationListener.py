@@ -18,7 +18,8 @@ from metamodel.governance import (
     SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
-    ConsensusPolicy, MinimumParticipant, VetoRight, Agent
+    ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
+    ElementList, StringList
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -40,6 +41,7 @@ class PolicyCreationListener(govdslListener):
         self.__policy_conditions_map = {}
         self.__policy_order_map = {}
         self.__policy_parameters_map = {}
+        self.__policy_decision_type_map = {}
 
         # Maps to track scopes and participants predefined
         self.__scopes_map = {}
@@ -132,11 +134,13 @@ class PolicyCreationListener(govdslListener):
                 # Scope will be automatically propagated to children by the ComposedPolicy class
             
             else: # single policy
+                decision_type = self.__policy_decision_type_map.get(node.policy_id)
                 participants = self.__policy_participants_map.get(node.policy_id, set())
                 conditions = self.__policy_conditions_map.get(node.policy_id, set())
                 base_policy = SinglePolicy(name=node.policy_id,
                                             conditions=conditions,
                                             participants=participants,
+                                            decision_type=decision_type,
                                             scope=scope)
                 
                 match node.policy_type:
@@ -289,6 +293,29 @@ class PolicyCreationListener(govdslListener):
         # Associate the rule with the current policy
         self.__policy_rules_map[current_policy_id].add(rule)
 
+    def _register_decision_type_with_current_policy(self, decision_obj):
+        """
+        Registers a decision type object (BooleanDecision, StringList, ElementList) with the current policy.
+        
+        Args:
+            decision_obj: The decision type object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the decision types set for this policy if needed
+        if current_policy_id in self.__policy_decision_type_map:
+            raise Exception("Decision type already defined for policy.") # TODO: Handle this case
+        
+        # Associate the decision type with the current policy
+        self.__policy_decision_type_map[current_policy_id] = decision_obj
+
     def enterTopLevelSinglePolicy(self, ctx:govdslParser.TopLevelSinglePolicyContext):
         """When entering a top-level single policy, create a node"""
         policy_id = ctx.ID().getText()
@@ -350,65 +377,6 @@ class PolicyCreationListener(govdslListener):
     def enterScope(self, ctx:govdslParser.ScopeContext):
         self._register_scope_with_current_policy(self.__scopes_map[ctx.ID().getText()])
 
-    # def enterActivity(self, ctx:govdslParser.ActivityContext):
-    #     activity_name = ctx.ID().getText()
-    #     activity = Activity(name=activity_name, status=None) # TODO: relationship with tasks, tasks=activity_tasks)
-    #     # self.__project_activities[activity_name] = activity # TODO: work in relationships
-    #     self._register_scope_with_current_policy(activity)
-    
-    # def enterTask(self, ctx:govdslParser.TaskContext):
-    #     task_name = ctx.ID().getText()
-        
-    #     # Extract status if present
-    #     status = None
-    #     if ctx.taskContent().status():
-    #         status = str_to_status_enum(ctx.taskContent().status().statusEnum().getText())
-        
-    #     task = None
-        
-    #     # Handle GitHub extension elements
-    #     if ctx.taskType():
-    #         task_type_str = ctx.taskType().getText().lower()
-            
-    #         # Create the GitHub element (PullRequest or Issue)
-    #         gh_element = None
-    #         labels = None
-            
-    #         # Process labels if present
-    #         if ctx.taskContent().actionWithLabels():
-    #             label_count = len(ctx.taskContent().actionWithLabels().labels().ID())
-    #             labels = set()
-    #             for i in range(label_count):
-    #                 l_id = ctx.taskContent().actionWithLabels().labels().ID(i).getText()
-    #                 labels.add(Label(name=l_id))
-            
-    #         # Create the appropriate GitHub element based on task type
-    #         if task_type_str == "pull request":
-    #             gh_element = PullRequest(name=task_name, labels=labels)
-    #         elif task_type_str == "issue":
-    #             gh_element = Issue(name=task_name, labels=labels)
-            
-    #         # Extract action for Patch
-    #         action = None
-    #         if ctx.taskContent().action():
-    #             action = str_to_action_enum(ctx.taskContent().action().actionEnum().getText())
-    #         elif ctx.taskContent().actionWithLabels():
-    #             action = str_to_action_enum(ctx.taskContent().actionWithLabels().action().actionEnum().getText())
-    #         else:
-    #             raise UndefinedAttributeException("action", "This task must have an action defined.")
-            
-    #         # Create the Patch object that references the GitHub element
-    #         if gh_element:
-    #             task = Patch(name=task_name, status=status, action=action, element=gh_element)
-    #         else:
-    #             # Fallback if no matching GitHub element type
-    #             task = Task(name=task_name, status=status)
-    #     else:
-    #         # For regular tasks
-    #         task = Task(name=task_name, status=status)
-            
-    #     self._register_scope_with_current_policy(task)
-    
     def enterProject(self, ctx:govdslParser.ProjectContext):
         project_name = ctx.ID().getText()
         project = Project(name=project_name, status=None)
@@ -517,7 +485,6 @@ class PolicyCreationListener(govdslListener):
                     raise UndefinedAttributeException("role", message="No role defined for this role assignment.")
             self._register_participant_with_current_policy(participant)
                 
-        
     def enterRoleID(self, ctx:govdslParser.RolesContext): 
 
         roleID = ctx.ID().getText()
@@ -554,7 +521,29 @@ class PolicyCreationListener(govdslListener):
             
         self.__participants_map[name] = agent
 
-            
+    def enterBooleanDecision(self, ctx:govdslParser.BooleanDecisionContext):
+        decision = BooleanDecision(name="booleanDecision")
+        self._register_decision_type_with_current_policy(decision)
+    
+    def enterStringList(self, ctx:govdslParser.StringListContext):
+        ids = ctx.ID()
+        string_list = set()
+        for i in ids:
+            string_list.add(i.getText())
+        decision = StringList(name="stringList", options=string_list)
+        self._register_decision_type_with_current_policy(decision)
+    
+    def enterElementList(self, ctx:govdslParser.ElementListContext):
+        ids = ctx.ID()
+        element_list = set()
+        for i in ids:
+            element = self.__participants_map.get(i.getText())
+            if not element or not isinstance(element, Individual):
+                raise UndefinedAttributeException("element", message="Individual not defined.")
+            element_list.add(element)
+        decision = ElementList(name="elementList", elements=element_list)
+        self._register_decision_type_with_current_policy(decision)
+
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
         name = ctx.deadlineID().ID().getText()
         offset = None

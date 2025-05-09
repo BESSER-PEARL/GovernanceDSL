@@ -288,6 +288,57 @@ class VetoRight(Condition):
     def vetoers(self, vetoers: set[Participant]):
         self.__vetoers = vetoers
 
+# DecisionType
+class DecisionType(Element):
+    def __init__(self, name: str):
+        self.name = name
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+
+class BooleanDecision(DecisionType):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+class CandidateChoice(DecisionType):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+class ElementList(CandidateChoice):
+    def __init__(self, name: str, elements: set[Element]):
+        super().__init__(name)
+        self.elements = elements
+    
+    @property
+    def elements(self) -> set[Element]:
+        return self.__elements
+    
+    @elements.setter
+    def elements(self, elements: set[Element]):
+        if not elements:
+            raise EmptySetException("elements")
+        self.__elements = elements
+
+class StringList(CandidateChoice):
+    def __init__(self, name: str, options: set[str]):
+        super().__init__(name)
+        self.options = options
+
+    @property
+    def options(self) -> set[str]:
+        return self.__options
+    
+    @options.setter
+    def options(self, options: set[str]):
+        if not options:
+            raise EmptySetException("options")
+        self.__options = options
+
 # Policy hierarchy
 class Policy(Element):
     """A Policy must have a scope, but it can be set after initialization."""
@@ -325,12 +376,14 @@ class Policy(Element):
         if not self.scope:
             raise EmptySetException("Policy must have a scope before execution")
 
-
 class SinglePolicy(Policy):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope = None):
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 decision_type: DecisionType, scope: Scope = None):
         super().__init__(name, scope)
         self.conditions = conditions
         self.participants = participants
+        self.decision_type = decision_type
+        self.scope = scope
     
     @property
     def conditions(self) -> set[Condition]:
@@ -349,41 +402,55 @@ class SinglePolicy(Policy):
         if not participants:  # Only check for None or empty
             raise EmptySetException("Policy must have at least one participant")
         self.__participants = participants
+    
+    @property
+    def decision_type(self) -> DecisionType:
+        return self.__decision_type
+    
+    @decision_type.setter
+    def decision_type(self, decision_type: DecisionType):
+        if decision_type is None:
+            raise UndefinedAttributeException("decision_type", None)
+        self.__decision_type = decision_type
 
 
 class ConsensusPolicy(SinglePolicy):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
-        super().__init__(name, conditions, participants, scope)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 decision_type: DecisionType, scope: Scope):
+        super().__init__(name, conditions, participants, decision_type, scope)
 
     @classmethod
     def from_policy(cls, policy: SinglePolicy):
         consensus = cls(name=policy.name, conditions=policy.conditions, 
-                        participants=policy.participants, scope=policy.scope)
+                        participants=policy.participants, decision_type=policy.decision_type,
+                        scope=policy.scope)
         return consensus
     
 
 class LazyConsensusPolicy(SinglePolicy):
-    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], scope: Scope):
-        super().__init__(name, conditions, participants, scope)
+    def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
+                 decision_type: DecisionType, scope: Scope):
+        super().__init__(name, conditions, participants, decision_type, scope)
 
     @classmethod
     def from_policy(cls, policy: SinglePolicy):
         lazy_consensus = cls(name=policy.name, conditions=policy.conditions, 
-                             participants=policy.participants, scope=policy.scope)
+                             participants=policy.participants, decision_type=policy.decision_type,
+                             scope=policy.scope)
         return lazy_consensus
 
 
 class VotingPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, scope)
+                 decision_type : DecisionType, scope: Scope, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope)
         self.ratio = ratio
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
         voting = cls(name=policy.name, conditions=policy.conditions, 
-                     participants=policy.participants, scope=policy.scope,
-                     ratio=ratio)
+                     participants=policy.participants, decision_type=policy.decision_type,
+                     scope=policy.scope, ratio=ratio)
         return voting
     
     @property
@@ -400,8 +467,8 @@ class VotingPolicy(SinglePolicy):
 class MajorityPolicy(VotingPolicy):
     """MajorityPolicy extends VotingPolicy"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, scope, ratio)
+                 decision_type: DecisionType, scope: Scope, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope, ratio)
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
@@ -410,16 +477,16 @@ class MajorityPolicy(VotingPolicy):
             ratio = policy.ratio if ratio is None else ratio
         
         majority = cls(name=policy.name, conditions=policy.conditions, 
-                       participants=policy.participants, scope=policy.scope,
-                       ratio=ratio)
+                       participants=policy.participants, decision_type=policy.decision_type,
+                       scope=policy.scope, ratio=ratio)
         return majority
 
 
 class AbsoluteMajorityPolicy(VotingPolicy):
     """AbsoluteMajorityPolicy extends VotingPolicy"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, scope, ratio)
+                 decision_type: DecisionType, scope: Scope, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope, ratio)
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
@@ -428,26 +495,26 @@ class AbsoluteMajorityPolicy(VotingPolicy):
             ratio = policy.ratio if ratio is None else ratio
         
         abs_majority = cls(name=policy.name, conditions=policy.conditions, 
-                           participants=policy.participants, scope=policy.scope,
-                           ratio=ratio)
+                           participants=policy.participants, decision_type=policy.decision_type,
+                           scope=policy.scope, ratio=ratio)
         return abs_majority
 
 
 class LeaderDrivenPolicy(SinglePolicy):
     """LeaderDrivenPolicy extends SinglePolicy and references another SinglePolicy as default"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 scope: Scope = None, default: SinglePolicy = None):
+                 decision_type: DecisionType, scope: Scope, default: SinglePolicy = None):
         # Initialize default first to avoid issues during object creation
         self.__default = None
-        super().__init__(name, conditions, participants, scope)
+        super().__init__(name, conditions, participants, decision_type, scope)
         # Now set default through the property setter
         self.default = default
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, default: SinglePolicy):
         leader_driven = cls(name=policy.name, conditions=policy.conditions, 
-                            participants=policy.participants, scope=policy.scope, 
-                            default=default)
+                            participants=policy.participants, decision_type=policy.decision_type,
+                            scope=policy.scope, default=default)
         return leader_driven
 
     @property

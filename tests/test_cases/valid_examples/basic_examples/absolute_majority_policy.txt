@@ -4,6 +4,7 @@ Participants:
     Roles : Committers
 AbsoluteMajorityPolicy TestPolicy {
     Scope: TestProject
+    DecisionType as BooleanDecision
     Participant list : Committers
     Conditions:
         Deadline reviewDeadline : 7 days

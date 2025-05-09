@@ -19,7 +19,7 @@ from metamodel.governance import (
     Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
-    Activity
+    Activity, BooleanDecision, StringList, ElementList
 )
 from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch, PassedTests
 
@@ -89,6 +89,19 @@ class TestPolicyCreation(unittest.TestCase):
             exception_message = str(raised_exception.exception)
             print(f"\nException message: {exception_message}")
 
+    def test_invalid_element_list(self):
+        """Test MajorityPolicy with DecisionType as ElementList referencing undefined individuals."""
+        with open(self.test_cases_path / "invalid_examples/invalid_element_list.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
         with open(self.test_cases_path / "valid_examples/basic_examples/majority_policy.txt", "r") as file:
@@ -107,6 +120,12 @@ class TestPolicyCreation(unittest.TestCase):
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
             self.assertEqual(policy.name, "TestPolicy")
+
+            # DecisionType (now StringList)
+            self.assertIsNotNone(policy.decision_type)
+            self.assertIsInstance(policy.decision_type, StringList)
+            self.assertEqual(policy.decision_type.name, "stringList")
+            self.assertSetEqual(policy.decision_type.options, {"accept", "reject", "abstain"})
             
             # Test scope
             self.assertIsNotNone(policy.scope)
@@ -221,6 +240,12 @@ class TestPolicyCreation(unittest.TestCase):
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
             self.assertEqual(policy.name, "TestPolicy")
+
+            # DecisionType (ElementList)
+            self.assertIsNotNone(policy.decision_type)
+            self.assertIsInstance(policy.decision_type, ElementList)
+            self.assertEqual(policy.decision_type.name, "elementList")
+            self.assertSetEqual({ind.name for ind in policy.decision_type.elements}, {"Joe", "George"})
             
             # Test scope
             self.assertIsNotNone(policy.scope)
@@ -268,6 +293,11 @@ class TestPolicyCreation(unittest.TestCase):
             # Assertions
             self.assertIsInstance(policy, AbsoluteMajorityPolicy)
             self.assertEqual(policy.name, "TestPolicy")
+
+            # DecisionType check
+            self.assertIsNotNone(policy.decision_type)
+            self.assertIsInstance(policy.decision_type, BooleanDecision)
+            self.assertEqual(policy.decision_type.name, "booleanDecision")
             
             # Test scope
             self.assertIsNotNone(policy.scope)

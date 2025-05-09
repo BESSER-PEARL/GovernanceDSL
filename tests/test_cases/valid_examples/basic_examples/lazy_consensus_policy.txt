@@ -4,5 +4,6 @@ Participants:
     Roles : Maintainer
 LazyConsensusPolicy TestPolicy {
     Scope: TestProject
+    DecisionType as BooleanDecision
     Participant list : Maintainer
 }

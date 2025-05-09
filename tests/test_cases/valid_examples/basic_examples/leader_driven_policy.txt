@@ -5,11 +5,13 @@ Participants:
     Roles : Maintainers
 LeaderDrivenPolicy TestPolicy {
     Scope: TestProject
+    DecisionType as BooleanDecision
     Participant list : Leader
     Conditions:
         Deadline reviewDeadline : 7 days
     Parameters:
         default MajorityPolicy defaultPolicy {
+            DecisionType as BooleanDecision
             Participant list : Maintainers
             Conditions:
                 Deadline reviewDeadline : 7 days

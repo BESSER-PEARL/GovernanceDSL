@@ -18,6 +18,7 @@ ComposedPolicy phasedPolicy {
         CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
+            DecisionType as BooleanDecision
             Participant list : Maintainers
             Conditions:
                 Deadline reviewDeadline : 14 days
@@ -26,6 +27,7 @@ ComposedPolicy phasedPolicy {
                 ratio 1.0
         }
         MajorityPolicy phase_2 {
+            DecisionType as BooleanDecision
             Participant list : Maintainers
             Conditions:
                 MinParticipants : 1

@@ -13,6 +13,7 @@ Participants:
     Individuals : Joe with vote value 0.7, (Agent) Mike with confidence 0.8
 MajorityPolicy TestPolicy {
     Scope: myTask
+    DecisionType as StringList : accept, reject, abstain
     Participant list : Maintainer, Joe as Maintainer, Mike as Maintainer, Reviewer
     Conditions:
         Deadline reviewDeadline : 14 days

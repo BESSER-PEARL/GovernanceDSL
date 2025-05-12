@@ -64,6 +64,8 @@ minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' participantID (',' participantID)* ; 
 passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
+labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;
+include             : 'include' | 'not';
 
 // Parameters group
 parameters          : 'Parameters' ':' (votParams | default) ;
@@ -82,7 +84,7 @@ phases              : 'Phases' '{' nestedPolicy+ '}' ;
 nestedPolicy        : nestedSinglePolicy | nestedComposedPolicy ;
 
 // Lexer rules
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
+ID              : [a-zA-Z_][a-zA-Z0-9_-]* ;
 SIGNED_INT      : '-'? [0-9]+ ; // Just to cover the case where the user might use a negative number
 FLOAT           : '-'? [0-9]+ '.' [0-9]+ ;
 WS              : (' ' | '\t' | '\r'? '\n')+ -> skip ;

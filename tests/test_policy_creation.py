@@ -663,6 +663,66 @@ class TestPolicyCreation(unittest.TestCase):
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
+    def test_custom_example(self):
+        with open(self.test_cases_path / "valid_examples/basic_examples/custom_example.txt") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policy()
+
+            # Assertions
+            self.assertIsInstance(policy, MajorityPolicy)
+            self.assertEqual(policy.name, "TestPolicy")
+
+            # DecisionType (BooleanDecision)
+            self.assertIsNotNone(policy.decision_type)
+            self.assertIsInstance(policy.decision_type, BooleanDecision)
+            self.assertEqual(policy.decision_type.name, "booleanDecision")
+
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Patch)
+            self.assertEqual(scope.name, "TestTask")
+            self.assertEqual(scope.action, ActionEnum.MERGE)
+            activity_scope = scope.activity
+            self.assertIsInstance(activity_scope, Activity)
+            self.assertEqual(activity_scope.name, "TestActivity")
+            project_scope = activity_scope.project
+            self.assertIsInstance(project_scope, Repository)
+            self.assertEqual(project_scope.name, "TestProjectGH")
+            self.assertEqual(project_scope.repo_id, "owner/repo")
+
+            # Test participants
+            self.assertEqual(len(policy.participants), 2)
+            individuals = [p for p in policy.participants if isinstance(p, Individual)]
+            roles = [p for p in policy.participants if isinstance(p, Role)]
+            self.assertEqual(len(individuals), 1)
+            self.assertEqual(len(roles), 1)
+            individual = individuals[0]
+            self.assertEqual(individual.name, "Zoe")
+            self.assertEqual(individual.vote_value, 0.7)
+            self.assertIsNotNone(individual.role_assignement)
+            self.assertEqual(individual.role_assignement.name, "Zoe_Maintainer")
+            role = roles[0]
+            self.assertEqual(role.name, "Maintainer")
+
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            deadline = next(iter(policy.conditions))
+            self.assertIsInstance(deadline, Deadline)
+            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.offset, timedelta(days=14))
+
+            # Test voting parameters
+            self.assertEqual(policy.ratio, 0.5)
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

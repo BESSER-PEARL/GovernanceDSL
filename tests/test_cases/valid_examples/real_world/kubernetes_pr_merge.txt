@@ -1,5 +1,5 @@
 Scopes: 
-    Project K8sProject from GitHub {
+    Project K8sProject from GitHub : kubernetes/kubernetes {
         activities :
             TestActivity {
                 tasks :
@@ -10,7 +10,7 @@ Scopes:
     }
 Participants:
     Roles : Reviewers, Approvers
-    Individuals : Agent
+    Individuals : (Agent) Agent
 ComposedPolicy pr_merge {
     Scope: TestTask
     Order :
@@ -18,20 +18,27 @@ ComposedPolicy pr_merge {
         RequireAll : true
         CarryOver : true
     Phases {
-        AbsoluteMajorityPolicy phase_1 {
+        MajorityPolicy phase_1 { // or consensus?
             Participant list : Reviewers
+            Conditions:
+                Reviewers/approvers PRassigned? pre
+                LabelCondition post : lgtm
             Parameters:
                 ratio 1.0
         }
         AbsoluteMajorityPolicy phase_2 {
             Participant list : Approvers
+            Conditions:
+                LabelCondition post: approved
             Parameters:
                 ratio 1.0
         }
         LeaderDrivenPolicy phase_3 {
             Participant list : Agent
             Conditions:
-                Labels
+                LabelCondition pre: lgtm, approved
+                LabelCondition pre not: do-not-merge/hold, needs-rebase
+                jobs?
         }
     }
 }

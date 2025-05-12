@@ -8,5 +8,5 @@ MajorityPolicy TestPolicy {
     DecisionType as ElementList : Joe, George
     Participant list : Maintainer
     Conditions:
-        VetoRight : ProjectOwner
+        VetoRight : ProjectOwner, Diego
 }

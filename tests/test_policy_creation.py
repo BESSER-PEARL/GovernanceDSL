@@ -21,7 +21,10 @@ from metamodel.governance import (
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
 )
-from utils.gh_extension import ActionEnum, PullRequest, Repository, Patch, PassedTests
+from utils.gh_extension import (
+    ActionEnum, PullRequest, Repository, Patch, PassedTests,
+    Label, LabelCondition
+)
 
 class TestPolicyCreation(unittest.TestCase):
     def setUp(self):
@@ -188,7 +191,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIn("Alexander", individuals_names, "Alexander should be in Reviewer role")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 3)
+            self.assertEqual(len(policy.conditions), 5)
             
             # Find and test Deadline condition
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
@@ -215,6 +218,22 @@ class TestPolicyCreation(unittest.TestCase):
             min_part = next(iter(min_part_conditions))
             self.assertEqual(min_part.name, "minParticipantsCondition")
             self.assertEqual(min_part.min_participants, 2)
+
+            # Find and test LabelCondition condition
+            label_conditions = [c for c in policy.conditions if isinstance(c, LabelCondition)]
+            self.assertEqual(len(label_conditions), 2)
+            lc_1 = label_conditions[0]
+            self.assertEqual(lc_1.name, "labelCondition")
+            self.assertIsInstance(lc_1, LabelCondition)
+            self.assertEqual(lc_1.evaluation_mode, EvaluationMode.PRE)
+            self.assertEqual(lc_1.inclusion, False)
+            self.assertEqual(next(iter(lc_1.labels)).name, "Label1")
+            lc_2 = label_conditions[1]
+            self.assertEqual(lc_2.name, "labelCondition")
+            self.assertIsInstance(lc_2, LabelCondition)
+            self.assertEqual(next(iter(lc_2.labels)).name, "Label2")
+            self.assertEqual(lc_2.evaluation_mode, EvaluationMode.CONCURRENT)
+            self.assertEqual(lc_2.inclusion, True)
             
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.5)
@@ -271,9 +290,15 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(condition.name, "VetoRightCondition")
             
             # Verify vetoers set
-            self.assertEqual(len(condition.vetoers), 1)
-            vetoer = next(iter(condition.vetoers))
-            self.assertEqual(vetoer.name, "ProjectOwner")
+            self.assertEqual(len(condition.vetoers), 2)
+            po = next((v for v in condition.vetoers if v.name == "ProjectOwner"), None)
+            self.assertIsInstance(po, Individual)
+            self.assertEqual(po.name, "ProjectOwner")
+            # We check the default creation of individuals
+            diego = next((v for v in condition.vetoers if v.name == "Diego"), None)
+            self.assertIsInstance(diego, Individual)
+            self.assertEqual(diego.name, "Diego")
+
             
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

@@ -8,8 +8,8 @@ from utils.exceptions import (
     UndefinedAttributeException
 )
 from utils.gh_extension import (
-    ActionEnum, Label, PullRequest, Issue, Patch, Repository, GitHubElement,
-    PassedTests
+    ActionEnum, Label, PullRequest, Issue, Patch, Repository,
+    PassedTests, LabelCondition
 )
 from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
@@ -606,8 +606,8 @@ class PolicyCreationListener(govdslListener):
                 # Get the existing participant object
                 vetoer = next(p for p in self.__policy_participants_map if p.name == vetoer_name)
             else:
-                # We create a Role by default
-                vetoer = Role(name=vetoer_name)
+                # We create a Individual by default
+                vetoer = Individual(name=vetoer_name)
             vetoer_obj.add(vetoer)
         
         # Create the VetoRight object
@@ -632,6 +632,35 @@ class PolicyCreationListener(govdslListener):
             # Create the PassedTests object
             test_condition = PassedTests(name="passedTestsCondition", evaluation_mode=evaluation_mode)
             self._register_condition_with_current_policy(test_condition)
+
+    def enterLabelsCondition(self, ctx:govdslParser.LabelsConditionContext):
+
+        evaluation_mode = EvaluationMode.CONCURRENT
+        if ctx.evaluationMode():
+            ev_mode = ctx.evaluationMode().getText()
+            match ev_mode:
+                case "pre":
+                    evaluation_mode = EvaluationMode.PRE
+                case "post":
+                    evaluation_mode = EvaluationMode.POST
+                case "concurrent":
+                    evaluation_mode = EvaluationMode.CONCURRENT
+
+        labels = set()
+        for l in ctx.ID():
+            label = Label(name=l.getText())
+            labels.add(label)
+        
+        # Check if inclusion is specified
+        inclusion = True
+        if ctx.include():
+            inclusion = ctx.include().getText().lower() == "include"
+        
+        # Create the LabelCondition object
+        label_condition = LabelCondition(name="labelCondition", evaluation_mode=evaluation_mode, labels=labels, inclusion=inclusion)
+        
+        # Register with current policy
+        self._register_condition_with_current_policy(label_condition)
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         # Get the current policy context

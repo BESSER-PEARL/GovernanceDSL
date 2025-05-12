@@ -19,6 +19,8 @@ MajorityPolicy TestPolicy {
         Deadline reviewDeadline : 14 days
         ParticipantExclusion : Mike
         MinParticipants : 2
+        LabelCondition pre not : Label1
+        LabelCondition : Label2
     Parameters:
         ratio 0.5
 }

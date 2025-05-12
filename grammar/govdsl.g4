@@ -53,7 +53,7 @@ agent               : '(Agent)' participantID voteValue? confidence? ;
 confidence          : 'with confidence' FLOAT ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? ;
+conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ;
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener

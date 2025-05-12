@@ -98,3 +98,26 @@ class PassedTests(Condition):
     """Represents the condition of passed tests for a GitHub element"""
     def __init__(self, name: str, evaluation_mode: EvaluationMode):
         super().__init__(name, evaluation_mode)
+
+class LabelCondition(Condition):
+    """Represents a condition based on labels for a GitHub element"""
+    def __init__(self, name: str, evaluation_mode: EvaluationMode, labels: set[Label], inclusion: bool = True):
+        super().__init__(name, evaluation_mode)
+        self.labels = labels
+        self.inclusion = inclusion
+    
+    @property
+    def labels(self):
+        return self.__labels
+    
+    @labels.setter
+    def labels(self, labels: set[Label]):
+        self.__labels = labels
+
+    @property
+    def inclusion(self):
+        return self.__inclusion
+    
+    @inclusion.setter
+    def inclusion(self, inclusion: bool):
+        self.__inclusion = inclusion

@@ -10,7 +10,7 @@ Scopes:
     }
 Participants:
     Roles : Reviewers, Approvers
-    Individuals : (Agent) Agent
+    Individuals : (Agent) k8s-ci-robot
 ComposedPolicy pr_merge {
     Scope: TestTask
     Order :
@@ -22,6 +22,8 @@ ComposedPolicy pr_merge {
             Participant list : Reviewers
             Conditions:
                 Reviewers/approvers PRassigned? pre
+                ParticipantExclusion : PRAuthor
+                MinParticipants : 2
                 LabelCondition post : lgtm
             Parameters:
                 ratio 1.0
@@ -34,7 +36,7 @@ ComposedPolicy pr_merge {
                 ratio 1.0
         }
         LeaderDrivenPolicy phase_3 {
-            Participant list : Agent
+            Participant list : k8s-ci-robot
             Conditions:
                 LabelCondition pre: lgtm, approved
                 LabelCondition pre not: do-not-merge/hold, needs-rebase

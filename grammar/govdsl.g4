@@ -15,13 +15,15 @@ nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
 
 // Scope definition
-scopes              : 'Scopes' ':' project ; // Definition from upper element
+scopes              : 'Scopes' ':' ( project | act | tsk) ; // Definition from upper element; but we can also define alone scopes
 scope               : 'Scope' ':' ID ; // reference from policy
 project             : 'Project' ID ('from' platform ':' repoID)? ('{' 'activities' ':' activity+ '}')? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
+act                 : 'Activity' activity ;
 activity            : ID ('{' 'tasks' ':' task+ '}')? ;
-task                : ID (':' taskType)? '{' taskContent '}' ;
+tsk                 : 'Task' task ;
+task                : ID (':' taskType)? ('{' taskContent '}')? ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
 taskContent         : status | action | actionWithLabels ;
 actionWithLabels    : action labels ;

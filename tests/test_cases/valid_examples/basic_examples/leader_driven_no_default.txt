@@ -1,9 +1,9 @@
 Scopes: 
-    Project TestProject from GitHub : owner/repo
+    Activity myActivity
 Participants:
     Individuals : Leader
 LeaderDrivenPolicy TestPolicy {
-    Scope: TestProject
+    Scope: myActivity
     DecisionType as BooleanDecision
     Participant list : Leader
     Conditions:

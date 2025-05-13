@@ -19,8 +19,7 @@
     - **Phase 1**: Humans review the PR
         - **Reviewers** look for general code quality, correctness, sane software engineering, style, etc.
         - Anyone in the organization can act as a **reviewer** with the exception of the individual who opened the PR
-        - If the code changes look good to them, a **reviewer** types `/lgtm` in a PR comment or review;
-            if they change their mind, they `/lgtm cancel`
+        - If the code changes look good to them, a **reviewer** types `/lgtm` in a PR comment or review; if they change their mind, they `/lgtm cancel`
         - Once a **reviewer** has `/lgtm`'ed, [prow](https://prow.k8s.io) ([@k8s-ci-robot](https://github.com/k8s-ci-robot/)) applies an `lgtm` label to the PR. (ADEM: No specification on amount of needed lgtm. Should be all of the reviewers assigned to my understanding. Thus, is this Absolute Majority with ratio 100%?)
     - **Phase 2**: Humans approve the PR
         - The PR **author** `/assign`'s all suggested **approvers** to the PR, and optionally notifies them (eg: "pinging @foo for approval").

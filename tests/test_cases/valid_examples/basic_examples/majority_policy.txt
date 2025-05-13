@@ -1,5 +1,5 @@
 Scopes: 
-    Project TestProjectGH from GitHub : owner/repo {
+    Project TestProjectGH from GitHub : owner/repo-with-hyphen {
         activities : 
             myActivity {
                 tasks : 

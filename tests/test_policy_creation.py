@@ -15,7 +15,7 @@ from utils.exceptions import (
     InvalidValueException
 )
 from metamodel.governance import (
-    Role, Deadline, MajorityPolicy, 
+    Role, Deadline, MajorityPolicy, Task,
     Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
@@ -142,7 +142,7 @@ class TestPolicyCreation(unittest.TestCase):
             project_scope = activity_scope.project 
             self.assertIsInstance(project_scope, Repository)
             self.assertEqual(project_scope.name, "TestProjectGH")
-            self.assertEqual(project_scope.repo_id, "owner/repo")
+            self.assertEqual(project_scope.repo_id, "owner/repo-with-hyphen")
             
             # Test participants
             self.assertEqual(len(policy.participants), 4) 
@@ -222,13 +222,13 @@ class TestPolicyCreation(unittest.TestCase):
             # Find and test LabelCondition condition
             label_conditions = [c for c in policy.conditions if isinstance(c, LabelCondition)]
             self.assertEqual(len(label_conditions), 2)
-            lc_1 = label_conditions[0]
+            lc_1 = next(lc for lc in label_conditions if lc.evaluation_mode == EvaluationMode.PRE)
             self.assertEqual(lc_1.name, "labelCondition")
             self.assertIsInstance(lc_1, LabelCondition)
             self.assertEqual(lc_1.evaluation_mode, EvaluationMode.PRE)
             self.assertEqual(lc_1.inclusion, False)
             self.assertEqual(next(iter(lc_1.labels)).name, "Label1")
-            lc_2 = label_conditions[1]
+            lc_2 = next(lc for lc in label_conditions if lc.evaluation_mode == EvaluationMode.CONCURRENT)
             self.assertEqual(lc_2.name, "labelCondition")
             self.assertIsInstance(lc_2, LabelCondition)
             self.assertEqual(next(iter(lc_2.labels)).name, "Label2")
@@ -269,9 +269,8 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProjectGH")
-            self.assertEqual(scope.repo_id, "owner/repo")
+            self.assertIsInstance(scope, Task)
+            self.assertEqual(scope.name, "myTask")
             
             # Test participants
             self.assertEqual(len(policy.participants), 1)
@@ -445,9 +444,8 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProject")
-            self.assertEqual(scope.repo_id, "owner/repo")
+            self.assertIsInstance(scope, Activity)
+            self.assertEqual(scope.name, "myActivity")
             
             # Test leader participants
             self.assertEqual(len(policy.participants), 1)

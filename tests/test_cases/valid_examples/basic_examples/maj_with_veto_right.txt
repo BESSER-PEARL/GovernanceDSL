@@ -1,10 +1,10 @@
 Scopes: 
-    Project TestProjectGH from GitHub : owner/repo
+    Task myTask
 Participants:
     Roles : Maintainer; ProjectOwner
     Individuals: Joe, George, Mike
 MajorityPolicy TestPolicy {
-    Scope: TestProjectGH
+    Scope: myTask
     DecisionType as ElementList : Joe, George
     Participant list : Maintainer
     Conditions:

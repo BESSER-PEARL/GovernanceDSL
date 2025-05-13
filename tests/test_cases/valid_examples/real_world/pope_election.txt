@@ -1,0 +1,7 @@
+Scope : 
+AbsoluteMajorityPolicy popeElection {
+    Participant list : cardinals
+    DecisionType as StringList : 
+    Parameters : 
+        ratio 0.665 // 89 of 133 = 66,92%; 88 of 133 = 66,17%
+}

@@ -1,5 +1,9 @@
-Scope : 
+Scopes : 
+    Task election_of_pope
+Participants : 
+    Roles : Cardinals
 AbsoluteMajorityPolicy popeElection {
+    Scope : election_of_pope
     Participant list : cardinals
     DecisionType as StringList : 
     Parameters : 

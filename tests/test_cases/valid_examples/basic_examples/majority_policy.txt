@@ -10,7 +10,12 @@ Scopes:
     }
 Participants:
     Roles : Maintainer; Reviewer composed of : Mike, Alexander; Owner
-    Individuals : Joe with vote value 0.7, (Agent) Mike with confidence 0.8
+    Individuals : 
+        Joe with vote value 0.7 with profile joeProfile {
+            gender : male
+            race : hispanic
+        },
+        (Agent) Mike with confidence 0.8
 MajorityPolicy TestPolicy {
     Scope: myTask
     DecisionType as StringList : accept, reject, abstain

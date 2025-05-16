@@ -111,12 +111,43 @@ class Participant(Element):
     
     def __hash__(self):
         return hash(self.name)
+    
+class Profile(Element):
+    def __init__(self, name: str, gender: str, race: str):
+        self.name = name
+        self.gender = gender
+        self.race = race
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+
+    @property
+    def gender(self) -> str:
+        return self.__gender
+    
+    @gender.setter
+    def gender(self, gender: str):
+        self.__gender = gender
+
+    @property
+    def race(self) -> str:
+        return self.__race
+    
+    @race.setter
+    def race(self, race: str):
+        self.__race = race
 
 class Individual(Participant):
-    def __init__(self, name: str, vote_value: float = 1.0):
+    def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
         super().__init__(name)
         self.__role_assignement = None
         self.vote_value = vote_value 
+        self.profile = profile
     
     @property
     def role_assignement(self) -> 'hasRole':
@@ -135,6 +166,14 @@ class Individual(Participant):
         if vote_value < 0:
             raise InvalidValueException("vote_value", vote_value)
         self.__vote_value = vote_value
+    
+    @property
+    def profile(self) -> Profile:
+        return self.__profile
+    
+    @profile.setter
+    def profile(self, profile: Profile):
+        self.__profile = profile
 
 class Agent(Individual):
     def __init__(self, name: str, confidence: float = 1.0):

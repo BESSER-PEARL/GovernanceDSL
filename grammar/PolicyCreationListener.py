@@ -19,7 +19,7 @@ from metamodel.governance import (
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
-    ElementList, StringList, EvaluationMode
+    ElementList, StringList, EvaluationMode, Profile
 )
 from .govdslParser import govdslParser
 from .govdslListener import govdslListener
@@ -625,6 +625,18 @@ class PolicyCreationListener(govdslListener):
                 
         if ctx.voteValue():
             individual.vote_value = float(ctx.voteValue().FLOAT().getText())
+        
+        if ctx.profile():
+            gender = None
+            race = None
+            if ctx.profile().gender():
+                gender = ctx.profile().gender().ID().getText()
+            if ctx.profile().race():
+                race = ctx.profile().race().ID().getText()
+            profile = Profile(name=ctx.profile().ID().getText(),
+                              gender=gender,
+                              race=race)
+            individual.profile = profile
             
         self.__participants_map[name] = individual
 

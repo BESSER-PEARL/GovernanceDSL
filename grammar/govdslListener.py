@@ -377,6 +377,33 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#profile.
+    def enterProfile(self, ctx:govdslParser.ProfileContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#profile.
+    def exitProfile(self, ctx:govdslParser.ProfileContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#gender.
+    def enterGender(self, ctx:govdslParser.GenderContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#gender.
+    def exitGender(self, ctx:govdslParser.GenderContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#race.
+    def enterRace(self, ctx:govdslParser.RaceContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#race.
+    def exitRace(self, ctx:govdslParser.RaceContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#conditions.
     def enterConditions(self, ctx:govdslParser.ConditionsContext):
         pass

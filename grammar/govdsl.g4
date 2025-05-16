@@ -48,11 +48,14 @@ roleID              : ID ('composed of' ':' participantID (',' participantID)*)?
 participantID       : ID  ;
 individuals         : 'Individuals' ':' individualEntry (',' individualEntry)* ;
 individualEntry     : individual | agent ;
-individual          : participantID voteValue? ;
+individual          : participantID voteValue? profile? ;
 hasRole             : 'as' participantID ;
 voteValue           : 'with vote value' FLOAT ;
 agent               : '(Agent)' participantID voteValue? confidence? ;
 confidence          : 'with confidence' FLOAT ;
+profile             : 'with profile' ID '{' (gender race? | race gender?) '}';
+gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule
+race                : 'race' ':' ID ;
 
 // Conditions group
 conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ;

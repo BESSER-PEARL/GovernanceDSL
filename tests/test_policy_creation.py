@@ -157,6 +157,11 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(individual.vote_value, 0.7)
             self.assertIsNotNone(individual.role_assignement)
             self.assertEqual(individual.role_assignement.name, "Joe_Maintainer")
+            profile = individual.profile
+            self.assertIsNotNone(profile)
+            self.assertEqual(profile.name, "joeProfile")
+            self.assertEqual(profile.gender, "male")
+            self.assertEqual(profile.race, "hispanic")
 
             agent = next((ind for ind in individuals if ind.name == "Mike"), None)
             self.assertIsNotNone(agent, "Mike not found")
@@ -273,12 +278,20 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(scope.name, "myTask")
             
             # Test participants
-            self.assertEqual(len(policy.participants), 1)
+            self.assertEqual(len(policy.participants), 2)
             
             # Test Role participant
-            participant = next(iter(policy.participants))
-            self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Maintainer")
+            participant = [p for p in policy.participants if isinstance(p, Role)]
+            self.assertEqual(len(participant), 1)
+            self.assertIsInstance(participant[0], Role)
+            self.assertEqual(participant[0].name, "Maintainer")
+
+            individual = [p for p in policy.participants if isinstance(p, Individual)]
+            self.assertEqual(len(individual), 1)
+            self.assertIsInstance(individual[0], Individual)
+            self.assertEqual(individual[0].name, "Mike")
+            self.assertEqual(individual[0].profile.name, "mikeProfile")
+            self.assertEqual(individual[0].profile.race, "caucasian")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)

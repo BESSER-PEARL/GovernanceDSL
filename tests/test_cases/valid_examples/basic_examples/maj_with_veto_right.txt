@@ -2,11 +2,13 @@ Scopes:
     Task myTask
 Participants:
     Roles : Maintainer; ProjectOwner
-    Individuals: Joe, George, Mike
+    Individuals: Joe, George, Mike with profile mikeProfile {
+        race : caucasian
+    }
 MajorityPolicy TestPolicy {
     Scope: myTask
     DecisionType as ElementList : Joe, George
-    Participant list : Maintainer
+    Participant list : Maintainer, Mike
     Conditions:
         VetoRight : ProjectOwner, Diego
 }

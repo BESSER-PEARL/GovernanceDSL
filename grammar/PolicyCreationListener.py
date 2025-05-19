@@ -32,7 +32,7 @@ class PolicyCreationListener(govdslListener):
     """
     def __init__(self):
         super().__init__()
-        self.__policy = None
+        self.__policies = []
 
         # Maps to track attributes by policy ID
         self.__policy_rules_map = {}        # So we have a set for each policy. Maybe we could use a dict with the rule name as key. Same for following maps.
@@ -53,9 +53,9 @@ class PolicyCreationListener(govdslListener):
         self.composed_policy_stack = []  # Tracks the current composed policies
         self.referenced_policies = set()  # Track policies referenced by others (like default policies)
 
-    def get_policy(self):
-        """Policy: Retrieves the Policy instance."""
-        return self.__policy
+    def get_policies(self):
+        """Policies: Retrieves the Policy instances."""
+        return self.__policies
     
     def find_descendant_nodes_by_type(self, node, target_type):
         """
@@ -859,20 +859,22 @@ class PolicyCreationListener(govdslListener):
                     parent_scope = self.__policy_scopes_map[current_policy.policy_id]
                     self.__policy_scopes_map[default_policy_id] = parent_scope
 
-    def exitPolicy(self, ctx:govdslParser.PolicyContext):
-        """Final policy construction using the tree structure"""
+    def exitGovernance(self, ctx:govdslParser.GovernanceContext):
+        """When exiting the governance context, construct the policy tree"""
         # Build all objects from the tree (bottom-up)
         self._construct_policy_objects()
         
-        # Set the root policy as the main policy, excluding referenced policies
-        root_policies = [node for node in self.policy_tree.values() 
+        
+        root_policy_nodes = [node for node in self.policy_tree.values() 
                          if node.parent is None and node.policy_id not in self.referenced_policies]
 
-        # Should never enter here, but just in case
-        if len(root_policies) != 1:
-            raise Exception(f"Grammar violation: Found {len(root_policies)} root policies, but only one is allowed")        
-        
-        self.__policy = root_policies[0].policy_object
+        self.__policies = [
+            node.policy_object for node in root_policy_nodes 
+            if hasattr(node, 'policy_object') and node.policy_object is not None
+        ]
+
+        if len(self.__policies) < len(root_policy_nodes):
+            raise Exception("Some policies were not constructed correctly. Check the policy tree.")
     
     def exitNestedSinglePolicy(self, ctx:govdslParser.NestedSinglePolicyContext):
         """When exiting a nested single policy, pop from stack"""

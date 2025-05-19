@@ -1,7 +1,7 @@
 grammar govdsl;
 
 // Parser rules
-governance          : (scopes participants policy) EOF ;
+governance          : (scopes participants policy+) EOF ;
 policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)

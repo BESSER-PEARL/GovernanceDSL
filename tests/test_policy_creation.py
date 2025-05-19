@@ -118,7 +118,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
@@ -259,7 +259,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
@@ -325,7 +325,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, AbsoluteMajorityPolicy)
@@ -383,7 +383,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, LeaderDrivenPolicy)
@@ -448,7 +448,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, LeaderDrivenPolicy)
@@ -490,7 +490,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, ComposedPolicy)
@@ -646,7 +646,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
             
             # Assertions
             self.assertIsInstance(policy, LazyConsensusPolicy)
@@ -674,6 +674,78 @@ class TestPolicyCreation(unittest.TestCase):
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
+    def test_multi_policy_creation(self):
+        """Test the creation of a policy with multiple policies."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/multi_policy.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policies = listener.get_policies()
+            
+            # Assertions
+            self.assertEqual(len(policies), 2)
+            
+            # Test first policy (lcPolicy - LazyConsensusPolicy)
+            policy_1 = policies[0]
+            self.assertIsInstance(policy_1, LazyConsensusPolicy)
+            self.assertEqual(policy_1.name, "lcPolicy")
+
+            # Test scope for policy_1
+            self.assertIsNotNone(policy_1.scope)
+            self.assertIsInstance(policy_1.scope, Repository)
+            self.assertEqual(policy_1.scope.name, "TestProject")
+            self.assertEqual(policy_1.scope.repo_id, "owner/repo")
+            
+            # Test DecisionType for policy_1
+            self.assertIsNotNone(policy_1.decision_type)
+            self.assertIsInstance(policy_1.decision_type, BooleanDecision)
+            self.assertEqual(policy_1.decision_type.name, "booleanDecision")
+
+            # Test participants for policy_1
+            self.assertEqual(len(policy_1.participants), 1)
+            participant_1 = next(iter(policy_1.participants))
+            self.assertIsInstance(participant_1, Role)
+            self.assertEqual(participant_1.name, "Maintainer")
+
+            # Test conditions for policy_1 (none defined)
+            self.assertEqual(len(policy_1.conditions), 0)
+
+            # Test second policy (majPolicy - MajorityPolicy)
+            policy_2 = policies[1]
+            self.assertIsInstance(policy_2, MajorityPolicy)
+            self.assertEqual(policy_2.name, "majPolicy")
+
+            # Test scope for policy_2
+            self.assertIsNotNone(policy_2.scope)
+            self.assertIsInstance(policy_2.scope, Activity)
+            self.assertEqual(policy_2.scope.name, "myActivity")
+            # Check associated project for the activity
+            self.assertIsNotNone(policy_2.scope.project)
+            self.assertIsInstance(policy_2.scope.project, Repository)
+            self.assertEqual(policy_2.scope.project.name, "TestProject")
+
+
+            # Test DecisionType for policy_2 (should be default BooleanDecision)
+            self.assertIsNotNone(policy_2.decision_type)
+            self.assertIsInstance(policy_2.decision_type, BooleanDecision)
+            self.assertEqual(policy_2.decision_type.name, "booleanDecision") # Default name
+
+            # Test participants for policy_2
+            self.assertEqual(len(policy_2.participants), 1)
+            participant_2 = next(iter(policy_2.participants))
+            self.assertIsInstance(participant_2, Role)
+            self.assertEqual(participant_2.name, "Collaborator")
+
+            # Test conditions for policy_2 (none defined)
+            self.assertEqual(len(policy_2.conditions), 0)
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+            
     def test_custom_example(self):
         with open(self.test_cases_path / "valid_examples/basic_examples/custom_example.txt") as file:
             text = file.read()
@@ -682,7 +754,7 @@ class TestPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             walker.walk(listener, tree)
-            policy = listener.get_policy()
+            policy = listener.get_policies()[0]
 
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)

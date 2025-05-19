@@ -1,0 +1,16 @@
+Scopes: 
+    Project TestProject from GitHub : owner/repo {
+        activities : myActivity
+    }
+Participants:
+    Roles : Maintainer; Collaborator
+LazyConsensusPolicy lcPolicy {
+    Scope: TestProject
+    DecisionType as BooleanDecision
+    Participant list : Maintainer
+}
+MajorityPolicy majPolicy {
+    Scope : myActivity
+    DecisionType as BooleanDecision
+    Participant list : Collaborator
+}

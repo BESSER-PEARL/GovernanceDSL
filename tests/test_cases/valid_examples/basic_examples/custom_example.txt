@@ -10,8 +10,20 @@ Scopes:
                 }
         }
 Participants:
-    Roles : maintainer composed of : alice, bob; reviewer composed of : charlie, daniel
-    Individuals : zoe with vote value 0.7, (Agent) agent with confidence 0.8
+    Roles : maintainer, reviewer
+    Individuals :
+        zoe {
+            vote value : 0.7
+        },
+        (Agent) agent {
+            confidence : 0.8
+        },
+        alice {
+            role : maintainer
+        },
+        bob {
+            role: maintainer
+        }
 MajorityPolicy testPolicy {
     Scope: testTask
     DecisionType as BooleanDecision

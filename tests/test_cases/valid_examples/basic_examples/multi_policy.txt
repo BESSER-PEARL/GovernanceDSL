@@ -4,7 +4,7 @@ Scopes:
             Activities : myActivity
         }
 Participants:
-    Roles : maintainer; collaborator
+    Roles : maintainer, collaborator
 LazyConsensusPolicy lcPolicy {
     Scope: testProject
     DecisionType as BooleanDecision

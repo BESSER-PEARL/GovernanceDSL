@@ -41,22 +41,25 @@ stringList          : 'StringList' ':' ID (',' ID)* ;
 elementList         : 'ElementList' ':' ID (',' ID)* ;
 
 // Participants group
-participants        : 'Participants' ':' ((roles individuals?) | (individuals roles?)) ;
-policyParticipants  : 'Participant list' ':' partID (',' partID)* ;
-partID              : ID hasRole? ;
-roles               : 'Roles' ':' roleID (';' roleID)* ;
-roleID              : ID ('composed of' ':' participantID (',' participantID)*)? ;
-participantID       : ID  ;
-individuals         : 'Individuals' ':' individualEntry (',' individualEntry)* ;
+participants        : 'Participants' ':' (roles | individuals | profiles)+ ;
+roles               : 'Roles' ':' ID (',' ID)* ;
+// roleID              : ID ('composed of' ':' participantID (',' participantID)*)? ;
+// participantID       : ID  ;
+individuals         : 'Individuals' ':' individualEntry ((',')? individualEntry)* ;
 individualEntry     : individual | agent ;
-individual          : participantID voteValue? profile? ;
-hasRole             : 'as' participantID ;
-voteValue           : 'with vote value' FLOAT ;
-agent               : '(Agent)' participantID voteValue? confidence? ;
-confidence          : 'with confidence' FLOAT ;
-profile             : 'with profile' ID '{' (gender race? | race gender?) '}';
+individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}')? ; 
+voteValue           : 'vote value' ':' FLOAT ;
+withProfile         : 'profile' ':' ID ;
+withRole            : 'role' ':' ID ;
+agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? withRole? '}')? ;
+confidence          : 'confidence' ':' FLOAT ;
+profiles            : 'Profiles' ':' profile ((',')? profile)* ;
+profile             : ID '{' (gender (',')? race? | race (',')? gender?) '}';
 gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule
 race                : 'race' ':' ID ;
+policyParticipants  : 'Participant list' ':' partID (',' partID)* ;
+partID              : ID hasRole? ;
+hasRole             : 'as' ID ;
 
 // Conditions group
 conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ; // + extension
@@ -65,9 +68,9 @@ offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; This can be improved with a lexer rule
-participantExclusion: 'ParticipantExclusion' ':' participantID (',' participantID)* ;
+participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ;
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
-vetoRight           : 'VetoRight' ':' participantID (',' participantID)* ; 
+vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
 passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;

@@ -2,10 +2,17 @@ Scopes:
     Tasks :
         myTask
 Participants:
-    Roles : maintainer; projectOwner
-    Individuals: joe, george, mike with profile mikeProfile {
-        race : caucasian
-    }
+    Roles : maintainer, projectOwner
+    Profiles:
+        mikeProfile {
+            race : caucasian
+        }
+    Individuals:
+        joe,
+        george,
+        mike {
+            profile : mikeProfile
+        }
 MajorityPolicy testPolicy {
     Scope: myTask
     DecisionType as ElementList : joe, george

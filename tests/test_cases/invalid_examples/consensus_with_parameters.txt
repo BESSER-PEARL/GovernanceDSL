@@ -3,7 +3,10 @@ Scopes:
         testProject
 Participants:
     Roles : Maintainer
-    Individuals : Joe with vote value 0.7
+    Individuals : 
+        Joe {
+            vote value : 0.7
+        }
 ConsensusPolicy TestPolicy {
     Scope: TestProjectGH
     DecisionType as BooleanDecision

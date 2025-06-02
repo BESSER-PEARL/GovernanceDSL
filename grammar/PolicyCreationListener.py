@@ -46,6 +46,7 @@ class PolicyCreationListener(govdslListener):
         # Maps to track scopes and participants predefined
         self.__scopes_map = {}
         self.__participants_map = {}
+        self.__profiles_map = {}
 
         # Policy tree structure
         self.policy_tree = {}  # Maps policy ID to PolicyNode
@@ -589,7 +590,7 @@ class PolicyCreationListener(govdslListener):
             if p.hasRole():
                 if not isinstance(participant, Individual):
                     raise UndefinedAttributeException("role", message="hasRole attribute can only be applied to individual.")
-                role_name = p.hasRole().participantID().ID().getText()
+                role_name = p.hasRole().ID().getText()
                 # Find the role object, has to be already defined
                 role_obj = self.__participants_map.get(role_name)
                 if role_obj:
@@ -605,51 +606,65 @@ class PolicyCreationListener(govdslListener):
                     raise UndefinedAttributeException("role", message="No role defined for this role assignment.")
             self._register_participant_with_current_policy(participant)
                 
-    def enterRoleID(self, ctx:govdslParser.RolesContext): 
+    def enterRoles(self, ctx:govdslParser.RolesContext): 
 
-        roleID = ctx.ID().getText()
-        role = Role(name=roleID)
-        if ctx.participantID():
-            individuals = set()
-            for p in ctx.participantID():
-                participant = self.__participants_map.get(p.ID().getText())
-                if not participant:
-                    # Individual might not be defined yet, so we create it; Can be enriched later
-                    participant = Individual(name=p.ID().getText())
-                    self.__participants_map[participant.name] = participant
-                individuals.add(participant)
-            role.individuals = individuals
-        self.__participants_map[roleID] = role
+        for roleID in ctx.ID():
+            roleID = roleID.getText()
+            role = Role(name=roleID)
+            self.__participants_map[roleID] = role
      
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
-        name = ctx.participantID().ID().getText()
+        name = ctx.ID().getText()
         individual = Individual(name=name)
                 
         if ctx.voteValue():
             individual.vote_value = float(ctx.voteValue().FLOAT().getText())
         
-        if ctx.profile():
-            gender = None
-            race = None
-            if ctx.profile().gender():
-                gender = ctx.profile().gender().ID().getText()
-            if ctx.profile().race():
-                race = ctx.profile().race().ID().getText()
-            profile = Profile(name=ctx.profile().ID().getText(),
-                              gender=gender,
-                              race=race)
+        if ctx.withProfile():
+            profile_name = ctx.withProfile().ID().getText()
+            profile = self.__profiles_map.get(profile_name)
+            if not profile:
+                raise UndefinedAttributeException("profile", message=f"Profile {profile_name} not defined.")
             individual.profile = profile
+        
+        if ctx.withRole():
+            role_name = ctx.withRole().ID().getText()
+            role = self.__participants_map.get(role_name)
+            if not role:
+                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+            # individual.role = role # Should the relationship be bidirectional?
+            role.individuals.add(individual)
             
         self.__participants_map[name] = individual
 
+    def enterProfile(self, ctx:govdslParser.ProfileContext):
+
+        gender = None
+        race = None
+        if ctx.gender():
+            gender = ctx.gender().ID().getText()
+        if ctx.race():
+            race = ctx.race().ID().getText()
+        profile = Profile(name=ctx.ID().getText(),
+                            gender=gender,
+                            race=race)
+        self.__profiles_map[profile.name] = profile
+
     def enterAgent(self, ctx:govdslParser.AgentContext):
-        name = ctx.participantID().ID().getText()
+        name = ctx.ID().getText()
         agent = Agent(name=name)
                 
         if ctx.voteValue():
             agent.vote_value = float(ctx.voteValue().FLOAT().getText())
         if ctx.confidence():
             agent.confidence = float(ctx.confidence().FLOAT().getText())
+        if ctx.withRole():
+            role_name = ctx.withRole().ID().getText()
+            role = self.__participants_map.get(role_name)
+            if not role:
+                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+            # agent.role = role # Should the relationship be bidirectional?
+            role.individuals.add(agent)
             
         self.__participants_map[name] = agent
 
@@ -699,12 +714,10 @@ class PolicyCreationListener(govdslListener):
     
     def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
         # TODO: This condition needs more refinement. We will include primitive types.
-        excluded = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.ParticipantIDContext)
         
         excluded_objs = set()
-        for e in excluded:
-            excluded_name = e.ID().getText()
+        for e in ctx.ID():
+            excluded_name = e.getText()
             excluded_participant = None
             if excluded_name in self.__policy_participants_map:
                 # Get the existing individual object; 
@@ -726,13 +739,12 @@ class PolicyCreationListener(govdslListener):
         self._register_condition_with_current_policy(condition)
 
     def enterVetoRight(self, ctx:govdslParser.VetoRightContext):
-        vetoers = self.find_descendant_nodes_by_type(node=ctx,
-                                                target_type=govdslParser.ParticipantIDContext)
+        
         vetoer_obj = set()
         # Vetoers might not be participants of the current policy
-        for v in vetoers:
+        for v in ctx.ID():
             # Check if the vetoer is already registered
-            vetoer_name = v.ID().getText()
+            vetoer_name = v.getText()
             vetoer = None
             if vetoer_name in self.__policy_participants_map:
                 # Get the existing participant object

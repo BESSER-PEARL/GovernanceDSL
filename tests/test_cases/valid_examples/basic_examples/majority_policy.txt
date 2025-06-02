@@ -14,13 +14,24 @@ Scopes:
     Tasks :
         myTask2
 Participants:
-    Roles : maintainer; reviewer composed of : mike, alexander; owner
-    Individuals : 
-        joe with vote value 0.7 with profile joeProfile {
+    Profiles:
+        joeProfile {
             gender : male
             race : hispanic
+        }
+    Roles : maintainer, reviewer, owner
+    Individuals : 
+        joe {
+            vote value : 0.7
+            profile : joeProfile
         },
-        (Agent) mike with confidence 0.8
+        (Agent) mike {
+            confidence : 0.8
+            role : reviewer
+        },
+        alexander {
+            role : reviewer
+        }
 MajorityPolicy testPolicy {
     Scope: myTask
     DecisionType as StringList : accept, reject, abstain

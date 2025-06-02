@@ -2,7 +2,8 @@ Scopes:
     Activities :
         myActivity
 Participants:
-    Individuals : leader
+    Individuals : 
+        leader
 LeaderDrivenPolicy testPolicy {
     Scope: myActivity
     DecisionType as BooleanDecision

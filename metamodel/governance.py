@@ -192,7 +192,7 @@ class Agent(Individual):
 class Role(Participant):
     def __init__(self, name: str):
         super().__init__(name)
-        self.__individuals = None
+        self.__individuals = set()
     
     @property
     def individuals(self) -> set[Individual]:

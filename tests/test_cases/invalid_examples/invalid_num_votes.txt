@@ -1,14 +1,15 @@
 Scopes: 
-    Project TestProject from GitHub : owner/repo {
-        activities :
-            TestActivity
+    Projects :
+        testProject from GitHub : owner/repo {
+            Activities :
+                testActivity
     }
 Participants:
-    Roles : Committers
-MajorityPolicy TestPolicy {
-    Scope: TestActivity
+    Roles : committers
+MajorityPolicy testPolicy {
+    Scope: testActivity
     DecisionType as BooleanDecision
-    Participant list : Committers
+    Participant list : committers
     Conditions:
         Deadline reviewDeadline : 7 days
         MinParticipants : -1

@@ -1,20 +1,21 @@
 Scopes:
-    Project TestProjectGH from GitHub : owner/repo {
-        activities :
-            TestActivity {
-                tasks :
-                    TestTask : Pull request {
-                        Action : merge
-                    }
-            }
-    }
+    Projects :
+        testProjectGH from GitHub : owner/repo {
+            Activities : 
+                testActivity {
+                    Tasks : 
+                        testTask : Pull request {
+                            Action : merge
+                        }
+                }
+        }
 Participants:
-    Roles : Maintainer composed of : Alice, Bob; Reviewer composed of : Charlie, Daniel
-    Individuals : Zoe with vote value 0.7, (Agent) Agent with confidence 0.8
-MajorityPolicy TestPolicy {
-    Scope: TestTask
+    Roles : maintainer composed of : alice, bob; reviewer composed of : charlie, daniel
+    Individuals : zoe with vote value 0.7, (Agent) agent with confidence 0.8
+MajorityPolicy testPolicy {
+    Scope: testTask
     DecisionType as BooleanDecision
-    Participant list : Maintainer, Zoe as Maintainer
+    Participant list : maintainer, zoe as maintainer
     Conditions:
         Deadline reviewDeadline : 14 days
     Parameters:

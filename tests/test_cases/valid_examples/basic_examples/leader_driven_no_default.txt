@@ -1,11 +1,12 @@
 Scopes: 
-    Activity myActivity
+    Activities :
+        myActivity
 Participants:
-    Individuals : Leader
-LeaderDrivenPolicy TestPolicy {
+    Individuals : leader
+LeaderDrivenPolicy testPolicy {
     Scope: myActivity
     DecisionType as BooleanDecision
-    Participant list : Leader
+    Participant list : leader
     Conditions:
         Deadline reviewDeadline : 7 days
 }

@@ -1,11 +1,12 @@
 Scopes: 
-    Project TestProjectGH from GitHub : owner/repo
+    Projects : 
+        testProjectGH from GitHub : owner/repo
 Participants:
-    Individuals : Joe with vote value -0.7
-MajorityPolicy TestPolicy {
-    Scope: TestProjectGH
+    Individuals : joe with vote value -0.7
+MajorityPolicy testPolicy {
+    Scope: testProjectGH
     DecisionType as BooleanDecision
-    Participant list : Joe
+    Participant list : joe
     Parameters:
         ratio 0.5
 }

@@ -1,17 +1,18 @@
 Scopes: 
-    Project HFCProject from GitHub : owner/repo {
-        activities :
-            TestActivity {
-                tasks :
-                    TestTask : Pull request {
-                        Action : merge
-                    }
+    Projects :
+        hfcProject from GitHub : owner/repo {
+            Activities :
+                testActivity {
+                    Tasks :
+                        testTask : Pull request {
+                            Action : merge
+                        }
             }
     }
 Participants:
-    Roles : Maintainers
+    Roles : maintainers
 ComposedPolicy phasedPolicy {
-    Scope: TestTask
+    Scope: testTask
     Order :
         Execution : sequential
         RequireAll : false
@@ -19,16 +20,16 @@ ComposedPolicy phasedPolicy {
     Phases {
         MajorityPolicy phase_1 {
             DecisionType as BooleanDecision
-            Participant list : Maintainers
+            Participant list : maintainers
             Conditions:
-                Deadline reviewDeadline : 14 days
+                Deadline reviewdeadline : 14 days
                 MinParticipants : 2
             Parameters:
                 ratio 1.0
         }
         MajorityPolicy phase_2 {
             DecisionType as BooleanDecision
-            Participant list : Maintainers
+            Participant list : maintainers
             Conditions:
                 MinParticipants : 1
             Parameters:

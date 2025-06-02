@@ -1,5 +1,6 @@
 Scopes: 
-    Project TestProjectGH from GitHub : owner/repo
+    Projects : 
+        testProject
 Participants:
     Roles : Maintainer
     Individuals : Joe with vote value 0.7

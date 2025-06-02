@@ -1,16 +1,17 @@
 Scopes: 
-    Project TestProject from GitHub : owner/repo {
-        activities : myActivity
-    }
+    Projects :
+        testProject from GitHub : owner/repo {
+            Activities : myActivity
+        }
 Participants:
-    Roles : Maintainer; Collaborator
+    Roles : maintainer; collaborator
 LazyConsensusPolicy lcPolicy {
-    Scope: TestProject
+    Scope: testProject
     DecisionType as BooleanDecision
-    Participant list : Maintainer
+    Participant list : maintainer
 }
 MajorityPolicy majPolicy {
     Scope : myActivity
     DecisionType as BooleanDecision
-    Participant list : Collaborator
+    Participant list : collaborator
 }

@@ -1,11 +1,12 @@
 Scopes: 
-    Project TestProjectGH from GitHub : owner/repo
+    Projects : 
+        testProjectGH from GitHub : owner/repo
 Participants:
-    Roles : Maintainer
-MajorityPolicy TestPolicy {
-    Scope: TestProjectGH
-    DecisionType as ElementList : NonExistentPerson1, NonExistentPerson2
-    Participant list : Maintainer
+    Roles : maintainer
+MajorityPolicy testPolicy {
+    Scope: testProjectGH
+    DecisionType as ElementList : nonExistentPerson1, nonExistentPerson2
+    Participant list : maintainer
     Parameters:
         ratio 0.5
 }

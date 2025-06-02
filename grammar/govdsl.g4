@@ -15,14 +15,15 @@ nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
 
 // Scope definition
-scopes              : 'Scopes' ':' ( project | act | tsk) ; // Definition from upper element; but we can also define alone scopes
+scopes              : 'Scopes' ':' ( projects | activities | tasks)+ ; // Definition from upper element; but we can also define alone scopes
 scope               : 'Scope' ':' ID ; // reference from policy
-project             : 'Project' ID ('from' platform ':' repoID)? ('{' 'activities' ':' activity+ '}')? ;
+projects            : 'Projects' ':' project+ ;
+project             : ID ('from' platform ':' repoID)? ('{' 'Activities' ':' activity+ '}')? ;
 platform            : 'GitHub' ;
 repoID              : ID ('/' ID)? ; // owner/repo
-act                 : 'Activity' activity ;
-activity            : ID ('{' 'tasks' ':' task+ '}')? ;
-tsk                 : 'Task' task ;
+activities          : 'Activities' ':' activity+ ;
+activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
+tasks               : 'Tasks' ':' task+ ;
 task                : ID (':' taskType)? ('{' taskContent '}')? ;
 taskType            : 'Issue' | 'Pull request' | 'All' ; 
 taskContent         : status | action | actionWithLabels ;
@@ -58,7 +59,7 @@ gender              : 'gender' ':' ID ; // For now it will be a string, but we c
 race                : 'race' ':' ID ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ;
+conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ; // + extension
 deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener

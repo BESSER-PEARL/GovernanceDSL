@@ -1,28 +1,33 @@
-Scopes: 
-    Project TestProjectGH from GitHub : owner/repo-with-hyphen {
-        activities : 
-            myActivity {
-                tasks : 
-                    myTask : Pull request {
-                        Action : merge
-                    }
-            }
-    }
+Scopes:
+    Projects :
+        testProjectGH from GitHub : owner/repo-with-hyphen {
+            Activities : 
+                myActivity {
+                    Tasks : 
+                        myTask : Pull request {
+                            Action : merge
+                        }
+                }
+        }
+    Activities :
+        myActivity2
+    Tasks :
+        myTask2
 Participants:
-    Roles : Maintainer; Reviewer composed of : Mike, Alexander; Owner
+    Roles : maintainer; reviewer composed of : mike, alexander; owner
     Individuals : 
-        Joe with vote value 0.7 with profile joeProfile {
+        joe with vote value 0.7 with profile joeProfile {
             gender : male
             race : hispanic
         },
-        (Agent) Mike with confidence 0.8
-MajorityPolicy TestPolicy {
+        (Agent) mike with confidence 0.8
+MajorityPolicy testPolicy {
     Scope: myTask
     DecisionType as StringList : accept, reject, abstain
-    Participant list : Maintainer, Joe as Maintainer, Mike as Maintainer, Reviewer
+    Participant list : maintainer, joe as maintainer, mike as maintainer, reviewer
     Conditions:
         Deadline reviewDeadline : 14 days
-        ParticipantExclusion : Mike
+        ParticipantExclusion : mike
         MinParticipants : 2
         LabelCondition pre not : Label1
         LabelCondition : Label2

@@ -1,9 +1,10 @@
 Scopes: 
-    Project TestProject from GitHub : owner/repo
+    Projects :
+        testProject from GitHub : owner/repo
 Participants:
-    Roles : Maintainer
-LazyConsensusPolicy TestPolicy {
-    Scope: TestProject
+    Roles : maintainer
+LazyConsensusPolicy testPolicy {
+    Scope: testProject
     DecisionType as BooleanDecision
-    Participant list : Maintainer
+    Participant list : maintainer
 }

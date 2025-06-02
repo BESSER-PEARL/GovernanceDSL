@@ -89,6 +89,15 @@ class govdslListener(ParseTreeListener):
         print(f"exitScope: {ctx.getText()}")
 
 
+    # Enter a parse tree produced by govdslParser#projects.
+    def enterProjects(self, ctx:govdslParser.ProjectsContext):
+        print(f"enterProjects: {ctx.getText()}")
+
+    # Exit a parse tree produced by govdslParser#projects.
+    def exitProjects(self, ctx:govdslParser.ProjectsContext):
+        print(f"exitProjects: {ctx.getText()}")
+
+
     # Enter a parse tree produced by govdslParser#project.
     def enterProject(self, ctx:govdslParser.ProjectContext):
         print(f"enterProject: {ctx.getText()}")
@@ -116,13 +125,13 @@ class govdslListener(ParseTreeListener):
         print(f"exitRepoID: {ctx.getText()}")
 
 
-    # Enter a parse tree produced by govdslParser#act.
-    def enterAct(self, ctx:govdslParser.ActContext):
-        print(f"enterAct: {ctx.getText()}")
+    # Enter a parse tree produced by govdslParser#activities.
+    def enterActivities(self, ctx:govdslParser.ActivitiesContext):
+        print(f"enterActivities: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#act.
-    def exitAct(self, ctx:govdslParser.ActContext):
-        print(f"exitAct: {ctx.getText()}")
+    # Exit a parse tree produced by govdslParser#activities.
+    def exitActivities(self, ctx:govdslParser.ActivitiesContext):
+        print(f"exitActivities: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#activity.
@@ -134,13 +143,13 @@ class govdslListener(ParseTreeListener):
         print(f"exitActivity: {ctx.getText()}")
 
 
-    # Enter a parse tree produced by govdslParser#tsk.
-    def enterTsk(self, ctx:govdslParser.TskContext):
-        print(f"enterTsk: {ctx.getText()}")
+    # Enter a parse tree produced by govdslParser#tasks.
+    def enterTasks(self, ctx:govdslParser.TasksContext):
+        print(f"enterTasks: {ctx.getText()}")
 
-    # Exit a parse tree produced by govdslParser#tsk.
-    def exitTsk(self, ctx:govdslParser.TskContext):
-        print(f"exitTsk: {ctx.getText()}")
+    # Exit a parse tree produced by govdslParser#tasks.
+    def exitTasks(self, ctx:govdslParser.TasksContext):
+        print(f"exitTasks: {ctx.getText()}")
 
 
     # Enter a parse tree produced by govdslParser#task.

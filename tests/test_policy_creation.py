@@ -26,7 +26,7 @@ from utils.gh_extension import (
     Label, LabelCondition
 )
 
-class TestPolicyCreation(unittest.TestCase):
+class testPolicyCreation(unittest.TestCase):
     def setUp(self):
         self.test_cases_path = Path(__file__).parent / "test_cases"
     
@@ -122,7 +122,7 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
 
             # DecisionType (now StringList)
             self.assertIsNotNone(policy.decision_type)
@@ -141,7 +141,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(activity_scope.name, "myActivity")
             project_scope = activity_scope.project 
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "TestProjectGH")
+            self.assertEqual(project_scope.name, "testProjectGH")
             self.assertEqual(project_scope.repo_id, "owner/repo-with-hyphen")
             
             # Test participants
@@ -151,49 +151,49 @@ class TestPolicyCreation(unittest.TestCase):
             individuals = [p for p in policy.participants if isinstance(p, Individual)]
             self.assertEqual(len(individuals), 2)
             # Individuals are not ordered
-            individual = next((ind for ind in individuals if ind.name == "Joe"), None)
-            self.assertIsNotNone(individual, "Joe not found")
-            self.assertEqual(individual.name, "Joe")
+            individual = next((ind for ind in individuals if ind.name == "joe"), None)
+            self.assertIsNotNone(individual, "joe not found")
+            self.assertEqual(individual.name, "joe")
             self.assertEqual(individual.vote_value, 0.7)
             self.assertIsNotNone(individual.role_assignement)
-            self.assertEqual(individual.role_assignement.name, "Joe_Maintainer")
+            self.assertEqual(individual.role_assignement.name, "joe_maintainer")
             profile = individual.profile
             self.assertIsNotNone(profile)
             self.assertEqual(profile.name, "joeProfile")
             self.assertEqual(profile.gender, "male")
             self.assertEqual(profile.race, "hispanic")
 
-            agent = next((ind for ind in individuals if ind.name == "Mike"), None)
-            self.assertIsNotNone(agent, "Mike not found")
-            self.assertEqual(agent.name, "Mike")
+            agent = next((ind for ind in individuals if ind.name == "mike"), None)
+            self.assertIsNotNone(agent, "mike not found")
+            self.assertEqual(agent.name, "mike")
             self.assertEqual(agent.vote_value, 1.0) # This is the default value
             self.assertEqual(agent.confidence, 0.8)
             self.assertIsNotNone(agent.role_assignement)
-            self.assertEqual(agent.role_assignement.name, "Mike_Maintainer")
+            self.assertEqual(agent.role_assignement.name, "mike_maintainer")
             
             
             # Test Role participants
             roles = [p for p in policy.participants if isinstance(p, Role)]
             self.assertEqual(len(roles), 2)
             
-            # Test Maintainer role
-            maintainer_role = next((r for r in roles if r.name == "Maintainer"), None)
-            self.assertIsNotNone(maintainer_role, "Maintainer role not found")
-            self.assertEqual(maintainer_role.name, "Maintainer")
+            # Test maintainer role
+            maintainer_role = next((r for r in roles if r.name == "maintainer"), None)
+            self.assertIsNotNone(maintainer_role, "maintainer role not found")
+            self.assertEqual(maintainer_role.name, "maintainer")
             
-            # Test Reviewer role with composed individuals
-            reviewer_role = next((r for r in roles if r.name == "Reviewer"), None)
-            self.assertIsNotNone(reviewer_role, "Reviewer role not found")
-            self.assertEqual(reviewer_role.name, "Reviewer")
+            # Test reviewer role with composed individuals
+            reviewer_role = next((r for r in roles if r.name == "reviewer"), None)
+            self.assertIsNotNone(reviewer_role, "reviewer role not found")
+            self.assertEqual(reviewer_role.name, "reviewer")
             
-            # Check the individuals composed in the Reviewer role
-            self.assertIsNotNone(reviewer_role.individuals, "Reviewer role should have individuals")
-            self.assertEqual(len(reviewer_role.individuals), 2, "Reviewer should have 2 individuals")
+            # Check the individuals composed in the reviewer role
+            self.assertIsNotNone(reviewer_role.individuals, "reviewer role should have individuals")
+            self.assertEqual(len(reviewer_role.individuals), 2, "reviewer should have 2 individuals")
             
-            # Check individual members of the Reviewer role
+            # Check individual members of the reviewer role
             individuals_names = {ind.name for ind in reviewer_role.individuals}
-            self.assertIn("Mike", individuals_names, "Mike should be in Reviewer role")
-            self.assertIn("Alexander", individuals_names, "Alexander should be in Reviewer role")
+            self.assertIn("mike", individuals_names, "mike should be in reviewer role")
+            self.assertIn("alexander", individuals_names, "alexander should be in reviewer role")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 5)
@@ -215,7 +215,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsInstance(excluded_participants, set)
             excluded_participant = next(iter(excluded_participants))
             self.assertIsInstance(excluded_participant, Individual)
-            self.assertEqual(excluded_participant.name, "Mike")
+            self.assertEqual(excluded_participant.name, "mike")
 
             # Find and test MinimumParticipant condition
             min_part_conditions = {c for c in policy.conditions if isinstance(c, MinimumParticipant)}
@@ -263,13 +263,13 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
 
             # DecisionType (ElementList)
             self.assertIsNotNone(policy.decision_type)
             self.assertIsInstance(policy.decision_type, ElementList)
             self.assertEqual(policy.decision_type.name, "elementList")
-            self.assertSetEqual({ind.name for ind in policy.decision_type.elements}, {"Joe", "George"})
+            self.assertSetEqual({ind.name for ind in policy.decision_type.elements}, {"joe", "george"})
             
             # Test scope
             self.assertIsNotNone(policy.scope)
@@ -284,12 +284,12 @@ class TestPolicyCreation(unittest.TestCase):
             participant = [p for p in policy.participants if isinstance(p, Role)]
             self.assertEqual(len(participant), 1)
             self.assertIsInstance(participant[0], Role)
-            self.assertEqual(participant[0].name, "Maintainer")
+            self.assertEqual(participant[0].name, "maintainer")
 
             individual = [p for p in policy.participants if isinstance(p, Individual)]
             self.assertEqual(len(individual), 1)
             self.assertIsInstance(individual[0], Individual)
-            self.assertEqual(individual[0].name, "Mike")
+            self.assertEqual(individual[0].name, "mike")
             self.assertEqual(individual[0].profile.name, "mikeProfile")
             self.assertEqual(individual[0].profile.race, "caucasian")
             
@@ -303,13 +303,13 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Verify vetoers set
             self.assertEqual(len(condition.vetoers), 2)
-            po = next((v for v in condition.vetoers if v.name == "ProjectOwner"), None)
+            po = next((v for v in condition.vetoers if v.name == "projectOwner"), None)
             self.assertIsInstance(po, Individual)
-            self.assertEqual(po.name, "ProjectOwner")
+            self.assertEqual(po.name, "projectOwner")
             # We check the default creation of individuals
-            diego = next((v for v in condition.vetoers if v.name == "Diego"), None)
+            diego = next((v for v in condition.vetoers if v.name == "diego"), None)
             self.assertIsInstance(diego, Individual)
-            self.assertEqual(diego.name, "Diego")
+            self.assertEqual(diego.name, "diego")
 
             
             # Check parser errors
@@ -329,7 +329,7 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, AbsoluteMajorityPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
 
             # DecisionType check
             self.assertIsNotNone(policy.decision_type)
@@ -340,14 +340,14 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.name, "testProject")
             self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test participants
             self.assertEqual(len(policy.participants), 1)
             participant = next(iter(policy.participants))
             self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Committers")
+            self.assertEqual(participant.name, "committers")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 2)
@@ -387,20 +387,20 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, LeaderDrivenPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
             
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.name, "testProject")
             self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test leader participants
             self.assertEqual(len(policy.participants), 1)
             participant = next(iter(policy.participants))
             self.assertIsInstance(participant, Individual)
-            self.assertEqual(participant.name, "Leader")
+            self.assertEqual(participant.name, "leader")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)
@@ -419,7 +419,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(default_policy.participants), 1)
             default_participant = next(iter(default_policy.participants))
             self.assertIsInstance(default_participant, Role)
-            self.assertEqual(default_participant.name, "Maintainers")
+            self.assertEqual(default_participant.name, "maintainers")
             
             # Test default policy conditions
             self.assertEqual(len(default_policy.conditions), 1)
@@ -432,7 +432,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(default_policy.scope)
             scope = default_policy.scope
             self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.name, "testProject")
             self.assertEqual(scope.repo_id, "owner/repo")
 
             # Check parser errors
@@ -452,7 +452,7 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, LeaderDrivenPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
             
             # Test scope
             self.assertIsNotNone(policy.scope)
@@ -464,7 +464,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(policy.participants), 1)
             participant = next(iter(policy.participants))
             self.assertIsInstance(participant, Individual)
-            self.assertEqual(participant.name, "Leader")
+            self.assertEqual(participant.name, "leader")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)
@@ -478,7 +478,6 @@ class TestPolicyCreation(unittest.TestCase):
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
-
 
     def test_composed_policy_creation(self):
         """Test the creation of a composed policy. Based on the HFC governance policy."""
@@ -500,18 +499,18 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
-            self.assertEqual(scope.name, "TestTask")
+            self.assertEqual(scope.name, "testTask") 
             self.assertEqual(scope.action, ActionEnum.MERGE)
             # Test the relationship with activity
             activity_scope = scope.activity
             self.assertIsNotNone(activity_scope)
             self.assertIsInstance(activity_scope, Activity)
-            self.assertEqual(activity_scope.name, "TestActivity")
+            self.assertEqual(activity_scope.name, "testActivity") 
             # Test the relationship with project
             project_scope = activity_scope.project
             self.assertIsNotNone(project_scope)
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "HFCProject")
+            self.assertEqual(project_scope.name, "hfcProject") 
             
             # Test order properties
             self.assertTrue(policy.sequential, "Policy should be sequential")
@@ -534,22 +533,22 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(phase_1.scope)
             task_scope = phase_1.scope
             self.assertIsInstance(task_scope, Patch)
-            self.assertEqual(task_scope.name, "TestTask")
+            self.assertEqual(task_scope.name, "testTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
             # Test the relationship with activity
             activity_scope = task_scope.activity
             self.assertIsNotNone(activity_scope)
             self.assertIsInstance(activity_scope, Activity)
-            self.assertEqual(activity_scope.name, "TestActivity")
+            self.assertEqual(activity_scope.name, "testActivity")
             # Test the relationship with project
             project_scope = activity_scope.project
             self.assertIsNotNone(project_scope)
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "HFCProject")
+            self.assertEqual(project_scope.name, "hfcProject")
             # Check the GitHub element
             self.assertIsNotNone(task_scope.element)
             self.assertIsInstance(task_scope.element, PullRequest)
-            self.assertEqual(task_scope.element.name, "TestTask")
+            self.assertEqual(task_scope.element.name, "testTask")
             # Check for labels
             self.assertIsNone(task_scope.element.labels)
 
@@ -562,7 +561,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(phase_1.participants), 1)
             participant = next(iter(phase_1.participants))
             self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Maintainers")
+            self.assertEqual(participant.name, "maintainers")
             
             # Test phase 1 conditions
             self.assertEqual(len(phase_1.conditions), 2)
@@ -571,7 +570,7 @@ class TestPolicyCreation(unittest.TestCase):
             deadline_conditions = {c for c in phase_1.conditions if isinstance(c, Deadline)}
             deadline = next(iter(deadline_conditions))
             self.assertIsInstance(deadline, Deadline)
-            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.name, "reviewdeadline")
             self.assertEqual(deadline.offset, timedelta(days=14))
 
             # Find and test MinimumParticipant condition
@@ -593,22 +592,22 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(phase_2.scope)
             task_scope = phase_2.scope
             self.assertIsInstance(task_scope, Patch)
-            self.assertEqual(task_scope.name, "TestTask")
+            self.assertEqual(task_scope.name, "testTask")
             self.assertEqual(task_scope.action, ActionEnum.MERGE)
             # Test the relationship with activity
             activity_scope = task_scope.activity
             self.assertIsNotNone(activity_scope)
             self.assertIsInstance(activity_scope, Activity)
-            self.assertEqual(activity_scope.name, "TestActivity")
+            self.assertEqual(activity_scope.name, "testActivity")
             # Test the relationship with project
             project_scope = activity_scope.project
             self.assertIsNotNone(project_scope)
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "HFCProject")
+            self.assertEqual(project_scope.name, "hfcProject")
             # Check the GitHub element
             self.assertIsNotNone(task_scope.element)
             self.assertIsInstance(task_scope.element, PullRequest)
-            self.assertEqual(task_scope.element.name, "TestTask")
+            self.assertEqual(task_scope.element.name, "testTask")
             # Check for labels
             self.assertIsNone(task_scope.element.labels)
 
@@ -621,7 +620,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(phase_2.participants), 1)
             participant = next(iter(phase_2.participants))
             self.assertIsInstance(participant, Role)
-            self.assertEqual(participant.name, "Maintainers")
+            self.assertEqual(participant.name, "maintainers")
             
             # Test phase 2 conditions
             self.assertEqual(len(phase_2.conditions), 1)
@@ -650,13 +649,13 @@ class TestPolicyCreation(unittest.TestCase):
             
             # Assertions
             self.assertIsInstance(policy, LazyConsensusPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
             
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "TestProject")
+            self.assertEqual(scope.name, "testProject")
             self.assertEqual(scope.repo_id, "owner/repo")
             
             # Test participants
@@ -666,7 +665,7 @@ class TestPolicyCreation(unittest.TestCase):
             roles = {p for p in policy.participants if isinstance(p, Role)}
             self.assertEqual(len(roles), 1)
             role = next(iter(roles))
-            self.assertEqual(role.name, "Maintainer")
+            self.assertEqual(role.name, "maintainer")
             
             # Test conditions (none in this policy)
             self.assertEqual(len(policy.conditions), 0)
@@ -697,7 +696,7 @@ class TestPolicyCreation(unittest.TestCase):
             # Test scope for policy_1
             self.assertIsNotNone(policy_1.scope)
             self.assertIsInstance(policy_1.scope, Repository)
-            self.assertEqual(policy_1.scope.name, "TestProject")
+            self.assertEqual(policy_1.scope.name, "testProject")
             self.assertEqual(policy_1.scope.repo_id, "owner/repo")
             
             # Test DecisionType for policy_1
@@ -709,7 +708,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(policy_1.participants), 1)
             participant_1 = next(iter(policy_1.participants))
             self.assertIsInstance(participant_1, Role)
-            self.assertEqual(participant_1.name, "Maintainer")
+            self.assertEqual(participant_1.name, "maintainer")
 
             # Test conditions for policy_1 (none defined)
             self.assertEqual(len(policy_1.conditions), 0)
@@ -726,7 +725,7 @@ class TestPolicyCreation(unittest.TestCase):
             # Check associated project for the activity
             self.assertIsNotNone(policy_2.scope.project)
             self.assertIsInstance(policy_2.scope.project, Repository)
-            self.assertEqual(policy_2.scope.project.name, "TestProject")
+            self.assertEqual(policy_2.scope.project.name, "testProject")
 
 
             # Test DecisionType for policy_2 (should be default BooleanDecision)
@@ -738,7 +737,7 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(policy_2.participants), 1)
             participant_2 = next(iter(policy_2.participants))
             self.assertIsInstance(participant_2, Role)
-            self.assertEqual(participant_2.name, "Collaborator")
+            self.assertEqual(participant_2.name, "collaborator")
 
             # Test conditions for policy_2 (none defined)
             self.assertEqual(len(policy_2.conditions), 0)
@@ -758,7 +757,7 @@ class TestPolicyCreation(unittest.TestCase):
 
             # Assertions
             self.assertIsInstance(policy, MajorityPolicy)
-            self.assertEqual(policy.name, "TestPolicy")
+            self.assertEqual(policy.name, "testPolicy")
 
             # DecisionType (BooleanDecision)
             self.assertIsNotNone(policy.decision_type)
@@ -769,14 +768,14 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
-            self.assertEqual(scope.name, "TestTask")
+            self.assertEqual(scope.name, "testTask")
             self.assertEqual(scope.action, ActionEnum.MERGE)
             activity_scope = scope.activity
             self.assertIsInstance(activity_scope, Activity)
-            self.assertEqual(activity_scope.name, "TestActivity")
+            self.assertEqual(activity_scope.name, "testActivity")
             project_scope = activity_scope.project
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "TestProjectGH")
+            self.assertEqual(project_scope.name, "testProjectGH")
             self.assertEqual(project_scope.repo_id, "owner/repo")
 
             # Test participants
@@ -786,12 +785,12 @@ class TestPolicyCreation(unittest.TestCase):
             self.assertEqual(len(individuals), 1)
             self.assertEqual(len(roles), 1)
             individual = individuals[0]
-            self.assertEqual(individual.name, "Zoe")
+            self.assertEqual(individual.name, "zoe")
             self.assertEqual(individual.vote_value, 0.7)
             self.assertIsNotNone(individual.role_assignement)
-            self.assertEqual(individual.role_assignement.name, "Zoe_Maintainer")
+            self.assertEqual(individual.role_assignement.name, "zoe_maintainer")
             role = roles[0]
-            self.assertEqual(role.name, "Maintainer")
+            self.assertEqual(role.name, "maintainer")
 
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)

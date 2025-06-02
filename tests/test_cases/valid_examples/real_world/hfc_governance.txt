@@ -25,7 +25,7 @@ ComposedPolicy phasedPolicy {
                 Deadline reviewdeadline : 14 days
                 MinParticipants : 2
             Parameters:
-                ratio 1.0
+                ratio: 1.0
         }
         MajorityPolicy phase_2 {
             DecisionType as BooleanDecision
@@ -33,7 +33,7 @@ ComposedPolicy phasedPolicy {
             Conditions:
                 MinParticipants : 1
             Parameters:
-                ratio 1.0
+                ratio: 1.0
         }
     }
 }

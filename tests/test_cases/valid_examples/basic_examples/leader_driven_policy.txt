@@ -11,7 +11,7 @@ LeaderDrivenPolicy testPolicy {
     Conditions:
         Deadline reviewDeadline : 7 days
     Parameters:
-        default MajorityPolicy defaultPolicy {
+        default : MajorityPolicy defaultPolicy {
             DecisionType as BooleanDecision
             Participant list : maintainers
             Conditions:

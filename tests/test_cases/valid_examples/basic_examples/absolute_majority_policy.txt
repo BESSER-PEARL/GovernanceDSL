@@ -11,5 +11,5 @@ AbsoluteMajorityPolicy testPolicy {
         Deadline reviewDeadline : 7 days
         PassedTests pre: true
     Parameters:
-        ratio 0.7
+        ratio : 0.7
 }

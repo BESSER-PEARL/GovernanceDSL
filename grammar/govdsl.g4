@@ -79,8 +79,8 @@ include             : 'include' | 'not';
 // Parameters group
 parameters          : 'Parameters' ':' (votParams | default) ;
 votParams           :  ratio ; 
-ratio               : 'ratio' FLOAT ; 
-default             : 'default' nestedPolicy ;
+ratio               : 'ratio' ':' FLOAT ; 
+default             : 'default' ':' nestedPolicy ;
 
 // Phased policy 
 order               : 'Order' ':' ( orderType orderMode carryOver? ) ; 

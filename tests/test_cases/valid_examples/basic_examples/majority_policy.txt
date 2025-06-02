@@ -43,5 +43,5 @@ MajorityPolicy testPolicy {
         LabelCondition pre not : Label1
         LabelCondition : Label2
     Parameters:
-        ratio 0.5
+        ratio : 0.5
 }

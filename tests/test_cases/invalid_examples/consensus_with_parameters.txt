@@ -12,5 +12,5 @@ ConsensusPolicy TestPolicy {
     DecisionType as BooleanDecision
     Participant list : Maintainer, Joe as Maintainer
     Parameters:
-        ratio 0.5
+        ratio : 0.5
 }

@@ -23,6 +23,6 @@ When contributing to incorporate new tests in natural language (`NL_examples/`) 
 ```
 Original repo: URL (or we can also report "owner/name" if repository is from GitHub)
 Access date: Date you accessed the repository
-Reporter: Jordi/Javi
+Reporter: -
 Policy: If multiple, enter a new line for each.
 ```

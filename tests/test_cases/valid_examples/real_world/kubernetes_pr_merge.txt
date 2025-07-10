@@ -18,7 +18,7 @@ ComposedPolicy pr_merge {
         RequireAll : true
         CarryOver : true
     Phases {
-        MajorityPolicy phase_1 { // or consensus?
+        MajorityPolicy phase_1 {
             Participant list : Reviewers
             Conditions:
                 Reviewers/approvers PRassigned? pre

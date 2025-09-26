@@ -359,6 +359,24 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#autonomyLevel.
+    def enterAutonomyLevel(self, ctx:govdslParser.AutonomyLevelContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#autonomyLevel.
+    def exitAutonomyLevel(self, ctx:govdslParser.AutonomyLevelContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#explainability.
+    def enterExplainability(self, ctx:govdslParser.ExplainabilityContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#explainability.
+    def exitExplainability(self, ctx:govdslParser.ExplainabilityContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#profiles.
     def enterProfiles(self, ctx:govdslParser.ProfilesContext):
         pass

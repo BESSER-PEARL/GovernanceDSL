@@ -21,7 +21,6 @@ ComposedPolicy pr_merge {
         MajorityPolicy phase_1 {
             Participant list : Reviewers
             Conditions:
-                Reviewers/approvers PRassigned? pre
                 ParticipantExclusion : PRAuthor
                 MinParticipants : 2
                 LabelCondition post : lgtm
@@ -40,7 +39,6 @@ ComposedPolicy pr_merge {
             Conditions:
                 LabelCondition pre: lgtm, approved
                 LabelCondition pre not: do-not-merge/hold, needs-rebase
-                jobs?
         }
     }
 }

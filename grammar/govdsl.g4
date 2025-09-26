@@ -51,8 +51,10 @@ individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}
 voteValue           : 'vote value' ':' FLOAT ;
 withProfile         : 'profile' ':' ID ;
 withRole            : 'role' ':' ID ;
-agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? withRole? '}')? ;
+agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? autonomyLevel? (',')? explainability? (',')? withRole? '}')? ;
 confidence          : 'confidence' ':' FLOAT ;
+autonomyLevel       : 'autonomy level' ':' FLOAT ;
+explainability      : 'explainability' ':' FLOAT ;
 profiles            : 'Profiles' ':' profile ((',')? profile)* ;
 profile             : ID '{' (gender (',')? race? | race (',')? gender?) '}';
 gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule

@@ -143,11 +143,10 @@ class Profile(Element):
         self.__race = race
 
 class Individual(Participant):
-    def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
+    def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name)
         self.__role_assignement = None
         self.vote_value = vote_value 
-        self.profile = profile
     
     @property
     def role_assignement(self) -> 'hasRole':
@@ -166,7 +165,12 @@ class Individual(Participant):
         if vote_value < 0:
             raise InvalidValueException("vote_value", vote_value)
         self.__vote_value = vote_value
-    
+
+class HumanIndividual(Individual):
+    def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
+        super().__init__(name, vote_value)
+        self.__profile = profile
+
     @property
     def profile(self) -> Profile:
         return self.__profile
@@ -176,8 +180,10 @@ class Individual(Participant):
         self.__profile = profile
 
 class Agent(Individual):
-    def __init__(self, name: str, confidence: float = 1.0):
+    def __init__(self, name: str, confidence: float = 1.0, autonomy_level: float = 1.0, explainability: float = 1.0):
         super().__init__(name, confidence)
+        self.__autonomy_level = autonomy_level
+        self.__explainability = explainability
 
     @property
     def confidence(self) -> float:
@@ -188,6 +194,26 @@ class Agent(Individual):
         if confidence < 0 or confidence > 1:
             raise InvalidValueException("confidence", confidence)
         self.__confidence = confidence
+
+    @property
+    def autonomy_level(self) -> float:
+        return self.__autonomy_level
+    
+    @autonomy_level.setter
+    def autonomy_level(self, autonomy_level: float):
+        if autonomy_level < 0 or autonomy_level > 1:
+            raise InvalidValueException("autonomy_level", autonomy_level)
+        self.__autonomy_level = autonomy_level
+
+    @property
+    def explainability(self) -> float:
+        return self.__explainability
+
+    @explainability.setter
+    def explainability(self, explainability: float):
+        if explainability < 0 or explainability > 1:
+            raise InvalidValueException("explainability", explainability)
+        self.__explainability = explainability
 
 class Role(Participant):
     def __init__(self, name: str):

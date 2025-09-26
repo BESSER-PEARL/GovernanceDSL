@@ -15,7 +15,7 @@ from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
 )
 from metamodel.governance import (
-    SinglePolicy, Project, Activity, Task, Role, Individual,
+    HumanIndividual, SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
@@ -615,7 +615,7 @@ class PolicyCreationListener(govdslListener):
      
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
         name = ctx.ID().getText()
-        individual = Individual(name=name)
+        individual = HumanIndividual(name=name)
                 
         if ctx.voteValue():
             individual.vote_value = float(ctx.voteValue().FLOAT().getText())
@@ -658,6 +658,10 @@ class PolicyCreationListener(govdslListener):
             agent.vote_value = float(ctx.voteValue().FLOAT().getText())
         if ctx.confidence():
             agent.confidence = float(ctx.confidence().FLOAT().getText())
+        if ctx.autonomyLevel():
+            agent.autonomy_level = float(ctx.autonomyLevel().FLOAT().getText())
+        if ctx.explainability():
+            agent.explainability = float(ctx.explainability().FLOAT().getText())
         if ctx.withRole():
             role_name = ctx.withRole().ID().getText()
             role = self.__participants_map.get(role_name)

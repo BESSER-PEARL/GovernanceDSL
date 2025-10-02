@@ -225,18 +225,71 @@ class GovernanceFormBuilder:
             
         with gr.Accordion("Agents", open=True):
             gr.Markdown("### Automated Participants")
-            gr.Markdown("*Format: One per line as `Name | confidence | autonomy_level | explainability | role` (all optional except Name)*")
-            gr.Markdown("*Examples:*")
-            gr.Markdown("- `k8s-ci-robot` (minimal)")
-            gr.Markdown("- `dependabot | 0.9` (with confidence)")
-            gr.Markdown("- `security-bot | 0.8 | 0.9 | 1.0 | reviewer` (full definition)")
+            gr.Markdown("*Define automated systems that participate in decisions*")
+            gr.Markdown("*All attributes except name are optional*")
             
-            agents_text = gr.Textbox(
-                label="Agents",
-                placeholder="k8s-ci-robot\ndependabot | 0.9\nsecurity-bot | 0.8 | 0.9 | 1.0 | reviewer",
+            with gr.Row():
+                agent_name = gr.Textbox(
+                    label="Agent Name",
+                    placeholder="e.g., k8s-ci-robot, dependabot",
+                    info="Unique name for this automated agent"
+                )
+                
+            with gr.Row():
+                agent_confidence = gr.Number(
+                    label="Confidence (Optional)",
+                    value=None,
+                    minimum=0.0,
+                    maximum=1.0,
+                    step=0.1,
+                    placeholder="Enter value (0.0-1.0)",
+                    info="Agent's confidence level (0.0 to 1.0)"
+                )
+                
+                agent_autonomy_level = gr.Number(
+                    label="Autonomy Level (Optional)",
+                    value=None,
+                    minimum=0.0,
+                    maximum=1.0,
+                    step=0.1,
+                    placeholder="Enter value (0.0-1.0)",
+                    info="Agent's autonomy level (0.0 to 1.0)"
+                )
+                
+            with gr.Row():
+                agent_explainability = gr.Number(
+                    label="Explainability (Optional)",
+                    value=None,
+                    minimum=0.0,
+                    maximum=1.0,
+                    step=0.1,
+                    placeholder="Enter value (0.0-1.0)",
+                    info="Agent's explainability level (0.0 to 1.0)"
+                )
+                
+                agent_role = gr.Dropdown(
+                    label="Role (Optional)",
+                    choices=[],  # Will be populated dynamically from roles text
+                    value=None,
+                    allow_custom_value=False,
+                    info="Role assignment for this agent"
+                )
+                
+            with gr.Row():
+                add_agent_btn = gr.Button("➕ Add Agent", variant="secondary")
+                clear_agents_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added agents
+            agents_display = gr.Textbox(
+                label="Added Agents",
                 lines=4,
-                info="Define automated systems that participate in decisions"
+                interactive=False,
+                placeholder="No agents added yet",
+                info="Automated agents you've added will appear here"
             )
+            
+            # Hidden component to store agents data
+            agents_data = gr.State([])
         
         return {
             'profile_name': profile_name,
@@ -255,7 +308,15 @@ class GovernanceFormBuilder:
             'clear_individuals_btn': clear_individuals_btn,
             'individuals_display': individuals_display,
             'individuals_data': individuals_data,
-            'agents_text': agents_text
+            'agent_name': agent_name,
+            'agent_confidence': agent_confidence,
+            'agent_autonomy_level': agent_autonomy_level,
+            'agent_explainability': agent_explainability,
+            'agent_role': agent_role,
+            'add_agent_btn': add_agent_btn,
+            'clear_agents_btn': clear_agents_btn,
+            'agents_display': agents_display,
+            'agents_data': agents_data
         }
     
     def _create_policy_forms(self):
@@ -507,6 +568,44 @@ class GovernanceFormBuilder:
             
             return gr.Dropdown(choices=profile_choices, value=None), gr.Dropdown(choices=role_choices, value=None)
         
+        def add_agent(name, confidence, autonomy_level, explainability, role, current_agents, roles_text):
+            """Add a new agent to the list"""
+            if not name.strip():
+                return current_agents, "❌ Please enter an agent name", "", None, None, None, None
+            
+            # Check if agent already exists
+            if any(a['name'] == name.strip() for a in current_agents):
+                return current_agents, "❌ Agent name already exists", "", None, None, None, None
+            
+            # Create new agent
+            new_agent = {
+                'name': name.strip(),
+                'confidence': confidence if confidence is not None else None,
+                'autonomy_level': autonomy_level if autonomy_level is not None else None,
+                'explainability': explainability if explainability is not None else None,
+                'role': role if role else None
+            }
+            
+            updated_agents = current_agents + [new_agent]
+            
+            # Update display
+            display_text = self._format_agents_display(updated_agents)
+            success_message = f"✅ Agent '{new_agent['name']}' added successfully!\n\n{display_text}"
+            
+            # Update role dropdown choices for next agent
+            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+            
+            return updated_agents, success_message, "", None, None, None, gr.Dropdown(choices=role_choices, value=None)
+        
+        def clear_agents():
+            """Clear all agents"""
+            return [], "No agents added yet"
+        
+        def update_agent_role_dropdown(roles_text):
+            """Update agent role dropdown when roles text changes"""
+            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+            return gr.Dropdown(choices=role_choices, value=None)
+        
         def update_preview(*args):
             """Update the preview based on current form values"""
             try:
@@ -622,7 +721,38 @@ MajorityPolicy example_policy {
             ]
         )
         
-        # Update individual dropdowns when roles text changes
+        # Agent management handlers
+        participant_components['add_agent_btn'].click(
+            fn=add_agent,
+            inputs=[
+                participant_components['agent_name'],
+                participant_components['agent_confidence'],
+                participant_components['agent_autonomy_level'],
+                participant_components['agent_explainability'],
+                participant_components['agent_role'],
+                participant_components['agents_data'],
+                participant_components['roles_text']        # For role dropdown choices
+            ],
+            outputs=[
+                participant_components['agents_data'],
+                participant_components['agents_display'],
+                participant_components['agent_name'],           # Clear name field
+                participant_components['agent_confidence'],     # Clear confidence field
+                participant_components['agent_autonomy_level'], # Clear autonomy level field
+                participant_components['agent_explainability'], # Clear explainability field
+                participant_components['agent_role']            # Update role dropdown
+            ]
+        )
+        
+        participant_components['clear_agents_btn'].click(
+            fn=clear_agents,
+            outputs=[
+                participant_components['agents_data'],
+                participant_components['agents_display']
+            ]
+        )
+        
+        # Update individual and agent dropdowns when roles text changes
         participant_components['roles_text'].change(
             fn=update_individual_dropdowns,
             inputs=[
@@ -635,6 +765,13 @@ MajorityPolicy example_policy {
             ]
         )
         
+        # Update agent role dropdown when roles text changes
+        participant_components['roles_text'].change(
+            fn=update_agent_role_dropdown,
+            inputs=[participant_components['roles_text']],
+            outputs=[participant_components['agent_role']]
+        )
+        
         # Set up change handlers for preview updates
         preview_components = []
         preview_components.extend(scope_components.values())
@@ -642,7 +779,7 @@ MajorityPolicy example_policy {
             participant_components['profiles_data'],
             participant_components['roles_text'],
             participant_components['individuals_data'],
-            participant_components['agents_text']
+            participant_components['agents_data']
         ])
         preview_components.extend(policy_components.values())
         
@@ -662,7 +799,7 @@ MajorityPolicy example_policy {
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
-        (projects_text, activities_text, tasks_text, profiles_data, roles_text, individuals_data, agents_text,
+        (projects_text, activities_text, tasks_text, profiles_data, roles_text, individuals_data, agents_data,
          policy_name, policy_type, policy_scope, policy_participants, decision_type, voting_ratio,
          min_participants, deadline_days, exclusions, required_labels,
          forbidden_labels, is_composed, execution_type, require_all, carry_over) = form_values
@@ -675,7 +812,7 @@ MajorityPolicy example_policy {
         tasks = self._parse_tasks(tasks_text)
         profiles = profiles_data if profiles_data else []  # profiles_data is already structured
         individuals = individuals_data if individuals_data else []  # individuals_data is already structured
-        agents = self._parse_agents(agents_text)
+        agents = agents_data if agents_data else []  # agents_data is already structured
         
         # Generate Scopes section
         scope_parts = []
@@ -992,6 +1129,31 @@ MajorityPolicy example_policy {
                 attributes.append(f"📋 profile: {individual['profile']}")
             if individual.get('role'):
                 attributes.append(f"👔 role: {individual['role']}")
+            
+            if attributes:
+                line += f" → {', '.join(attributes)}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
+    
+    def _format_agents_display(self, agents):
+        """Format agents for display in the text area"""
+        if not agents:
+            return "No agents added yet"
+        
+        display_lines = [f"🤖 {len(agents)} agent(s) defined:", ""]
+        for i, agent in enumerate(agents, 1):
+            line = f"{i}. {agent['name']}"
+            attributes = []
+            if agent.get('confidence') is not None:
+                attributes.append(f"🔍 confidence: {agent['confidence']}")
+            if agent.get('autonomy_level') is not None:
+                attributes.append(f"⚡ autonomy: {agent['autonomy_level']}")
+            if agent.get('explainability') is not None:
+                attributes.append(f"💡 explainability: {agent['explainability']}")
+            if agent.get('role'):
+                attributes.append(f"👔 role: {agent['role']}")
             
             if attributes:
                 line += f" → {', '.join(attributes)}"

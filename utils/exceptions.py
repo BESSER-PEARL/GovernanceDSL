@@ -18,15 +18,15 @@ class InsufficientPhasesException(Exception):
     def __str__(self):
         return f'{self.policy_name} -> {self.message}'
 
-class InvalidDeadlineException(Exception):
-    """Exception raised when both offset and date are null in a Deadline."""
-    def __init__(self, deadline_name, message="Deadline must have either offset or date defined."):
-        self.deadline_name = deadline_name
+class InvalidTimeConditionException(Exception):
+    """Exception raised when both offset and date are null in a Deadline or MinDecisionTime condition."""
+    def __init__(self, cond_name, message="Deadline or MinDecisionTime condition must have either offset or date defined."):
+        self.cond_name = cond_name
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
-        return f'{self.deadline_name} -> {self.message}'
+        return f'{self.cond_name} -> {self.message}'
 
 class UnsupportedRuleTypeException(Exception):
     """Exception raised when a rule type is not supported."""

@@ -51,8 +51,10 @@ individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}
 voteValue           : 'vote value' ':' FLOAT ;
 withProfile         : 'profile' ':' ID ;
 withRole            : 'role' ':' ID ;
-agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? withRole? '}')? ;
+agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? autonomyLevel? (',')? explainability? (',')? withRole? '}')? ;
 confidence          : 'confidence' ':' FLOAT ;
+autonomyLevel       : 'autonomy level' ':' FLOAT ;
+explainability      : 'explainability' ':' FLOAT ;
 profiles            : 'Profiles' ':' profile ((',')? profile)* ;
 profile             : ID '{' (gender (',')? race? | race (',')? gender?) '}';
 gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule
@@ -62,8 +64,9 @@ partID              : ID hasRole? ;
 hasRole             : 'as' ID ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ; // + extension
-deadline            : 'Deadline' deadlineID ':' ( offset | date | (offset ',' date) ) ;
+conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ; // + extension
+deadline            : 'Deadline' deadlineID? ':' ( offset | date | (offset ',' date) ) ;
+minDecisionTime     : 'MinDecisionTime' ID? ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
@@ -77,10 +80,11 @@ labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* 
 include             : 'include' | 'not';
 
 // Parameters group
-parameters          : 'Parameters' ':' (votParams | default) ;
+parameters          : 'Parameters' ':' (votParams | default | fallback) ;
 votParams           :  ratio ; 
 ratio               : 'ratio' ':' FLOAT ; 
 default             : 'default' ':' nestedPolicy ;
+fallback            : 'fallback' ':' nestedPolicy ;
 
 // Phased policy 
 order               : 'Order' ':' ( orderType orderMode carryOver? ) ; 

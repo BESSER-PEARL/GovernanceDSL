@@ -359,6 +359,24 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#autonomyLevel.
+    def enterAutonomyLevel(self, ctx:govdslParser.AutonomyLevelContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#autonomyLevel.
+    def exitAutonomyLevel(self, ctx:govdslParser.AutonomyLevelContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#explainability.
+    def enterExplainability(self, ctx:govdslParser.ExplainabilityContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#explainability.
+    def exitExplainability(self, ctx:govdslParser.ExplainabilityContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#profiles.
     def enterProfiles(self, ctx:govdslParser.ProfilesContext):
         pass
@@ -437,6 +455,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#deadline.
     def exitDeadline(self, ctx:govdslParser.DeadlineContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#minDecisionTime.
+    def enterMinDecisionTime(self, ctx:govdslParser.MinDecisionTimeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#minDecisionTime.
+    def exitMinDecisionTime(self, ctx:govdslParser.MinDecisionTimeContext):
         pass
 
 
@@ -572,6 +599,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#default.
     def exitDefault(self, ctx:govdslParser.DefaultContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#fallback.
+    def enterFallback(self, ctx:govdslParser.FallbackContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#fallback.
+    def exitFallback(self, ctx:govdslParser.FallbackContext):
         pass
 
 

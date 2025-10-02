@@ -27,6 +27,8 @@ Participants:
         },
         (Agent) mike {
             confidence : 0.8
+            autonomy level: 0.9
+            explainability: 1.0
             role : reviewer
         },
         alexander {
@@ -38,6 +40,7 @@ MajorityPolicy testPolicy {
     Participant list : maintainer, joe as maintainer, mike as maintainer, reviewer
     Conditions:
         Deadline reviewDeadline : 14 days
+        MinDecisionTime : 4 days
         ParticipantExclusion : mike
         MinParticipants : 2
         LabelCondition pre not : Label1

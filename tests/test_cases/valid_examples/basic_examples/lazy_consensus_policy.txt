@@ -7,4 +7,11 @@ LazyConsensusPolicy testPolicy {
     Scope: testProject
     DecisionType as BooleanDecision
     Participant list : maintainer
+    Parameters :
+        fallback : MajorityPolicy fallbackPolicy {
+            DecisionType as BooleanDecision
+            Participant list : maintainer
+            Conditions:
+                Deadline reviewDeadline : 7 days
+        }
 }

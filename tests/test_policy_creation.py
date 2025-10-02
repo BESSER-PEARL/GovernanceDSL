@@ -15,7 +15,7 @@ from utils.exceptions import (
     InvalidValueException
 )
 from metamodel.governance import (
-    Role, Deadline, MajorityPolicy, Task,
+    ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
     Individual, ComposedPolicy,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
@@ -196,7 +196,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertIn("alexander", individuals_names, "alexander should be in reviewer role")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 5)
+            self.assertEqual(len(policy.conditions), 6)
             
             # Find and test Deadline condition
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
@@ -204,6 +204,13 @@ class testPolicyCreation(unittest.TestCase):
             deadline = next(iter(deadline_conditions))
             self.assertEqual(deadline.name, "reviewDeadline")
             self.assertEqual(deadline.offset, timedelta(days=14))
+
+            # Find and test MinDecisionTime condition
+            min_decision_conditions = {c for c in policy.conditions if isinstance(c, MinDecisionTime)}
+            self.assertEqual(len(min_decision_conditions), 1)
+            min_decision = next(iter(min_decision_conditions))
+            self.assertEqual(min_decision.name, "minDecisionTime") # Default name
+            self.assertEqual(min_decision.offset, timedelta(days=4))
             
             # Find and test ParticipantExclusion condition
             exclusion_conditions = {c for c in policy.conditions if isinstance(c, ParticipantExclusion)}
@@ -356,7 +363,7 @@ class testPolicyCreation(unittest.TestCase):
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
             deadline = next(iter(deadline_conditions))
             self.assertIsInstance(deadline, Deadline)
-            self.assertEqual(deadline.name, "reviewDeadline")
+            self.assertEqual(deadline.name, "deadline") # Default name
             self.assertEqual(deadline.offset, timedelta(days=7))
 
             # Find and test PassedTests condition
@@ -636,7 +643,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(len(self.error_listener.symbol), 0)
 
     def test_lazy_consensus_policy_creation(self):
-        """Test the creation of a policy with a consensus voting."""
+        """Test the creation of a policy with a lazy consensus process."""
         with open(self.test_cases_path / "valid_examples/basic_examples/lazy_consensus_policy.txt", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
@@ -669,6 +676,73 @@ class testPolicyCreation(unittest.TestCase):
             
             # Test conditions (none in this policy)
             self.assertEqual(len(policy.conditions), 0)
+
+            # Test fallback policy
+            self.assertIsNotNone(policy.fallback)
+            fallback_policy = policy.fallback
+            self.assertIsInstance(fallback_policy, MajorityPolicy)
+            self.assertEqual(fallback_policy.name, "fallbackPolicy")
+
+            # Test fallback policy participants
+            self.assertEqual(len(fallback_policy.participants), 1)
+            fallback_participant = next(iter(fallback_policy.participants))
+            self.assertIsInstance(fallback_participant, Role)
+            self.assertEqual(fallback_participant.name, "maintainer")
+
+            # Test fallback policy conditions
+            self.assertEqual(len(fallback_policy.conditions), 1)
+            fallback_condition = next(iter(fallback_policy.conditions))
+            self.assertIsInstance(fallback_condition, Deadline)
+            self.assertEqual(fallback_condition.name, "reviewDeadline")
+            self.assertEqual(fallback_condition.offset, timedelta(days=7))
+
+            # Test fallback policy scope
+            self.assertIsNotNone(fallback_policy.scope)
+            scope = fallback_policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "testProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_consensus_policy_creation(self):
+        """Test the creation of a policy with a consensus process."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/consensus_no_fallback.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policies()[0]
+            
+            # Assertions
+            self.assertIsInstance(policy, ConsensusPolicy)
+            self.assertEqual(policy.name, "testPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "testProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+            
+            # Test participants
+            self.assertEqual(len(policy.participants), 1)
+            
+            # Test Role participant
+            roles = {p for p in policy.participants if isinstance(p, Role)}
+            self.assertEqual(len(roles), 1)
+            role = next(iter(roles))
+            self.assertEqual(role.name, "maintainer")
+            
+            # Test conditions (none in this policy)
+            self.assertEqual(len(policy.conditions), 0)
+
+            # Test fallback policy does not exist
+            self.assertIsNone(policy.fallback)
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

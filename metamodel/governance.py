@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from besser.BUML.metamodel.structural import Element
 from utils.exceptions import (
     InvalidParticipantException, EmptySetException,
-    InvalidValueException, InvalidDeadlineException,
+    InvalidValueException, InvalidTimeConditionException,
     UndefinedAttributeException
 )
 
@@ -166,7 +166,7 @@ class Individual(Participant):
             raise InvalidValueException("vote_value", vote_value)
         self.__vote_value = vote_value
 
-class HumanIndividual(Individual):
+class Human(Individual):
     def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
         super().__init__(name, vote_value)
         self.__profile = profile
@@ -300,7 +300,7 @@ class Deadline(Condition):
     def __init__(self, name: str, offset: timedelta, date: datetime):
         super().__init__(name)
         if offset is None and date is None:
-            raise InvalidDeadlineException(name)
+            raise InvalidTimeConditionException(name)
         self.offset = offset
         self.date = date
     
@@ -311,7 +311,7 @@ class Deadline(Condition):
     @offset.setter
     def offset(self, offset: timedelta):
         if offset is None and self.date is None:
-            raise InvalidDeadlineException(self.name)
+            raise InvalidTimeConditionException(self.name)
         self.__offset = offset
 
     @property
@@ -321,11 +321,39 @@ class Deadline(Condition):
     @date.setter
     def date(self, date: datetime):
         if date is None and self.offset is None:
-            raise InvalidDeadlineException(self.name)
+            raise InvalidTimeConditionException(self.name)
+        self.__date = date
+
+class MinDecisionTime(Condition):
+    def __init__(self, name: str, offset: timedelta, date: datetime):
+        super().__init__(name)
+        if offset is None and date is None:
+            raise InvalidTimeConditionException(name)
+        self.offset = offset
+        self.date = date
+    
+    @property
+    def offset(self) -> timedelta:
+        return self.__offset
+    
+    @offset.setter
+    def offset(self, offset: timedelta):
+        if offset is None and self.date is None:
+            raise InvalidTimeConditionException(self.name)
+        self.__offset = offset
+
+    @property
+    def date(self) -> datetime:
+        return self.__date
+    
+    @date.setter
+    def date(self, date: datetime):
+        if date is None and self.offset is None:
+            raise InvalidTimeConditionException(self.name)
         self.__date = date
 
 class ParticipantExclusion(Condition):
-    def __init__(self, name: str, excluded: set[Individual]):
+    def __init__(self, name: str, excluded: set[Individual]): # TODO: Individual or Participant?
         super().__init__(name)
         self.excluded = excluded
     
@@ -495,27 +523,39 @@ class SinglePolicy(Policy):
 
 class ConsensusPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope):
+                 decision_type: DecisionType, scope: Scope, fallback: SinglePolicy):
         super().__init__(name, conditions, participants, decision_type, scope)
+        self.fallback = fallback
 
     @classmethod
-    def from_policy(cls, policy: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, fallback: SinglePolicy):
         consensus = cls(name=policy.name, conditions=policy.conditions, 
                         participants=policy.participants, decision_type=policy.decision_type,
-                        scope=policy.scope)
+                        scope=policy.scope, fallback=fallback)
         return consensus
     
+    @property
+    def fallback(self) -> SinglePolicy:
+        return self.__fallback
+    
+    @fallback.setter
+    def fallback(self, fallback: SinglePolicy):
+        self.__fallback = fallback
+        # Only propagate scope after default is set
+        if self.scope and fallback:
+            self.fallback.scope = self.scope
+    
 
-class LazyConsensusPolicy(SinglePolicy):
+class LazyConsensusPolicy(ConsensusPolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope):
-        super().__init__(name, conditions, participants, decision_type, scope)
+                 decision_type: DecisionType, scope: Scope, fallback: SinglePolicy):
+        super().__init__(name, conditions, participants, decision_type, scope, fallback)
 
     @classmethod
-    def from_policy(cls, policy: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, fallback: SinglePolicy):
         lazy_consensus = cls(name=policy.name, conditions=policy.conditions, 
                              participants=policy.participants, decision_type=policy.decision_type,
-                             scope=policy.scope)
+                             scope=policy.scope, fallback=fallback)
         return lazy_consensus
 
 

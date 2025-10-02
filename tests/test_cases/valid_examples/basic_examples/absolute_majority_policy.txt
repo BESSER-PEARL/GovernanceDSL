@@ -8,7 +8,7 @@ AbsoluteMajorityPolicy testPolicy {
     DecisionType as BooleanDecision
     Participant list : committers
     Conditions:
-        Deadline reviewDeadline : 7 days
+        Deadline : 7 days
         PassedTests pre: true
     Parameters:
         ratio : 0.7

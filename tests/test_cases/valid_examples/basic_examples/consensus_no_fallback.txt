@@ -1,0 +1,10 @@
+Scopes: 
+    Projects :
+        testProject from GitHub : owner/repo
+Participants:
+    Roles : maintainer
+ConsensusPolicy testPolicy {
+    Scope: testProject
+    DecisionType as BooleanDecision
+    Participant list : maintainer
+}

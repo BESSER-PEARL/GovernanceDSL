@@ -458,6 +458,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#minDecisionTime.
+    def enterMinDecisionTime(self, ctx:govdslParser.MinDecisionTimeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#minDecisionTime.
+    def exitMinDecisionTime(self, ctx:govdslParser.MinDecisionTimeContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#offset.
     def enterOffset(self, ctx:govdslParser.OffsetContext):
         pass
@@ -590,6 +599,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#default.
     def exitDefault(self, ctx:govdslParser.DefaultContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#fallback.
+    def enterFallback(self, ctx:govdslParser.FallbackContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#fallback.
+    def exitFallback(self, ctx:govdslParser.FallbackContext):
         pass
 
 

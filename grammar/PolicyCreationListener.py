@@ -15,7 +15,7 @@ from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
 )
 from metamodel.governance import (
-    HumanIndividual, SinglePolicy, Project, Activity, Task, Role, Individual,
+    Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
@@ -92,6 +92,14 @@ class PolicyCreationListener(govdslListener):
                 if default_policy_id in self.policy_tree:
                     default_policies.add(default_policy_id)
         
+        # Same with fallback policies
+        fallback_policies = set()
+        for _, parameters in self.__policy_parameters_map.items():
+            if 'fallback' in parameters:
+                fallback_policy_id = parameters['fallback']
+                if fallback_policy_id in self.policy_tree:
+                    fallback_policies.add(fallback_policy_id)
+        
         # Identify leaf nodes (no children)
         leaves = [node for node in self.policy_tree.values() if not node.children]
                 
@@ -100,8 +108,10 @@ class PolicyCreationListener(govdslListener):
         
         # First process all default policies
         to_process = [self.policy_tree[pid] for pid in default_policies if pid in self.policy_tree]
+        # Then all fallback policies
+        to_process.extend([self.policy_tree[pid] for pid in fallback_policies if pid in self.policy_tree])
         # Then add leaf nodes that aren't default policies
-        to_process.extend([node for node in leaves if node.policy_id not in default_policies])
+        to_process.extend([node for node in leaves if node.policy_id not in default_policies and node.policy_id not in fallback_policies])
         
         while to_process:
             node = to_process.pop(0)
@@ -146,15 +156,47 @@ class PolicyCreationListener(govdslListener):
                 
                 match node.policy_type:
                     case "ConsensusPolicy":
-                        if len(self.__policy_parameters_map.get(node.policy_id, {})) > 0:
-                            raise UndefinedAttributeException("parameters",
-                                                            message="ConsensusPolicy cannot have parameters.")
-                        node.policy_object = ConsensusPolicy.from_policy(base_policy)
+                        parameters = self.__policy_parameters_map.get(node.policy_id, {})
+                        fallback_policy_id = parameters.get('fallback')
+                        
+                        fallback_policy = None
+                        if fallback_policy_id:
+                            fallback_node = self.policy_tree.get(fallback_policy_id)
+                            if not fallback_node:
+                                raise UndefinedAttributeException("fallback", 
+                                                            f"fallback policy '{fallback_policy_id}' not found in policy tree.")
+                        
+                            # If the fallback policy hasn't been processed yet, prioritize it
+                            if fallback_policy_id not in processed:
+                                # Move the fallback policy to the front of the processing queue
+                                to_process.insert(0, fallback_node)
+                                # Re-add the current node to process after the fallback
+                                to_process.append(node)
+                                continue
+                            
+                            fallback_policy = fallback_node.policy_object
+                        node.policy_object = ConsensusPolicy.from_policy(base_policy, fallback=fallback_policy)
                     case "LazyConsensusPolicy":
-                        if len(self.__policy_parameters_map.get(node.policy_id, {})) > 0:
-                            raise UndefinedAttributeException("parameters",
-                                                            message="LazyConsensusPolicy cannot have parameters.")
-                        node.policy_object = LazyConsensusPolicy.from_policy(base_policy)
+                        parameters = self.__policy_parameters_map.get(node.policy_id, {})
+                        fallback_policy_id = parameters.get('fallback')
+                        
+                        fallback_policy = None
+                        if fallback_policy_id:
+                            fallback_node = self.policy_tree.get(fallback_policy_id)
+                            if not fallback_node:
+                                raise UndefinedAttributeException("fallback", 
+                                                            f"fallback policy '{fallback_policy_id}' not found in policy tree.")
+                        
+                            # If the fallback policy hasn't been processed yet, prioritize it
+                            if fallback_policy_id not in processed:
+                                # Move the fallback policy to the front of the processing queue
+                                to_process.insert(0, fallback_node)
+                                # Re-add the current node to process after the fallback
+                                to_process.append(node)
+                                continue
+                            
+                            fallback_policy = fallback_node.policy_object
+                        node.policy_object = LazyConsensusPolicy.from_policy(base_policy, fallback=fallback_policy)
                     case "MajorityPolicy":
                         parameters = self.__policy_parameters_map.get(node.policy_id, {})
                         node.policy_object = MajorityPolicy.from_policy(base_policy,  
@@ -615,7 +657,7 @@ class PolicyCreationListener(govdslListener):
      
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
         name = ctx.ID().getText()
-        individual = HumanIndividual(name=name)
+        individual = Human(name=name)
                 
         if ctx.voteValue():
             individual.vote_value = float(ctx.voteValue().FLOAT().getText())
@@ -696,7 +738,7 @@ class PolicyCreationListener(govdslListener):
         self._register_decision_type_with_current_policy(decision)
 
     def enterDeadline(self, ctx:govdslParser.DeadlineContext):
-        name = ctx.deadlineID().ID().getText()
+        name = ctx.deadlineID().ID().getText() if ctx.deadlineID() else "deadline"
         offset = None
         date = None
         
@@ -715,7 +757,28 @@ class PolicyCreationListener(govdslListener):
         
         deadline = Deadline(name=name, offset=offset, date=date)
         self._register_condition_with_current_policy(deadline)
-    
+        
+    def enterMinDecisionTime(self, ctx:govdslParser.MinDecisionTimeContext):
+        name = ctx.ID().getText() if ctx.ID() else "minDecisionTime"
+        offset = None
+        date = None
+
+        # Check for offset
+        if ctx.offset():
+            amount = int(ctx.offset().SIGNED_INT().getText())
+            time_unit = ctx.offset().timeUnit().getText()
+            offset = deadline_to_timedelta(value=amount, unit=time_unit)
+
+        # Check for date
+        if ctx.date():
+            day = int(ctx.date().SIGNED_INT(0).getText())    # First SIGNED_INT is day
+            month = int(ctx.date().SIGNED_INT(1).getText())  # Second SIGNED_INT is month
+            year = int(ctx.date().SIGNED_INT(2).getText())   # Third SIGNED_INT is year
+            date = datetime(year=year, month=month, day=day)
+
+        min_decision_time = MinDecisionTime(name=name, offset=offset, date=date)
+        self._register_condition_with_current_policy(min_decision_time)
+
     def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
         # TODO: This condition needs more refinement. We will include primitive types.
         
@@ -841,6 +904,15 @@ class PolicyCreationListener(govdslListener):
                 default_ctx = ctx.default().nestedPolicy().nestedComposedPolicy().ID().getText()
             self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
+        # Extract fallback policy if present (for ConsensusPolicy)
+        if ctx.fallback():
+            fallback_ctx = None
+            if ctx.fallback().nestedPolicy().nestedSinglePolicy():
+                fallback_ctx = ctx.fallback().nestedPolicy().nestedSinglePolicy().ID().getText()
+            elif ctx.fallback().nestedPolicy().nestedComposedPolicy():
+                fallback_ctx = ctx.fallback().nestedPolicy().nestedComposedPolicy().ID().getText()
+            self.__policy_parameters_map[current_policy_id]['fallback'] = fallback_ctx
+
     def enterDefault(self, ctx:govdslParser.DefaultContext):
         # Get the current policy context (the LeaderDrivenPolicy)
         if not self.policy_stack:
@@ -876,6 +948,42 @@ class PolicyCreationListener(govdslListener):
                 if current_policy.policy_id in self.__policy_scopes_map:
                     parent_scope = self.__policy_scopes_map[current_policy.policy_id]
                     self.__policy_scopes_map[default_policy_id] = parent_scope
+    
+    def enterFallback(self, ctx:govdslParser.FallbackContext):
+        # Get the current policy context (the ConsensusPolicy)
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        # Extract the default policy ID
+        fallback_policy_id = None
+        policy_type = None
+        if ctx.nestedPolicy().nestedSinglePolicy():
+            fallback_policy_id = ctx.nestedPolicy().nestedSinglePolicy().ID().getText()
+            policy_type = ctx.nestedPolicy().nestedSinglePolicy().policyType().getText()
+        elif ctx.nestedPolicy().nestedComposedPolicy():
+            fallback_policy_id = ctx.nestedPolicy().nestedComposedPolicy().ID().getText()
+            policy_type = "composed"
+        
+        # Create a node for this fallback policy
+        if fallback_policy_id and fallback_policy_id not in self.policy_tree:
+            # Create the fallback policy node with is_nested=True to ensure scope inheritance
+            node = PolicyNode(fallback_policy_id, policy_type, is_nested=True)
+            # Add the fallback attribute to distinguish from phases
+            node.is_fallback = True
+            self.policy_tree[fallback_policy_id] = node
+            
+            # Mark this policy as referenced so it's not considered a root policy
+            self.referenced_policies.add(fallback_policy_id)
+            
+            # Set up parent-child relationship with the current policy
+            if self.policy_stack:
+                current_policy = self.policy_stack[-1]
+                current_policy.add_child(node)
+                
+                # Share the scope from parent to default policy
+                if current_policy.policy_id in self.__policy_scopes_map:
+                    parent_scope = self.__policy_scopes_map[current_policy.policy_id]
+                    self.__policy_scopes_map[fallback_policy_id] = parent_scope
 
     def exitGovernance(self, ctx:govdslParser.GovernanceContext):
         """When exiting the governance context, construct the policy tree"""

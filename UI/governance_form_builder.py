@@ -63,51 +63,152 @@ class GovernanceFormBuilder:
         
         with gr.Accordion("Projects", open=True):
             gr.Markdown("### Define Projects")
-            gr.Markdown("*Format: One per line as `ProjectName | Platform | Repository`*")
-            gr.Markdown("*Platform and Repository are optional. Examples:*")
-            gr.Markdown("- `MyProject` (no platform/repo)")
-            gr.Markdown("- `K8sProject | GitHub | kubernetes/kubernetes`")
+            gr.Markdown("*Define individual projects with optional platform and repository information*")
+            gr.Markdown("**Note:** Only Project Name is required")
             
-            projects_text = gr.Textbox(
-                label="Projects",
-                placeholder="MyProject | GitHub | owner/repo\nAnotherProject",
-                lines=3,
-                info="Define multiple projects, one per line"
+            with gr.Row():
+                project_name = gr.Textbox(
+                    label="Project Name *",
+                    placeholder="e.g., MyProject, K8sProject",
+                    info="Unique name for this project (required)"
+                )
+                
+                project_platform = gr.Textbox(
+                    label="Platform (Optional)",
+                    placeholder="e.g., GitHub, GitLab, Bitbucket",
+                    info="Platform where the project is hosted"
+                )
+            
+            with gr.Row():
+                project_repo = gr.Textbox(
+                    label="Repository (Optional)",
+                    placeholder="e.g., owner/repo, kubernetes/kubernetes",
+                    info="Repository path or identifier"
+                )
+            
+            with gr.Row():
+                add_project_btn = gr.Button("➕ Add Project", variant="secondary")
+                clear_projects_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added projects
+            projects_display = gr.Textbox(
+                label="Added Projects",
+                lines=4,
+                interactive=False,
+                placeholder="No projects added yet. Create projects to define your organizational structure.",
+                info="Projects you've added will appear here"
             )
+            
+            # Hidden component to store projects data
+            projects_data = gr.State([])
         
         with gr.Accordion("Activities", open=False):
             gr.Markdown("### Define Activities")
-            gr.Markdown("*Format: One per line as `ActivityName | ParentProject` (ParentProject is optional)*")
-            gr.Markdown("*Examples:*")
-            gr.Markdown("- `CodeReview` (root-level activity)")
-            gr.Markdown("- `TestActivity | MyProject` (belongs to MyProject)")
+            gr.Markdown("*Define activities with optional parent project association*")
+            gr.Markdown("**Note:** Only Activity Name is required")
             
-            activities_text = gr.Textbox(
-                label="Activities",
-                placeholder="CodeReview\nTestActivity | MyProject",
-                lines=3,
-                info="Define multiple activities, one per line"
+            with gr.Row():
+                activity_name = gr.Textbox(
+                    label="Activity Name *",
+                    placeholder="e.g., CodeReview, TestActivity, Documentation",
+                    info="Unique name for this activity (required)"
+                )
+                
+                activity_parent = gr.Dropdown(
+                    label="Parent Project (Optional)",
+                    choices=[],  # Will be populated dynamically from added projects
+                    value=None,
+                    allow_custom_value=True,
+                    info="Select a parent project or leave empty for root-level activity"
+                )
+            
+            with gr.Row():
+                add_activity_btn = gr.Button("➕ Add Activity", variant="secondary")
+                clear_activities_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added activities
+            activities_display = gr.Textbox(
+                label="Added Activities",
+                lines=4,
+                interactive=False,
+                placeholder="No activities added yet. Create activities to organize your project workflow.",
+                info="Activities you've added will appear here"
             )
+            
+            # Hidden component to store activities data
+            activities_data = gr.State([])
             
         with gr.Accordion("Tasks", open=False):
             gr.Markdown("### Define Tasks")
-            gr.Markdown("*Format: One per line as `TaskName | Parent | Type | Action`*")
-            gr.Markdown("*Parent, Type, and Action are optional. Examples:*")
-            gr.Markdown("- `MergeTask` (minimal task)")
-            gr.Markdown("- `PRMerge | CodeReview` (task with parent)")
-            gr.Markdown("- `PRMerge | CodeReview | Pull request | merge` (full definition)")
+            gr.Markdown("*Define specific tasks with optional parent, type, and action details*")
+            gr.Markdown("**Note:** Only Task Name is required")
             
-            tasks_text = gr.Textbox(
-                label="Tasks",
-                placeholder="MergeTask\nPRMerge | CodeReview\nFullTask | CodeReview | Pull request | merge",
+            with gr.Row():
+                task_name = gr.Textbox(
+                    label="Task Name *",
+                    placeholder="e.g., MergeTask, PRMerge, ApprovalTask",
+                    info="Unique name for this task (required)"
+                )
+                
+                task_parent = gr.Dropdown(
+                    label="Parent (Optional)",
+                    choices=[],  # Will be populated dynamically from projects and activities
+                    value=None,
+                    allow_custom_value=True,
+                    info="Select a parent project or activity"
+                )
+            
+            with gr.Row():
+                task_type = gr.Textbox(
+                    label="Type (Optional)",
+                    placeholder="e.g., Pull request, Issue, Review",
+                    info="Type or category of this task"
+                )
+                
+                task_action = gr.Textbox(
+                    label="Action (Optional)",
+                    placeholder="e.g., merge, approve, review",
+                    info="Specific action this task performs"
+                )
+            
+            with gr.Row():
+                add_task_btn = gr.Button("➕ Add Task", variant="secondary")
+                clear_tasks_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added tasks
+            tasks_display = gr.Textbox(
+                label="Added Tasks",
                 lines=4,
-                info="Define multiple tasks, one per line"
+                interactive=False,
+                placeholder="No tasks added yet. Create tasks to define specific governance actions.",
+                info="Tasks you've added will appear here"
             )
+            
+            # Hidden component to store tasks data
+            tasks_data = gr.State([])
         
         return {
-            'projects_text': projects_text,
-            'activities_text': activities_text,
-            'tasks_text': tasks_text
+            'project_name': project_name,
+            'project_platform': project_platform,
+            'project_repo': project_repo,
+            'add_project_btn': add_project_btn,
+            'clear_projects_btn': clear_projects_btn,
+            'projects_display': projects_display,
+            'projects_data': projects_data,
+            'activity_name': activity_name,
+            'activity_parent': activity_parent,
+            'add_activity_btn': add_activity_btn,
+            'clear_activities_btn': clear_activities_btn,
+            'activities_display': activities_display,
+            'activities_data': activities_data,
+            'task_name': task_name,
+            'task_parent': task_parent,
+            'task_type': task_type,
+            'task_action': task_action,
+            'add_task_btn': add_task_btn,
+            'clear_tasks_btn': clear_tasks_btn,
+            'tasks_display': tasks_display,
+            'tasks_data': tasks_data
         }
     
     def _create_participant_forms(self):
@@ -938,10 +1039,122 @@ class GovernanceFormBuilder:
             role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
             return gr.Dropdown(choices=role_choices, value=None)
         
-        def update_scope_dropdown(projects_text, activities_text, tasks_text):
+        # Scope event handlers
+        def add_project(name, platform, repo, current_projects):
+            """Add a new project to the list"""
+            if not name.strip():
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Please enter a project name\n\n{display_text}" if current_projects else "❌ Error: Please enter a project name"
+                return current_projects, error_message, "", "", ""
+            
+            # Check if project already exists
+            if any(p['name'] == name.strip() for p in current_projects):
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Project name already exists\n\n{display_text}" if current_projects else "❌ Error: Project name already exists"
+                return current_projects, error_message, "", "", ""
+            
+            # Create new project
+            new_project = {
+                'name': name.strip(),
+                'platform': platform.strip() if platform.strip() else None,
+                'repo': repo.strip() if repo.strip() else None
+            }
+            
+            updated_projects = current_projects + [new_project]
+            success_message = self._format_projects_display(updated_projects)
+            
+            return updated_projects, success_message, "", "", ""
+        
+        def clear_projects():
+            """Clear all projects"""
+            return [], "No projects added yet. Create projects to define your organizational structure."
+        
+        def add_activity(name, parent, current_activities, current_projects):
+            """Add a new activity to the list"""
+            if not name.strip():
+                display_text = self._format_activities_display(current_activities)
+                error_message = f"❌ Error: Please enter an activity name\n\n{display_text}" if current_activities else "❌ Error: Please enter an activity name"
+                return current_activities, error_message, "", None
+            
+            # Check if activity already exists
+            if any(a['name'] == name.strip() for a in current_activities):
+                display_text = self._format_activities_display(current_activities)
+                error_message = f"❌ Error: Activity name already exists\n\n{display_text}" if current_activities else "❌ Error: Activity name already exists"
+                return current_activities, error_message, "", None
+            
+            # Create new activity
+            new_activity = {
+                'name': name.strip(),
+                'parent': parent if parent else None
+            }
+            
+            updated_activities = current_activities + [new_activity]
+            success_message = self._format_activities_display(updated_activities)
+            
+            return updated_activities, success_message, "", None
+        
+        def clear_activities():
+            """Clear all activities"""
+            return [], "No activities added yet. Create activities to organize your project workflow."
+        
+        def update_activity_parent_dropdown(current_projects):
+            """Update activity parent dropdown when projects change"""
+            project_choices = [p['name'] for p in current_projects]
+            return gr.Dropdown(choices=project_choices, value=None)
+        
+        def add_task(name, parent, task_type, action, current_tasks, current_projects, current_activities):
+            """Add a new task to the list"""
+            if not name.strip():
+                display_text = self._format_tasks_display(current_tasks)
+                error_message = f"❌ Error: Please enter a task name\n\n{display_text}" if current_tasks else "❌ Error: Please enter a task name"
+                return current_tasks, error_message, "", None, "", ""
+            
+            # Check if task already exists
+            if any(t['name'] == name.strip() for t in current_tasks):
+                display_text = self._format_tasks_display(current_tasks)
+                error_message = f"❌ Error: Task name already exists\n\n{display_text}" if current_tasks else "❌ Error: Task name already exists"
+                return current_tasks, error_message, "", None, "", ""
+            
+            # Create new task
+            new_task = {
+                'name': name.strip(),
+                'parent': parent if parent else None,
+                'type': task_type.strip() if task_type.strip() else None,
+                'action': action.strip() if action.strip() else None
+            }
+            
+            updated_tasks = current_tasks + [new_task]
+            success_message = self._format_tasks_display(updated_tasks)
+            
+            return updated_tasks, success_message, "", None, "", ""
+        
+        def clear_tasks():
+            """Clear all tasks"""
+            return [], "No tasks added yet. Create tasks to define specific governance actions."
+        
+        def update_task_parent_dropdown(current_projects, current_activities):
+            """Update task parent dropdown when projects or activities change"""
+            parent_choices = []
+            parent_choices.extend([p['name'] for p in current_projects])
+            parent_choices.extend([a['name'] for a in current_activities])
+            return gr.Dropdown(choices=parent_choices, value=None)
+        
+        def update_scope_dropdown(projects_data, activities_data, tasks_data):
             """Update policy scope dropdown when scope definitions change"""
-            scope_choices = self._extract_scope_names(projects_text, activities_text, tasks_text)
-            return gr.Dropdown(choices=scope_choices, value=None)
+            scope_choices = []
+            
+            # Extract names from structured data
+            for project in projects_data:
+                if project['name']:
+                    scope_choices.append(project['name'])
+            for activity in activities_data:
+                if activity['name']:
+                    scope_choices.append(activity['name'])
+            for task in tasks_data:
+                if task['name']:
+                    scope_choices.append(task['name'])
+            
+            return gr.Dropdown(choices=sorted(list(set(scope_choices))), value=None)
         
         def update_participant_dropdown(roles_text, individuals_data, agents_data):
             """Update policy participants dropdown when participant definitions change"""
@@ -1529,6 +1742,103 @@ MajorityPolicy example_policy {
         all_components.extend(participant_components.values())
         all_components.extend(policy_components.values())
         
+        # Scope management handlers
+        # Project management
+        scope_components['add_project_btn'].click(
+            fn=add_project,
+            inputs=[
+                scope_components['project_name'],
+                scope_components['project_platform'],
+                scope_components['project_repo'],
+                scope_components['projects_data']
+            ],
+            outputs=[
+                scope_components['projects_data'],
+                scope_components['projects_display'],
+                scope_components['project_name'],        # Clear name field
+                scope_components['project_platform'],    # Clear platform field
+                scope_components['project_repo']         # Clear repo field
+            ]
+        )
+        
+        scope_components['clear_projects_btn'].click(
+            fn=clear_projects,
+            outputs=[
+                scope_components['projects_data'],
+                scope_components['projects_display']
+            ]
+        )
+        
+        # Activity management
+        scope_components['add_activity_btn'].click(
+            fn=add_activity,
+            inputs=[
+                scope_components['activity_name'],
+                scope_components['activity_parent'],
+                scope_components['activities_data'],
+                scope_components['projects_data']
+            ],
+            outputs=[
+                scope_components['activities_data'],
+                scope_components['activities_display'],
+                scope_components['activity_name'],       # Clear name field
+                scope_components['activity_parent']      # Clear parent field
+            ]
+        )
+        
+        scope_components['clear_activities_btn'].click(
+            fn=clear_activities,
+            outputs=[
+                scope_components['activities_data'],
+                scope_components['activities_display']
+            ]
+        )
+        
+        # Task management
+        scope_components['add_task_btn'].click(
+            fn=add_task,
+            inputs=[
+                scope_components['task_name'],
+                scope_components['task_parent'],
+                scope_components['task_type'],
+                scope_components['task_action'],
+                scope_components['tasks_data'],
+                scope_components['projects_data'],
+                scope_components['activities_data']
+            ],
+            outputs=[
+                scope_components['tasks_data'],
+                scope_components['tasks_display'],
+                scope_components['task_name'],           # Clear name field
+                scope_components['task_parent'],         # Clear parent field
+                scope_components['task_type'],           # Clear type field
+                scope_components['task_action']          # Clear action field
+            ]
+        )
+        
+        scope_components['clear_tasks_btn'].click(
+            fn=clear_tasks,
+            outputs=[
+                scope_components['tasks_data'],
+                scope_components['tasks_display']
+            ]
+        )
+        
+        # Update activity parent dropdown when projects change
+        scope_components['projects_data'].change(
+            fn=update_activity_parent_dropdown,
+            inputs=[scope_components['projects_data']],
+            outputs=[scope_components['activity_parent']]
+        )
+        
+        # Update task parent dropdown when projects or activities change
+        for data_component in [scope_components['projects_data'], scope_components['activities_data']]:
+            data_component.change(
+                fn=update_task_parent_dropdown,
+                inputs=[scope_components['projects_data'], scope_components['activities_data']],
+                outputs=[scope_components['task_parent']]
+            )
+        
         # Profile management handlers
         participant_components['add_profile_btn'].click(
             fn=add_profile,
@@ -1646,13 +1956,13 @@ MajorityPolicy example_policy {
         )
         
         # Update policy scope dropdown when scope definitions change
-        for scope_component in [scope_components['projects_text'], scope_components['activities_text'], scope_components['tasks_text']]:
+        for scope_component in [scope_components['projects_data'], scope_components['activities_data'], scope_components['tasks_data']]:
             scope_component.change(
                 fn=update_scope_dropdown,
                 inputs=[
-                    scope_components['projects_text'],
-                    scope_components['activities_text'],
-                    scope_components['tasks_text']
+                    scope_components['projects_data'],
+                    scope_components['activities_data'],
+                    scope_components['tasks_data']
                 ],
                 outputs=[policy_components['policy_scope']]
             )
@@ -1945,20 +2255,26 @@ MajorityPolicy example_policy {
         )
         
         # Update composed policy scope dropdown when scope definitions change
-        for scope_component in [scope_components['projects_text'], scope_components['activities_text'], scope_components['tasks_text']]:
+        for scope_component in [scope_components['projects_data'], scope_components['activities_data'], scope_components['tasks_data']]:
             scope_component.change(
                 fn=update_scope_dropdown,
                 inputs=[
-                    scope_components['projects_text'],
-                    scope_components['activities_text'],
-                    scope_components['tasks_text']
+                    scope_components['projects_data'],
+                    scope_components['activities_data'],
+                    scope_components['tasks_data']
                 ],
                 outputs=[policy_components['composed_policy_scope']]
             )
         
         # Set up change handlers for preview updates
         preview_components = []
-        preview_components.extend(scope_components.values())
+        # Scope data components (projects, activities, tasks)
+        preview_components.extend([
+            scope_components['projects_data'],
+            scope_components['activities_data'],
+            scope_components['tasks_data']
+        ])
+        # Participant components
         preview_components.extend([
             participant_components['profiles_data'],
             participant_components['roles_text'],
@@ -1985,15 +2301,15 @@ MajorityPolicy example_policy {
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
-        (projects_text, activities_text, tasks_text, profiles_data, roles_text, individuals_data, agents_data,
+        (projects_data, activities_data, tasks_data, profiles_data, roles_text, individuals_data, agents_data,
          policies_data, composed_policies_data) = form_values
         
         dsl_parts = []
         
-        # Parse multi-line inputs
-        projects = self._parse_projects(projects_text)
-        activities = self._parse_activities(activities_text)
-        tasks = self._parse_tasks(tasks_text)
+        # Use structured data directly (no need to parse text anymore)
+        projects = projects_data if projects_data else []
+        activities = activities_data if activities_data else []
+        tasks = tasks_data if tasks_data else []
         profiles = profiles_data if profiles_data else []  # profiles_data is already structured
         individuals = individuals_data if individuals_data else []  # individuals_data is already structured
         agents = agents_data if agents_data else []  # agents_data is already structured
@@ -2586,27 +2902,83 @@ MajorityPolicy example_policy {
             display_lines.append(line)
         
         return '\n'.join(display_lines)
+   
+    def _format_projects_display(self, projects):
+        """Format projects for display in the text area"""
+        if not projects:
+            return "No projects added yet. Create projects to define your organizational structure."
+        
+        display_lines = [f"🏗️ {len(projects)} project(s) defined:", ""]
+        for i, project in enumerate(projects, 1):
+            line = f"{i}. {project['name']}"
+            details = []
+            if project.get('platform'):
+                details.append(f"📦 platform: {project['platform']}")
+            if project.get('repo'):
+                details.append(f"📂 repo: {project['repo']}")
+            
+            if details:
+                line += f" → {', '.join(details)}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
     
-    def _extract_scope_names(self, projects_text, activities_text, tasks_text):
+    def _format_activities_display(self, activities):
+        """Format activities for display in the text area"""
+        if not activities:
+            return "No activities added yet. Create activities to organize your project workflow."
+        
+        display_lines = [f"⚡ {len(activities)} activit(ies) defined:", ""]
+        for i, activity in enumerate(activities, 1):
+            line = f"{i}. {activity['name']}"
+            if activity.get('parent'):
+                line += f" → 📋 parent: {activity['parent']}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
+    
+    def _format_tasks_display(self, tasks):
+        """Format tasks for display in the text area"""
+        if not tasks:
+            return "No tasks added yet. Create tasks to define specific governance actions."
+        
+        display_lines = [f"✅ {len(tasks)} task(s) defined:", ""]
+        for i, task in enumerate(tasks, 1):
+            line = f"{i}. {task['name']}"
+            details = []
+            if task.get('parent'):
+                details.append(f"📋 parent: {task['parent']}")
+            if task.get('type'):
+                details.append(f"🏷️ type: {task['type']}")
+            if task.get('action'):
+                details.append(f"⚙️ action: {task['action']}")
+            
+            if details:
+                line += f" → {', '.join(details)}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
+    
+    def _extract_scope_names(self, projects_data, activities_data, tasks_data):
         """Extract all scope names (projects, activities, tasks) for dropdown choices"""
         scope_names = []
         
-        # Parse and extract project names
-        projects = self._parse_projects(projects_text)
-        for project in projects:
-            if project['name']:
+        # Extract project names
+        for project in projects_data if projects_data else []:
+            if project.get('name'):
                 scope_names.append(project['name'])
         
-        # Parse and extract activity names
-        activities = self._parse_activities(activities_text)
-        for activity in activities:
-            if activity['name']:
+        # Extract activity names
+        for activity in activities_data if activities_data else []:
+            if activity.get('name'):
                 scope_names.append(activity['name'])
         
-        # Parse and extract task names
-        tasks = self._parse_tasks(tasks_text)
-        for task in tasks:
-            if task['name']:
+        # Extract task names
+        for task in tasks_data if tasks_data else []:
+            if task.get('name'):
                 scope_names.append(task['name'])
         
         return sorted(list(set(scope_names)))  # Remove duplicates and sort

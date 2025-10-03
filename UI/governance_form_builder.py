@@ -395,6 +395,7 @@ class GovernanceFormBuilder:
                     maximum=1.0,
                     value=1.0,
                     step=0.1,
+                    visible=True,  # Start visible since MajorityPolicy is default
                     info="Required ratio of positive votes (1.0 = unanimous)"
                 )
             
@@ -582,31 +583,160 @@ class GovernanceFormBuilder:
         
 
         
-        with gr.Accordion("Composed Policy (Multi-phase)", open=False):
-            gr.Markdown("### For Complex Multi-Phase Policies")
+        with gr.Accordion("🔄 Composed Policy (Multi-phase)", open=False):
+            gr.Markdown("### Create Complex Multi-Phase Governance Policies")
+            gr.Markdown("Composed policies orchestrate multiple existing policies in sequence or parallel.")
             
-            is_composed = gr.Checkbox(
-                label="This is a multi-phase policy",
-                value=False
+            # Basic composed policy information
+            with gr.Row():
+                composed_policy_name = gr.Textbox(
+                    label="Composed Policy Name *",
+                    placeholder="e.g., TwoPhaseReview, ComplexApproval",
+                    info="Unique name for this composed policy"
+                )
+                
+                composed_policy_scope = gr.Dropdown(
+                    label="Composed Policy Scope *",
+                    choices=[],  # Will be populated dynamically from defined scopes
+                    value=None,
+                    allow_custom_value=True,
+                    info="Select the scope this composed policy applies to (required)"
+                )
+            
+            # Execution configuration
+            gr.Markdown("**⚙️ Execution Configuration**")
+            with gr.Row():
+                execution_type = gr.Dropdown(
+                    label="Execution Type",
+                    choices=["sequential", "parallel"],
+                    value="sequential",
+                    info="Sequential: phases run one after another; Parallel: phases run simultaneously"
+                )
+                
+                require_all = gr.Checkbox(
+                    label="Require All Phases",
+                    value=True,
+                    info="Must all phases succeed for the composed policy to succeed?"
+                )
+                
+                carry_over = gr.Checkbox(
+                    label="Carry Over Results",
+                    value=True,
+                    info="Pass results between phases? (Only applicable for sequential execution)"
+                )
+            
+            # Phase management
+            gr.Markdown("**📋 Phase Management**")
+            gr.Markdown("Define each phase as a separate policy. Phases will inherit the composed policy's scope.")
+            
+            # Phase policy definition (similar to single policy form)
+            with gr.Row():
+                phase_name = gr.Textbox(
+                    label="Phase Name *",
+                    placeholder="e.g., ReviewPhase, ApprovalPhase",
+                    info="Unique name for this phase"
+                )
+                
+                phase_type = gr.Dropdown(
+                    label="Phase Policy Type",
+                    choices=[
+                        "MajorityPolicy", 
+                        "LeaderDrivenPolicy", 
+                        "AbsoluteMajorityPolicy", 
+                        "ConsensusPolicy", 
+                        "LazyConsensusPolicy", 
+                        "VotingPolicy"
+                    ],
+                    value="MajorityPolicy",
+                    info="Type of decision-making process for this phase"
+                )
+            
+            with gr.Row():
+                # Participants for this phase
+                phase_participants = gr.Dropdown(
+                    label="Phase Participants *",
+                    choices=[],  # Will be populated dynamically from defined participants
+                    value=None,
+                    allow_custom_value=True,
+                    multiselect=True,
+                    info="Select participants for this phase"
+                )
+                
+                # Decision type for the phase
+                phase_decision_type = gr.Dropdown(
+                    label="Phase Decision Type",
+                    choices=["BooleanDecision", "StringList", "ElementList"],
+                    value="BooleanDecision"
+                )
+            
+            with gr.Row():
+                # Options for StringList and ElementList
+                phase_decision_options = gr.Textbox(
+                    label="Phase Decision Options",
+                    placeholder="e.g., joe, george (for ElementList/StringList)",
+                    visible=False,
+                    info="Comma-separated options for StringList/ElementList decisions"
+                )
+                
+                # Parameters (for voting policies)
+                phase_voting_ratio = gr.Slider(
+                    label="Phase Voting Ratio",
+                    minimum=0.0,
+                    maximum=1.0,
+                    value=1.0,
+                    step=0.1,
+                    visible=True,  # Start visible since MajorityPolicy is default for phases too
+                    info="Required ratio of positive votes (1.0 = unanimous)"
+                )
+            
+            # Phase-specific policy attributes (default/fallback)
+            with gr.Row():
+                phase_default_decision = gr.Dropdown(
+                    label="Phase Default Decision",
+                    choices=[],
+                    value=None,
+                    visible=False,
+                    info="Default policy for LeaderDrivenPolicy phases"
+                )
+                
+                phase_fallback_policy = gr.Dropdown(
+                    label="Phase Fallback Policy", 
+                    choices=[],
+                    value=None,
+                    visible=False,
+                    info="Fallback policy for Consensus/LazyConsensus phases"
+                )
+            
+            with gr.Row():
+                add_phase_btn = gr.Button("➕ Add Phase", variant="secondary")
+                clear_phases_btn = gr.Button("🗑️ Clear All Phases", variant="secondary")
+            
+            # Display added phases
+            added_phases_list = gr.Textbox(
+                label="Added Phases",
+                value="",
+                interactive=False,
+                lines=1,
+                max_lines=8,
+                info="Phases that will be executed in this composed policy"
             )
             
-            execution_type = gr.Dropdown(
-                label="Execution Type",
-                choices=["sequential", "parallel"],
-                value="sequential"
+            # Composed policy actions
+            with gr.Row():
+                add_composed_policy_btn = gr.Button("➕ Add Composed Policy", variant="primary")
+                clear_composed_policies_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added composed policies
+            composed_policies_display = gr.Textbox(
+                label="Added Composed Policies",
+                lines=6,
+                interactive=False,
+                placeholder="No composed policies added yet. Create composed policies to define complex multi-phase governance.",
+                info="Composed policies you've added will appear here"
             )
             
-            require_all = gr.Checkbox(
-                label="Require All Phases",
-                value=True,
-                info="Must all phases succeed?"
-            )
-            
-            carry_over = gr.Checkbox(
-                label="Carry Over Results",
-                value=True,
-                info="Pass results between phases?"
-            )
+            # Hidden component to store composed policies data
+            composed_policies_data = gr.State([])
         
         return {
             'policy_name': policy_name,
@@ -638,10 +768,28 @@ class GovernanceFormBuilder:
             'clear_policies_btn': clear_policies_btn,
             'policies_display': policies_display,
             'policies_data': policies_data,
-            'is_composed': is_composed,
+            # Composed Policy components
+            'composed_policy_name': composed_policy_name,
+            'composed_policy_scope': composed_policy_scope,
             'execution_type': execution_type,
             'require_all': require_all,
-            'carry_over': carry_over
+            'carry_over': carry_over,
+            # Phase definition components
+            'phase_name': phase_name,
+            'phase_type': phase_type,
+            'phase_participants': phase_participants,
+            'phase_decision_type': phase_decision_type,
+            'phase_decision_options': phase_decision_options,
+            'phase_voting_ratio': phase_voting_ratio,
+            'phase_default_decision': phase_default_decision,
+            'phase_fallback_policy': phase_fallback_policy,
+            'add_phase_btn': add_phase_btn,
+            'clear_phases_btn': clear_phases_btn,
+            'added_phases_list': added_phases_list,
+            'add_composed_policy_btn': add_composed_policy_btn,
+            'clear_composed_policies_btn': clear_composed_policies_btn,
+            'composed_policies_display': composed_policies_display,
+            'composed_policies_data': composed_policies_data
         }
     
     def _create_preview_panel(self):
@@ -803,6 +951,11 @@ class GovernanceFormBuilder:
                 gr.Dropdown(choices=participant_choices, value=None),  # veto_participants
                 gr.Dropdown(choices=participant_choices, value=None)   # excluded_participants
             )
+        
+        def update_phase_participant_dropdown(roles_text, individuals_data, agents_data):
+            """Update phase participants dropdown when participant definitions change"""
+            participant_choices = self._extract_participant_names(roles_text, individuals_data, agents_data)
+            return gr.Dropdown(choices=participant_choices, value=None)
         
         def update_policy_reference_dropdowns(policies_data, current_scope=None):
             """Update default and fallback policy dropdowns when policies change or scope changes"""
@@ -1095,6 +1248,188 @@ class GovernanceFormBuilder:
             """Clear all conditions for the current policy"""
             return ""
         
+        # Composed Policy Functions
+        def add_phase(phase_name, phase_type, phase_participants, phase_decision_type, phase_decision_options, 
+                     phase_voting_ratio, phase_default_decision, phase_fallback_policy, current_phases_text):
+            """Add a phase to the current composed policy"""
+            # Parse existing phases from the display text (ignore error messages and success messages)
+            existing_phases = []
+            if current_phases_text.strip():
+                for line in current_phases_text.strip().split('\n'):
+                    line = line.strip()
+                    # Skip error messages, success messages, and empty lines
+                    if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
+                        existing_phases.append(line)
+            
+            # Helper function to format the phases display with error
+            def format_phases_with_error(error_msg):
+                if existing_phases:
+                    phases_text = '\n'.join(existing_phases)
+                    return f"❌ Error: {error_msg}\n\n{phases_text}"
+                else:
+                    return f"❌ Error: {error_msg}"
+            
+            # Helper function to return error with all phase fields reset
+            def return_phase_error(error_msg):
+                return (
+                    format_phases_with_error(error_msg),  # added_phases_list
+                    "",  # phase_name
+                    "MajorityPolicy",  # phase_type
+                    gr.Dropdown(value=None, choices=[]),  # phase_participants - clear completely
+                    "BooleanDecision",  # phase_decision_type
+                    "",  # phase_decision_options
+                    1.0,  # phase_voting_ratio
+                    None,  # phase_default_decision
+                    None   # phase_fallback_policy
+                )
+            
+            # Validate phase name (mandatory)
+            if not phase_name.strip():
+                return return_phase_error("Please enter a phase name")
+            
+            # Check for duplicates
+            phase_names = [line.split(' (')[0] for line in existing_phases]  # Extract names from display format
+            if phase_name.strip() in phase_names:
+                return return_phase_error(f"Phase '{phase_name.strip()}' already exists")
+            
+            # Validate phase participants (mandatory)
+            if not phase_participants or (isinstance(phase_participants, list) and len(phase_participants) == 0):
+                return return_phase_error("Please select at least one participant for this phase")
+            
+            # Create phase display string
+            participants_list = phase_participants if isinstance(phase_participants, list) else [phase_participants]
+            phase_display = f"{phase_name.strip()} ({phase_type}) → participants: {', '.join(participants_list)}"
+            
+            # Add type-specific details
+            details = []
+            if phase_decision_type != "BooleanDecision":
+                details.append(f"decision: {phase_decision_type}")
+            
+            # Show voting ratio for voting-related policies (always show, not just when != 1.0)
+            if phase_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"]:
+                details.append(f"ratio: {phase_voting_ratio}")
+            
+            # Show default decision only for LeaderDrivenPolicy
+            if phase_type == "LeaderDrivenPolicy" and phase_default_decision:
+                details.append(f"default: {phase_default_decision}")
+            
+            # Show fallback policy only for ConsensusPolicy and LazyConsensusPolicy
+            if phase_type in ["ConsensusPolicy", "LazyConsensusPolicy"] and phase_fallback_policy:
+                details.append(f"fallback: {phase_fallback_policy}")
+            
+            # Show decision options if specified and not BooleanDecision
+            if phase_decision_options and phase_decision_options.strip() and phase_decision_type != "BooleanDecision":
+                options_clean = phase_decision_options.strip()
+                details.append(f"options: {options_clean}")
+            
+            if details:
+                phase_display += f", {', '.join(details)}"
+            
+            # Add to existing phases and format success message
+            updated_phases = existing_phases + [phase_display]
+            phases_text = '\n'.join(updated_phases)
+            success_message = f"✅ Phase '{phase_name.strip()}' added successfully!\n\n{phases_text}"
+            
+            return (
+                success_message,  # added_phases_list
+                "",  # phase_name - clear
+                "MajorityPolicy",  # phase_type - reset
+                gr.Dropdown(value=None, choices=[]),  # phase_participants - clear completely
+                "BooleanDecision",  # phase_decision_type - reset
+                "",  # phase_decision_options - clear
+                1.0,  # phase_voting_ratio - reset
+                None,  # phase_default_decision - clear
+                None   # phase_fallback_policy - clear
+            )
+        
+        def clear_phases():
+            """Clear all phases for the current composed policy"""
+            return ""
+        
+        def add_composed_policy(name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies):
+            """Add a new composed policy to the list"""
+            # Validate composed policy name (mandatory)
+            if not name.strip():
+                display_text = self._format_composed_policies_display(current_composed_policies)
+                error_message = f"❌ Error: Please enter a composed policy name\n\n{display_text}" if current_composed_policies else "❌ Error: Please enter a composed policy name"
+                return current_composed_policies, error_message
+            
+            # Validate composed policy scope (mandatory)
+            if not scope:
+                display_text = self._format_composed_policies_display(current_composed_policies)
+                error_message = f"❌ Error: Please select a composed policy scope\n\n{display_text}" if current_composed_policies else "❌ Error: Please select a composed policy scope"
+                return current_composed_policies, error_message
+            
+            # Validate phases (at least one phase required)
+            phases = []
+            if phases_text.strip():
+                for line in phases_text.strip().split('\n'):
+                    line = line.strip()
+                    # Skip error messages, success messages, and empty lines
+                    if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
+                        phases.append(line)
+            
+            if not phases:
+                display_text = self._format_composed_policies_display(current_composed_policies)
+                error_message = f"❌ Error: Please add at least one phase\n\n{display_text}" if current_composed_policies else "❌ Error: Please add at least one phase"
+                return current_composed_policies, error_message
+            
+            # Check if composed policy already exists
+            if any(p['name'] == name.strip() for p in current_composed_policies):
+                display_text = self._format_composed_policies_display(current_composed_policies)
+                error_message = f"❌ Error: Composed policy name '{name.strip()}' already exists\n\n{display_text}"
+                return current_composed_policies, error_message
+            
+            # Create new composed policy
+            new_composed_policy = {
+                'type': 'ComposedPolicy',
+                'name': name.strip(),
+                'scope': scope,
+                'execution_type': execution_type,
+                'require_all': require_all,
+                'carry_over': carry_over,
+                'phases': phases
+            }
+            
+            # Add to the list
+            updated_composed_policies = current_composed_policies + [new_composed_policy]
+            display_text = self._format_composed_policies_display(updated_composed_policies)
+            success_message = f"✅ Composed policy '{name.strip()}' added successfully!\n\n{display_text}"
+            
+            return updated_composed_policies, success_message
+        
+        def clear_composed_policies():
+            """Clear all composed policies"""
+            return [], "No composed policies added yet"
+        
+        def add_composed_policy_and_clear_form(name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies):
+            """Add composed policy and clear form fields only on success"""
+            # First try to add the composed policy
+            policies_result, display_result = add_composed_policy(
+                name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies
+            )
+            
+            # Check if the addition was successful (no error message)
+            if "❌ Error:" not in display_result:
+                # Success: clear the form fields
+                return (
+                    policies_result, display_result,  # composed_policies_data, composed_policies_display
+                    "",  # composed_policy_name - clear
+                    None,  # composed_policy_scope - clear
+                    "sequential",  # execution_type - reset to default
+                    True,  # require_all - reset to default
+                    True,  # carry_over - reset to default
+                    ""   # added_phases_list - clear
+                )
+            else:
+                # Error: keep form as is, only update composed policies display
+                return (
+                    policies_result, display_result,  # composed_policies_data, composed_policies_display
+                    name, scope, execution_type, require_all, carry_over,  # Keep form values
+                    phases_text  # Keep phases
+                )
+        
+
         def add_policy_and_clear_form(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
                                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
                                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
@@ -1119,10 +1454,10 @@ class GovernanceFormBuilder:
                 fallback_choices = [p['name'] for p in policies_result]
                 return (
                     policies_result, display_result,  # policies_data, policies_display
-                    "", "MajorityPolicy", None, None, "BooleanDecision", "", 1.0,  # Clear form fields
+                    "", "MajorityPolicy", None, gr.Dropdown(value=None, choices=[]), "BooleanDecision", "", 1.0,  # Clear form fields with empty participants dropdown
                     gr.Dropdown(choices=fallback_choices, visible=False),  # default_decision
                     gr.Dropdown(choices=fallback_choices, visible=False),  # fallback_policy
-                    "", None, None, None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields + added_conditions_list
+                    "", gr.Dropdown(value=None, choices=[]), gr.Dropdown(value=None, choices=[]), None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields with empty dropdowns
                 )
             else:
                 # Error: keep form as is, only update policies display
@@ -1404,7 +1739,7 @@ MajorityPolicy example_policy {
                 policy_components['policy_name'],        # Clear/keep name field
                 policy_components['policy_type'],        # Reset/keep policy type
                 policy_components['policy_scope'],       # Clear/keep scope
-                policy_components['policy_participants'], # Clear/keep participants
+                gr.Dropdown(value=None, choices=[]), # Clear participants completely
                 policy_components['decision_type'],      # Reset/keep decision type
                 policy_components['decision_options'],   # Clear/keep decision options
                 policy_components['voting_ratio'],       # Reset/keep voting ratio
@@ -1505,6 +1840,115 @@ MajorityPolicy example_policy {
             ]
         )
         
+        # Composed Policy management handlers
+        policy_components['add_phase_btn'].click(
+            fn=add_phase,
+            inputs=[
+                policy_components['phase_name'],
+                policy_components['phase_type'],
+                policy_components['phase_participants'],
+                policy_components['phase_decision_type'],
+                policy_components['phase_decision_options'],
+                policy_components['phase_voting_ratio'],
+                policy_components['phase_default_decision'],
+                policy_components['phase_fallback_policy'],
+                policy_components['added_phases_list']
+            ],
+            outputs=[
+                policy_components['added_phases_list'],
+                policy_components['phase_name'],
+                policy_components['phase_type'],
+                policy_components['phase_participants'],
+                policy_components['phase_decision_type'],
+                policy_components['phase_decision_options'],
+                policy_components['phase_voting_ratio'],
+                policy_components['phase_default_decision'],
+                policy_components['phase_fallback_policy']
+            ]
+        )
+        
+        policy_components['clear_phases_btn'].click(
+            fn=clear_phases,
+            outputs=[
+                policy_components['added_phases_list']
+            ]
+        )
+        
+        policy_components['add_composed_policy_btn'].click(
+            fn=add_composed_policy_and_clear_form,
+            inputs=[
+                policy_components['composed_policy_name'],
+                policy_components['composed_policy_scope'],
+                policy_components['execution_type'],
+                policy_components['require_all'],
+                policy_components['carry_over'],
+                policy_components['added_phases_list'],
+                policy_components['composed_policies_data']
+            ],
+            outputs=[
+                policy_components['composed_policies_data'],
+                policy_components['composed_policies_display'],
+                policy_components['composed_policy_name'],
+                policy_components['composed_policy_scope'],
+                policy_components['execution_type'],
+                policy_components['require_all'],
+                policy_components['carry_over'],
+                policy_components['added_phases_list']
+            ]
+        )
+        
+        policy_components['clear_composed_policies_btn'].click(
+            fn=clear_composed_policies,
+            outputs=[
+                policy_components['composed_policies_data'],
+                policy_components['composed_policies_display']
+            ]
+        )
+        
+        # Update phase participant dropdown when participant definitions change
+        for participant_component in [participant_components['roles_text'], participant_components['individuals_data'], participant_components['agents_data']]:
+            participant_component.change(
+                fn=update_phase_participant_dropdown,
+                inputs=[
+                    participant_components['roles_text'],
+                    participant_components['individuals_data'],
+                    participant_components['agents_data']
+                ],
+                outputs=[
+                    policy_components['phase_participants']
+                ]
+            )
+        
+        # Update phase policy type visibility when phase type changes
+        policy_components['phase_type'].change(
+            fn=update_policy_type_visibility,
+            inputs=[policy_components['phase_type']],
+            outputs=[
+                policy_components['phase_default_decision'],
+                policy_components['phase_fallback_policy'],
+                policy_components['phase_voting_ratio']
+            ]
+        )
+        
+        # Update phase decision options visibility when phase decision type changes
+        policy_components['phase_decision_type'].change(
+            fn=update_decision_options_visibility,
+            inputs=[policy_components['phase_decision_type']],
+            outputs=[policy_components['phase_decision_options']]
+        )
+        
+        # Update composed policy scope dropdown when scope definitions change
+        for scope_component in [scope_components['projects_text'], scope_components['activities_text'], scope_components['tasks_text']]:
+            scope_component.change(
+                fn=update_scope_dropdown,
+                inputs=[
+                    scope_components['projects_text'],
+                    scope_components['activities_text'],
+                    scope_components['tasks_text']
+                ],
+                outputs=[policy_components['composed_policy_scope']]
+            )
+        
         # Set up change handlers for preview updates
         preview_components = []
         preview_components.extend(scope_components.values())
@@ -1514,8 +1958,9 @@ MajorityPolicy example_policy {
             participant_components['individuals_data'],
             participant_components['agents_data']
         ])
-        # Only include the policies_data for preview, not all form components
+        # Include both single policies and composed policies data for preview
         preview_components.append(policy_components['policies_data'])
+        preview_components.append(policy_components['composed_policies_data'])
         
         for component in preview_components:
             if hasattr(component, 'change'):
@@ -1534,7 +1979,7 @@ MajorityPolicy example_policy {
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
         (projects_text, activities_text, tasks_text, profiles_data, roles_text, individuals_data, agents_data,
-         policies_data) = form_values
+         policies_data, composed_policies_data) = form_values
         
         dsl_parts = []
         
@@ -1849,6 +2294,114 @@ MajorityPolicy example_policy {
                 
                 dsl_parts.append("}")
         
+        # Generate Composed Policies section
+        composed_policies = composed_policies_data if composed_policies_data else []
+        for composed_policy in composed_policies:
+            if composed_policy.get('name') and composed_policy.get('type') == 'ComposedPolicy':
+                policy_name = composed_policy['name']
+                
+                dsl_parts.append(f"ComposedPolicy {policy_name} {{")
+                
+                if composed_policy.get('scope'):
+                    dsl_parts.append(f"    Scope: {composed_policy['scope']}")
+                
+                # Add execution order configuration
+                if composed_policy.get('execution_type') or composed_policy.get('require_all') is not None or composed_policy.get('carry_over') is not None:
+                    dsl_parts.append("    Order:")
+                    
+                    if composed_policy.get('execution_type'):
+                        dsl_parts.append(f"        Execution: {composed_policy['execution_type']}")
+                    
+                    if composed_policy.get('require_all') is not None:
+                        require_val = "true" if composed_policy['require_all'] else "false"
+                        dsl_parts.append(f"        RequireAll: {require_val}")
+                    
+                    if composed_policy.get('carry_over') is not None:
+                        carry_val = "true" if composed_policy['carry_over'] else "false"
+                        dsl_parts.append(f"        CarryOver: {carry_val}")
+                
+                # Add phases
+                if composed_policy.get('phases'):
+                    dsl_parts.append("    Phases {")
+                    
+                    for phase_display in composed_policy['phases']:
+                        # Parse phase from display format: "PhaseName (PolicyType) → participants: p1, p2"
+                        if ' (' in phase_display and ') →' in phase_display:
+                            # Extract phase name and type
+                            name_part = phase_display.split(' (')[0].strip()
+                            type_part = phase_display.split(' (')[1].split(')')[0].strip()
+                            
+                            # Extract participants and details from display format
+                            participants_part = ""
+                            decision_type = "BooleanDecision"  # default
+                            ratio = None
+                            default_decision = None
+                            fallback_policy = None
+                            options = None
+                            
+                            # Parse the display string more carefully
+                            if 'participants: ' in phase_display:
+                                after_participants = phase_display.split('participants: ')[1]
+                                
+                                # Extract participants (everything before the first comma with a keyword)
+                                if ', decision:' in after_participants:
+                                    participants_part = after_participants.split(', decision:')[0]
+                                elif ', ratio:' in after_participants:
+                                    participants_part = after_participants.split(', ratio:')[0]
+                                elif ', default:' in after_participants:
+                                    participants_part = after_participants.split(', default:')[0]
+                                elif ', fallback:' in after_participants:
+                                    participants_part = after_participants.split(', fallback:')[0]
+                                elif ', options:' in after_participants:
+                                    participants_part = after_participants.split(', options:')[0]
+                                else:
+                                    participants_part = after_participants
+                            
+                            # Extract parameters from the details section
+                            if ', decision: ' in phase_display:
+                                decision_type = phase_display.split(', decision: ')[1].split(',')[0].strip()
+                            
+                            if ', ratio: ' in phase_display:
+                                ratio = phase_display.split(', ratio: ')[1].split(',')[0].strip()
+                            
+                            if ', default: ' in phase_display:
+                                default_decision = phase_display.split(', default: ')[1].split(',')[0].strip()
+                            
+                            if ', fallback: ' in phase_display:
+                                fallback_policy = phase_display.split(', fallback: ')[1].split(',')[0].strip()
+                            
+                            if ', options: ' in phase_display:
+                                options = phase_display.split(', options: ')[1].strip()
+                            
+                            # Generate DSL for this phase
+                            dsl_parts.append(f"        {type_part} {name_part} {{")
+                            dsl_parts.append(f"            DecisionType as {decision_type}")
+                            
+                            if participants_part:
+                                participants_list = [p.strip() for p in participants_part.split(',')]
+                                dsl_parts.append(f"            Participant list: {', '.join(participants_list)}")
+                            
+                            # Add parameters section if any parameters exist
+                            parameters = []
+                            if ratio:
+                                parameters.append(f"                ratio: {ratio}")
+                            if default_decision:
+                                parameters.append(f"                default: {default_decision}")
+                            if fallback_policy:
+                                parameters.append(f"                fallback: {fallback_policy}")
+                            if options:
+                                parameters.append(f"                options: {options}")
+                            
+                            if parameters:
+                                dsl_parts.append("            Parameters:")
+                                dsl_parts.extend(parameters)
+                            
+                            dsl_parts.append("        }")
+                    
+                    dsl_parts.append("    }")
+                
+                dsl_parts.append("}")
+        
         return '\n'.join(dsl_parts) if dsl_parts else "# Fill the form to generate DSL code"
 
     def _parse_projects(self, projects_text):
@@ -2099,6 +2652,38 @@ MajorityPolicy example_policy {
                 details.append(f"⚡ default: {policy['default_decision']}")
             if policy['type'] == "ConsensusPolicy" and policy.get('fallback_policy'):
                 details.append(f"🔄 fallback: {policy['fallback_policy']}")
+            
+            if details:
+                line += f" → {', '.join(details)}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
+    
+    def _format_composed_policies_display(self, composed_policies):
+        """Format composed policies for display in the text area"""
+        if not composed_policies:
+            return "No composed policies added yet"
+        
+        display_lines = [f"🔄 {len(composed_policies)} composed policy(ies) defined:", ""]
+        for i, policy in enumerate(composed_policies, 1):
+            line = f"{i}. {policy['name']} (ComposedPolicy)"
+            
+            details = []
+            if policy.get('scope'):
+                details.append(f"🎯 scope: {policy['scope']}")
+            if policy.get('execution_type'):
+                details.append(f"⚙️ execution: {policy['execution_type']}")
+            if policy.get('require_all') is not None:
+                details.append(f"✅ require all: {'yes' if policy['require_all'] else 'no'}")
+            if policy.get('carry_over') is not None:
+                details.append(f"📄 carry over: {'yes' if policy['carry_over'] else 'no'}")
+            if policy.get('phases'):
+                phases_count = len(policy['phases'])
+                phases_list = ', '.join(policy['phases'][:3])  # Show first 3 phases
+                if phases_count > 3:
+                    phases_list += f" (+{phases_count - 3} more)"
+                details.append(f"📋 phases ({phases_count}): {phases_list}")
             
             if details:
                 line += f" → {', '.join(details)}"

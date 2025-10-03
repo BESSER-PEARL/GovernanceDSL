@@ -406,7 +406,7 @@ class GovernanceFormBuilder:
                     value=None,
                     allow_custom_value=True,
                     visible=False,
-                    info="Default policy when leader doesn't participate (LeaderDriven only)"
+                    info="Default policy when leader doesn't participate (Showing only policies with same scope)"
                 )
                 
                 # Fallback policy for ConsensusPolicy and LazyConsensusPolicy
@@ -416,7 +416,7 @@ class GovernanceFormBuilder:
                     value=None,
                     allow_custom_value=True,
                     visible=False,
-                    info="Policy to use when consensus cannot be reached (Consensus/LazyConsensus only)"
+                    info="Policy to use when consensus cannot be reached (Showing only policies with same scope)"
                 )
             
             # Conditions section
@@ -804,12 +804,32 @@ class GovernanceFormBuilder:
                 gr.Dropdown(choices=participant_choices, value=None)   # excluded_participants
             )
         
-        def update_policy_reference_dropdowns(policies_data):
-            """Update default and fallback policy dropdowns when policies change"""
-            policy_choices = [p['name'] for p in policies_data] if policies_data else []
+        def update_policy_reference_dropdowns(policies_data, current_scope=None):
+            """Update default and fallback policy dropdowns when policies change or scope changes"""
+            if not policies_data or not current_scope:
+                # If no policies exist OR no scope is specified, show no policies
+                policy_choices = []
+            else:
+                # Filter policies to only show those with the same scope
+                policy_choices = [p['name'] for p in policies_data if p.get('scope') == current_scope]
+                
             return (
                 gr.Dropdown(choices=policy_choices),  # default_decision
                 gr.Dropdown(choices=policy_choices)   # fallback_policy  
+            )
+        
+        def update_policy_reference_dropdowns_on_scope_change(policies_data, current_scope=None):
+            """Update and clear default and fallback policy dropdowns when scope changes"""
+            if not policies_data or not current_scope:
+                # If no policies exist OR no scope is specified, show no policies
+                policy_choices = []
+            else:
+                # Filter policies to only show those with the same scope
+                policy_choices = [p['name'] for p in policies_data if p.get('scope') == current_scope]
+                
+            return (
+                gr.Dropdown(choices=policy_choices, value=None),  # default_decision - clear selection
+                gr.Dropdown(choices=policy_choices, value=None)   # fallback_policy - clear selection
             )
         
         def update_policy_type_visibility(policy_type):
@@ -1095,7 +1115,7 @@ class GovernanceFormBuilder:
             # Check if the addition was successful (no error message)
             if "❌ Error:" not in display_result:
                 # Success: clear the form and update dropdowns
-                # Include ALL policies in the dropdown choices (including the newly added one)
+                # Since we're clearing the form (scope will be None), show all policies
                 fallback_choices = [p['name'] for p in policies_result]
                 return (
                     policies_result, display_result,  # policies_data, policies_display
@@ -1462,7 +1482,23 @@ MajorityPolicy example_policy {
         # Update policy reference dropdowns when policies change
         policy_components['policies_data'].change(
             fn=update_policy_reference_dropdowns,
-            inputs=[policy_components['policies_data']],
+            inputs=[
+                policy_components['policies_data'],
+                policy_components['policy_scope']
+            ],
+            outputs=[
+                policy_components['default_decision'],
+                policy_components['fallback_policy']
+            ]
+        )
+        
+        # Update policy reference dropdowns when policy scope changes (and clear current selections)
+        policy_components['policy_scope'].change(
+            fn=update_policy_reference_dropdowns_on_scope_change,
+            inputs=[
+                policy_components['policies_data'],
+                policy_components['policy_scope']
+            ],
             outputs=[
                 policy_components['default_decision'],
                 policy_components['fallback_policy']

@@ -324,97 +324,247 @@ class GovernanceFormBuilder:
         gr.Markdown("## Define Governance Policies")
         gr.Markdown("Configure the decision-making rules for your project.")
         
-        with gr.Accordion("Policy Basic Information", open=True):
-            policy_name = gr.Textbox(
-                label="Policy Name",
-                placeholder="e.g., pr_merge_policy",
-                info="A unique name for this policy"
+        with gr.Accordion("Add New Policy", open=True):
+            gr.Markdown("### Create a New Policy")
+            gr.Markdown("*Define individual policies and add them to your governance structure*")
+            gr.Markdown("**Note:** Fields marked with * are mandatory")
+            
+            with gr.Row():
+                policy_name = gr.Textbox(
+                    label="Policy Name *",
+                    placeholder="e.g., pr_merge_policy",
+                    info="A unique name for this policy (required)"
+                )
+                
+                policy_type = gr.Dropdown(
+                    label="Policy Type",
+                    choices=[
+                        "MajorityPolicy",
+                        "AbsoluteMajorityPolicy", 
+                        "ConsensusPolicy",
+                        "LazyConsensusPolicy",
+                        "LeaderDrivenPolicy",
+                        "VotingPolicy",
+                        "ComposedPolicy"
+                    ],
+                    value="MajorityPolicy",
+                    info="Type of decision-making process"
+                )
+            
+            with gr.Row():
+                policy_scope = gr.Dropdown(
+                    label="Policy Scope *",
+                    choices=[],  # Will be populated dynamically from defined scopes
+                    value=None,
+                    allow_custom_value=True,
+                    info="Select the scope this policy applies to (required)"
+                )
+                
+                # Participants for this policy
+                policy_participants = gr.Dropdown(
+                    label="Policy Participants *",
+                    choices=[],  # Will be populated dynamically from defined participants
+                    value=None,
+                    allow_custom_value=True,
+                    multiselect=True,
+                    info="Select participants from defined roles/individuals (required)"
+                )
+            
+            with gr.Row():
+                # Decision type
+                decision_type = gr.Dropdown(
+                    label="Decision Type",
+                    choices=["BooleanDecision", "StringList", "ElementList"],
+                    value="BooleanDecision"
+                )
+                
+                # Options for StringList and ElementList
+                decision_options = gr.Textbox(
+                    label="Decision Options",
+                    placeholder="e.g., joe, george (for ElementList/StringList)",
+                    visible=False,
+                    info="Comma-separated options for StringList/ElementList decisions"
+                )
+                
+                # Parameters (for voting policies)
+                voting_ratio = gr.Slider(
+                    label="Voting Ratio",
+                    minimum=0.0,
+                    maximum=1.0,
+                    value=1.0,
+                    step=0.1,
+                    info="Required ratio of positive votes (1.0 = unanimous)"
+                )
+            
+            with gr.Row():
+                # Default policy for LeaderDrivenPolicy
+                default_decision = gr.Dropdown(
+                    label="Default Policy",
+                    choices=[],  # Will be populated with other defined policies
+                    value=None,
+                    allow_custom_value=True,
+                    visible=False,
+                    info="Default policy when leader doesn't participate (LeaderDriven only)"
+                )
+                
+                # Fallback policy for ConsensusPolicy and LazyConsensusPolicy
+                fallback_policy = gr.Dropdown(
+                    label="Fallback Policy",
+                    choices=[],  # Will be populated with other defined policies
+                    value=None,
+                    allow_custom_value=True,
+                    visible=False,
+                    info="Policy to use when consensus cannot be reached (Consensus/LazyConsensus only)"
+                )
+            
+            # Conditions section
+            gr.Markdown("#### Policy Conditions (Optional)")
+            
+            with gr.Row():
+                condition_type = gr.Dropdown(
+                    label="Add Condition",
+                    choices=[
+                        "",  # Empty option for no condition
+                        "VetoRight",
+                        "ParticipantExclusion",
+                        "MinParticipants",
+                        "Deadline",
+                        "MinDecisionTime",
+                        "LabelCondition"
+                    ],
+                    value="",
+                    info="Select a condition type to add to this policy"
+                )
+            
+            # Condition-specific fields (initially hidden)
+            with gr.Row():
+                # VetoRight condition
+                veto_participants = gr.Dropdown(
+                    label="Veto Right Participants",
+                    choices=[],  # Will be populated from participants
+                    value=None,
+                    multiselect=True,
+                    allow_custom_value=True,
+                    visible=False,
+                    info="Participants who can veto this decision"
+                )
+                
+                # ParticipantExclusion condition
+                excluded_participants = gr.Dropdown(
+                    label="Excluded Participants",
+                    choices=[],  # Will be populated from participants
+                    value=None,
+                    multiselect=True,
+                    allow_custom_value=True,
+                    visible=False,
+                    info="Participants excluded from this decision"
+                )
+            
+            with gr.Row():
+                # MinParticipants condition
+                min_participants = gr.Number(
+                    label="Minimum Participants",
+                    value=1,
+                    minimum=1,
+                    visible=False,
+                    info="Minimum number of participants required"
+                )
+            
+            # Deadline condition fields
+            with gr.Row():
+                deadline_offset_value = gr.Number(
+                    label="Deadline Offset Value",
+                    value=7,
+                    minimum=1,
+                    visible=False,
+                    info="Time offset number (e.g., 7 for '7 days')"
+                )
+                
+                deadline_offset_unit = gr.Dropdown(
+                    label="Deadline Offset Unit",
+                    choices=["days", "weeks", "months", "years"],
+                    value="days",
+                    visible=False,
+                    info="Time unit for the offset"
+                )
+            
+            with gr.Row():
+                deadline_date = gr.Textbox(
+                    label="Deadline Date (DD/MM/YYYY)",
+                    placeholder="e.g., 25/12/2024",
+                    visible=False,
+                    info="Specific deadline date (optional, can be used with or without offset)"
+                )
+            
+            # MinDecisionTime condition fields  
+            with gr.Row():
+                min_decision_offset_value = gr.Number(
+                    label="Min Decision Time Offset Value",
+                    value=1,
+                    minimum=1,
+                    visible=False,
+                    info="Minimum time offset number (e.g., 2 for '2 days')"
+                )
+                
+                min_decision_offset_unit = gr.Dropdown(
+                    label="Min Decision Time Offset Unit",
+                    choices=["days", "weeks", "months", "years"],
+                    value="days",
+                    visible=False,
+                    info="Time unit for the minimum decision time"
+                )
+            
+            with gr.Row():
+                min_decision_date = gr.Textbox(
+                    label="Min Decision Date (DD/MM/YYYY)",
+                    placeholder="e.g., 01/01/2024",
+                    visible=False,
+                    info="Specific minimum decision date (optional, can be used with or without offset)"
+                )
+            
+            with gr.Row():
+                # LabelCondition fields
+                label_condition_type = gr.Dropdown(
+                    label="Label Condition Type",
+                    choices=["pre", "post"],
+                    value="pre",
+                    visible=False,
+                    info="When to check labels (pre/post decision)"
+                )
+                
+                label_condition_operator = gr.Dropdown(
+                    label="Label Operator",
+                    choices=["", "not"],
+                    value="",
+                    visible=False,
+                    info="Label condition operator (empty for required, 'not' for forbidden)"
+                )
+            
+            with gr.Row():
+                label_condition_labels = gr.Textbox(
+                    label="Labels",
+                    placeholder="e.g., lgtm, approved",
+                    visible=False,
+                    info="Comma-separated list of labels"
+                )
+            
+            with gr.Row():
+                add_policy_btn = gr.Button("➕ Add Policy", variant="secondary")
+                clear_policies_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added policies
+            policies_display = gr.Textbox(
+                label="Added Policies",
+                lines=6,
+                interactive=False,
+                placeholder="No policies added yet. Create policies to define your governance rules.",
+                info="Policies you've added will appear here"
             )
             
-            policy_type = gr.Dropdown(
-                label="Policy Type",
-                choices=[
-                    "MajorityPolicy",
-                    "AbsoluteMajorityPolicy", 
-                    "ConsensusPolicy",
-                    "LazyConsensusPolicy",
-                    "LeaderDrivenPolicy",
-                    "VotingPolicy",
-                    "ComposedPolicy"
-                ],
-                value="MajorityPolicy",
-                info="Type of decision-making process"
-            )
-            
-            policy_scope = gr.Textbox(
-                label="Policy Scope",
-                placeholder="e.g., TestTask",
-                info="The task/activity this policy applies to"
-            )
+            # Hidden component to store policies data
+            policies_data = gr.State([])
         
-        with gr.Accordion("Policy Configuration", open=True):
-            # Participants for this policy
-            policy_participants = gr.Textbox(
-                label="Policy Participants",
-                placeholder="e.g., Reviewers, Approvers",
-                info="Comma-separated list of roles/individuals"
-            )
-            
-            # Decision type
-            decision_type = gr.Dropdown(
-                label="Decision Type",
-                choices=["BooleanDecision", "StringList", "ElementList"],
-                value="BooleanDecision"
-            )
-            
-            # Parameters (for voting policies)
-            voting_ratio = gr.Slider(
-                label="Voting Ratio",
-                minimum=0.0,
-                maximum=1.0,
-                value=1.0,
-                step=0.1,
-                info="Required ratio of positive votes (1.0 = unanimous)"
-            )
-        
-        with gr.Accordion("Conditions", open=False):
-            gr.Markdown("### Policy Conditions")
-            
-            # Minimum participants
-            min_participants = gr.Number(
-                label="Minimum Participants",
-                value=1,
-                minimum=1,
-                info="Minimum number of participants required"
-            )
-            
-            # Deadline
-            deadline_days = gr.Number(
-                label="Deadline (days)",
-                value=0,
-                minimum=0,
-                info="Time limit for decision (0 = no deadline)"
-            )
-            
-            # Participant exclusions
-            exclusions = gr.Textbox(
-                label="Participant Exclusions",
-                placeholder="e.g., PRAuthor",
-                info="Participants to exclude from this policy"
-            )
-            
-            # Label conditions
-            required_labels = gr.Textbox(
-                label="Required Labels",
-                placeholder="e.g., lgtm, approved",
-                info="Labels that must be present"
-            )
-            
-            forbidden_labels = gr.Textbox(
-                label="Forbidden Labels", 
-                placeholder="e.g., do-not-merge/hold, needs-rebase",
-                info="Labels that must NOT be present"
-            )
+
         
         with gr.Accordion("Composed Policy (Multi-phase)", open=False):
             gr.Markdown("### For Complex Multi-Phase Policies")
@@ -448,16 +598,27 @@ class GovernanceFormBuilder:
             'policy_scope': policy_scope,
             'policy_participants': policy_participants,
             'decision_type': decision_type,
+            'decision_options': decision_options,
             'voting_ratio': voting_ratio,
+            'default_decision': default_decision,
+            'fallback_policy': fallback_policy,
+            'condition_type': condition_type,
+            'veto_participants': veto_participants,
+            'excluded_participants': excluded_participants,
             'min_participants': min_participants,
-            'deadline_days': deadline_days,
-            'exclusions': exclusions,
-            'required_labels': required_labels,
-            'forbidden_labels': forbidden_labels,
-            'is_composed': is_composed,
-            'execution_type': execution_type,
-            'require_all': require_all,
-            'carry_over': carry_over
+            'deadline_offset_value': deadline_offset_value,
+            'deadline_offset_unit': deadline_offset_unit,
+            'deadline_date': deadline_date,
+            'min_decision_offset_value': min_decision_offset_value,
+            'min_decision_offset_unit': min_decision_offset_unit,
+            'min_decision_date': min_decision_date,
+            'label_condition_type': label_condition_type,
+            'label_condition_operator': label_condition_operator,
+            'label_condition_labels': label_condition_labels,
+            'add_policy_btn': add_policy_btn,
+            'clear_policies_btn': clear_policies_btn,
+            'policies_display': policies_display,
+            'policies_data': policies_data
         }
     
     def _create_preview_panel(self):
@@ -605,6 +766,177 @@ class GovernanceFormBuilder:
             """Update agent role dropdown when roles text changes"""
             role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
             return gr.Dropdown(choices=role_choices, value=None)
+        
+        def update_scope_dropdown(projects_text, activities_text, tasks_text):
+            """Update policy scope dropdown when scope definitions change"""
+            scope_choices = self._extract_scope_names(projects_text, activities_text, tasks_text)
+            return gr.Dropdown(choices=scope_choices, value=None)
+        
+        def update_participant_dropdown(roles_text, individuals_data, agents_data):
+            """Update policy participants dropdown when participant definitions change"""
+            participant_choices = self._extract_participant_names(roles_text, individuals_data, agents_data)
+            return (
+                gr.Dropdown(choices=participant_choices, value=None),  # policy_participants
+                gr.Dropdown(choices=participant_choices, value=None),  # veto_participants
+                gr.Dropdown(choices=participant_choices, value=None)   # excluded_participants
+            )
+        
+        def update_policy_reference_dropdowns(policies_data):
+            """Update default and fallback policy dropdowns when policies change"""
+            policy_choices = [p['name'] for p in policies_data] if policies_data else []
+            return (
+                gr.Dropdown(choices=policy_choices),  # default_decision
+                gr.Dropdown(choices=policy_choices)   # fallback_policy  
+            )
+        
+        def update_policy_type_visibility(policy_type):
+            """Update visibility of policy-specific attributes based on policy type"""
+            show_default = policy_type == "LeaderDrivenPolicy"
+            show_fallback = policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"]
+            show_voting_ratio = policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"]
+            
+            return (
+                gr.Dropdown(visible=show_default),  # default_decision
+                gr.Dropdown(visible=show_fallback),  # fallback_policy
+                gr.Slider(visible=show_voting_ratio)  # voting_ratio
+            )
+        
+        def update_decision_options_visibility(decision_type):
+            """Update visibility of decision options based on decision type"""
+            show_options = decision_type in ["StringList", "ElementList"]
+            return gr.Textbox(visible=show_options)
+        
+        def update_condition_visibility(condition_type):
+            """Update visibility of condition fields based on condition type"""
+            show_veto = condition_type == "VetoRight"
+            show_exclusion = condition_type == "ParticipantExclusion"
+            show_min_participants = condition_type == "MinParticipants"
+            show_deadline = condition_type == "Deadline"
+            show_min_decision = condition_type == "MinDecisionTime"
+            show_label = condition_type == "LabelCondition"
+            
+            return [
+                gr.Dropdown(visible=show_veto),       # veto_participants
+                gr.Dropdown(visible=show_exclusion),  # excluded_participants 
+                gr.Number(visible=show_min_participants), # min_participants
+                gr.Number(visible=show_deadline),     # deadline_offset_value
+                gr.Dropdown(visible=show_deadline),   # deadline_offset_unit
+                gr.Textbox(visible=show_deadline),    # deadline_date
+                gr.Number(visible=show_min_decision), # min_decision_offset_value
+                gr.Dropdown(visible=show_min_decision), # min_decision_offset_unit
+                gr.Textbox(visible=show_min_decision), # min_decision_date
+                gr.Dropdown(visible=show_label),     # label_condition_type
+                gr.Dropdown(visible=show_label),     # label_condition_operator
+                gr.Textbox(visible=show_label)       # label_condition_labels
+            ]
+        
+        def add_policy(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
+                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                      min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+                      label_condition_type, label_condition_operator, label_condition_labels, current_policies):
+            """Add a new policy to the list"""
+            # Validate policy name (mandatory)
+            if not name.strip():
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Please enter a policy name\n\n{display_text}" if current_policies else "❌ Error: Please enter a policy name"
+                return current_policies, error_message
+            
+            # Validate policy scope (mandatory)
+            if not scope:
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Please select a policy scope\n\n{display_text}" if current_policies else "❌ Error: Please select a policy scope"
+                return current_policies, error_message
+            
+            # Validate policy participants (mandatory)
+            if not participants or (isinstance(participants, list) and len(participants) == 0):
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Please select at least one participant\n\n{display_text}" if current_policies else "❌ Error: Please select at least one participant"
+                return current_policies, error_message
+            
+            # Check if policy already exists
+            if any(p['name'] == name.strip() for p in current_policies):
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Policy name '{name.strip()}' already exists\n\n{display_text}"
+                return current_policies, error_message
+            
+            # Create new policy
+            new_policy = {
+                'name': name.strip(),
+                'type': policy_type,
+                'scope': scope if scope else None,
+                'participants': participants if participants else None,
+                'decision_type': decision_type,
+                'decision_options': decision_options if decision_type in ["StringList", "ElementList"] and decision_options else None,
+                'voting_ratio': voting_ratio if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] else None,
+                'default_decision': default_decision if policy_type == "LeaderDrivenPolicy" else None,
+                'fallback_policy': fallback_policy if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] else None,
+                'condition_type': condition_type if condition_type else None,
+                'veto_participants': veto_participants if condition_type == "VetoRight" else None,
+                'excluded_participants': excluded_participants if condition_type == "ParticipantExclusion" else None,
+                'min_participants': min_participants if condition_type == "MinParticipants" else None,
+                'deadline_offset_value': deadline_offset_value if condition_type == "Deadline" else None,
+                'deadline_offset_unit': deadline_offset_unit if condition_type == "Deadline" else None,
+                'deadline_date': deadline_date if condition_type == "Deadline" else None,
+                'min_decision_offset_value': min_decision_offset_value if condition_type == "MinDecisionTime" else None,
+                'min_decision_offset_unit': min_decision_offset_unit if condition_type == "MinDecisionTime" else None,
+                'min_decision_date': min_decision_date if condition_type == "MinDecisionTime" else None,
+                'label_condition_type': label_condition_type if condition_type == "LabelCondition" else None,
+                'label_condition_operator': label_condition_operator if condition_type == "LabelCondition" else None,
+                'label_condition_labels': label_condition_labels if condition_type == "LabelCondition" else None
+            }
+            
+            updated_policies = current_policies + [new_policy]
+            
+            # Update display
+            display_text = self._format_policies_display(updated_policies)
+            success_message = f"✅ Policy '{new_policy['name']}' added successfully!\n\n{display_text}"
+            
+            # For successful addition, return updated policies and success message
+            return updated_policies, success_message
+        
+        def clear_policies():
+            """Clear all policies"""
+            return [], "No policies added yet"
+        
+        def add_policy_and_clear_form(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
+                                     default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                                     min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                                     min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
+                                     label_condition_type, label_condition_operator, label_condition_labels, current_policies):
+            """Add policy and clear form fields only on success"""
+            # First try to add the policy
+            policies_result, display_result = add_policy(
+                name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
+                default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+                label_condition_type, label_condition_operator, label_condition_labels, current_policies
+            )
+            
+            # Check if the addition was successful (no error message)
+            if "❌ Error:" not in display_result:
+                # Success: clear the form and update dropdowns
+                # Include ALL policies in the dropdown choices (including the newly added one)
+                fallback_choices = [p['name'] for p in policies_result]
+                return (
+                    policies_result, display_result,  # policies_data, policies_display
+                    "", "MajorityPolicy", None, None, "BooleanDecision", "", 1.0,  # Clear form fields
+                    gr.Dropdown(choices=fallback_choices, visible=False),  # default_decision
+                    gr.Dropdown(choices=fallback_choices, visible=False),  # fallback_policy
+                    "", None, None, 1, 7, "pre", "", ""  # Clear condition fields
+                )
+            else:
+                # Error: keep form as is, only update policies display
+                return (
+                    policies_result, display_result,  # policies_data, policies_display
+                    name, policy_type, scope, participants, decision_type, decision_options, voting_ratio,  # Keep form values
+                    default_decision, fallback_policy,  # Keep current values
+                    condition_type, veto_participants, excluded_participants, min_participants,  # Keep basic condition values
+                    deadline_offset_value, deadline_offset_unit, deadline_date,  # Keep deadline values
+                    min_decision_offset_value, min_decision_offset_unit, min_decision_date,  # Keep min decision values
+                    label_condition_type, label_condition_operator, label_condition_labels  # Keep label condition values
+                )
         
         def update_preview(*args):
             """Update the preview based on current form values"""
@@ -772,6 +1104,146 @@ MajorityPolicy example_policy {
             outputs=[participant_components['agent_role']]
         )
         
+        # Update policy scope dropdown when scope definitions change
+        for scope_component in [scope_components['projects_text'], scope_components['activities_text'], scope_components['tasks_text']]:
+            scope_component.change(
+                fn=update_scope_dropdown,
+                inputs=[
+                    scope_components['projects_text'],
+                    scope_components['activities_text'],
+                    scope_components['tasks_text']
+                ],
+                outputs=[policy_components['policy_scope']]
+            )
+        
+        # Update policy participants dropdown when participant definitions change
+        for participant_component in [participant_components['roles_text'], participant_components['individuals_data'], participant_components['agents_data']]:
+            participant_component.change(
+                fn=update_participant_dropdown,
+                inputs=[
+                    participant_components['roles_text'],
+                    participant_components['individuals_data'],
+                    participant_components['agents_data']
+                ],
+                outputs=[
+                    policy_components['policy_participants'],
+                    policy_components['veto_participants'],
+                    policy_components['excluded_participants']
+                ]
+            )
+        
+        # Update policy-specific attribute visibility when policy type changes
+        policy_components['policy_type'].change(
+            fn=update_policy_type_visibility,
+            inputs=[policy_components['policy_type']],
+            outputs=[
+                policy_components['default_decision'],
+                policy_components['fallback_policy'],
+                policy_components['voting_ratio']
+            ]
+        )
+        
+        # Update decision options visibility when decision type changes
+        policy_components['decision_type'].change(
+            fn=update_decision_options_visibility,
+            inputs=[policy_components['decision_type']],
+            outputs=[policy_components['decision_options']]
+        )
+        
+        # Update condition field visibility when condition type changes
+        policy_components['condition_type'].change(
+            fn=update_condition_visibility,
+            inputs=[policy_components['condition_type']],
+            outputs=[
+                policy_components['veto_participants'],
+                policy_components['excluded_participants'],
+                policy_components['min_participants'],
+                policy_components['deadline_offset_value'],
+                policy_components['deadline_offset_unit'],
+                policy_components['deadline_date'],
+                policy_components['min_decision_offset_value'],
+                policy_components['min_decision_offset_unit'],
+                policy_components['min_decision_date'],
+                policy_components['label_condition_type'],
+                policy_components['label_condition_operator'],
+                policy_components['label_condition_labels']
+            ]
+        )
+        
+        # Policy management handlers
+        policy_components['add_policy_btn'].click(
+            fn=add_policy_and_clear_form,
+            inputs=[
+                policy_components['policy_name'],
+                policy_components['policy_type'],
+                policy_components['policy_scope'],
+                policy_components['policy_participants'],
+                policy_components['decision_type'],
+                policy_components['decision_options'],
+                policy_components['voting_ratio'],
+                policy_components['default_decision'],
+                policy_components['fallback_policy'],
+                policy_components['condition_type'],
+                policy_components['veto_participants'],
+                policy_components['excluded_participants'],
+                policy_components['min_participants'],
+                policy_components['deadline_offset_value'],
+                policy_components['deadline_offset_unit'],
+                policy_components['deadline_date'],
+                policy_components['min_decision_offset_value'],
+                policy_components['min_decision_offset_unit'],
+                policy_components['min_decision_date'],
+                policy_components['label_condition_type'],
+                policy_components['label_condition_operator'],
+                policy_components['label_condition_labels'],
+                policy_components['policies_data']
+            ],
+            outputs=[
+                policy_components['policies_data'],
+                policy_components['policies_display'],
+                policy_components['policy_name'],        # Clear/keep name field
+                policy_components['policy_type'],        # Reset/keep policy type
+                policy_components['policy_scope'],       # Clear/keep scope
+                policy_components['policy_participants'], # Clear/keep participants
+                policy_components['decision_type'],      # Reset/keep decision type
+                policy_components['decision_options'],   # Clear/keep decision options
+                policy_components['voting_ratio'],       # Reset/keep voting ratio
+                policy_components['default_decision'],   # Update/keep default decision
+                policy_components['fallback_policy'],    # Update/keep fallback policy
+                policy_components['condition_type'],     # Clear/keep condition type
+                policy_components['veto_participants'],  # Clear/keep veto participants
+                policy_components['excluded_participants'], # Clear/keep excluded participants
+                policy_components['min_participants'],   # Reset/keep min participants
+                policy_components['deadline_offset_value'], # Reset/keep deadline offset value
+                policy_components['deadline_offset_unit'], # Reset/keep deadline offset unit
+                policy_components['deadline_date'],      # Reset/keep deadline date
+                policy_components['min_decision_offset_value'], # Reset/keep min decision offset value
+                policy_components['min_decision_offset_unit'], # Reset/keep min decision offset unit
+                policy_components['min_decision_date'],  # Reset/keep min decision date
+                policy_components['label_condition_type'], # Reset/keep label condition type
+                policy_components['label_condition_operator'], # Reset/keep label operator
+                policy_components['label_condition_labels'] # Clear/keep label condition labels
+            ]
+        )
+        
+        policy_components['clear_policies_btn'].click(
+            fn=clear_policies,
+            outputs=[
+                policy_components['policies_data'],
+                policy_components['policies_display']
+            ]
+        )
+        
+        # Update policy reference dropdowns when policies change
+        policy_components['policies_data'].change(
+            fn=update_policy_reference_dropdowns,
+            inputs=[policy_components['policies_data']],
+            outputs=[
+                policy_components['default_decision'],
+                policy_components['fallback_policy']
+            ]
+        )
+        
         # Set up change handlers for preview updates
         preview_components = []
         preview_components.extend(scope_components.values())
@@ -781,7 +1253,8 @@ MajorityPolicy example_policy {
             participant_components['individuals_data'],
             participant_components['agents_data']
         ])
-        preview_components.extend(policy_components.values())
+        # Only include the policies_data for preview, not all form components
+        preview_components.append(policy_components['policies_data'])
         
         for component in preview_components:
             if hasattr(component, 'change'):
@@ -800,9 +1273,7 @@ MajorityPolicy example_policy {
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
         (projects_text, activities_text, tasks_text, profiles_data, roles_text, individuals_data, agents_data,
-         policy_name, policy_type, policy_scope, policy_participants, decision_type, voting_ratio,
-         min_participants, deadline_days, exclusions, required_labels,
-         forbidden_labels, is_composed, execution_type, require_all, carry_over) = form_values
+         policies_data) = form_values
         
         dsl_parts = []
         
@@ -986,63 +1457,111 @@ MajorityPolicy example_policy {
             dsl_parts.append("Participants:")
             dsl_parts.extend(participants_section)
         
-        # Generate Policy section
-        if policy_name and policy_type:
-            if is_composed:
-                dsl_parts.append(f"ComposedPolicy {policy_name} {{")
-            else:
+        # Generate Policies section
+        policies = policies_data if policies_data else []
+        for policy in policies:
+            if policy.get('name') and policy.get('type'):
+                policy_type = policy['type']
+                policy_name = policy['name']
+                
                 dsl_parts.append(f"{policy_type} {policy_name} {{")
-            
-            if policy_scope:
-                dsl_parts.append(f"    Scope: {policy_scope}")
-            
-            if decision_type:
-                dsl_parts.append(f"    DecisionType as {decision_type}")
-            
-            if policy_participants:
-                participants = [p.strip() for p in policy_participants.split(',') if p.strip()]
-                dsl_parts.append(f"    Participant list : {', '.join(participants)}")
-            
-            # Conditions
-            conditions = []
-            if exclusions:
-                exclusion_list = [e.strip() for e in exclusions.split(',') if e.strip()]
-                conditions.append(f"        ParticipantExclusion : {', '.join(exclusion_list)}")
-            
-            if min_participants > 1:
-                conditions.append(f"        MinParticipants : {int(min_participants)}")
-            
-            if deadline_days > 0:
-                conditions.append(f"        Deadline policy_deadline : {int(deadline_days)} days")
-            
-            if required_labels:
-                label_list = [l.strip() for l in required_labels.split(',') if l.strip()]
-                conditions.append(f"        LabelCondition post : {', '.join(label_list)}")
-            
-            if forbidden_labels:
-                forbidden_list = [l.strip() for l in forbidden_labels.split(',') if l.strip()]
-                conditions.append(f"        LabelCondition pre not: {', '.join(forbidden_list)}")
-            
-            if conditions:
-                dsl_parts.append("    Conditions:")
-                dsl_parts.extend(conditions)
-            
-            # Parameters
-            if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"]:
-                dsl_parts.append("    Parameters:")
-                dsl_parts.append(f"        ratio: {voting_ratio}")
-            
-            # Composed policy specifics
-            if is_composed:
-                dsl_parts.append("    Order :")
-                dsl_parts.append(f"        Execution : {execution_type}")
-                dsl_parts.append(f"        RequireAll : {'true' if require_all else 'false'}")
-                dsl_parts.append(f"        CarryOver : {'true' if carry_over else 'false'}")
-                dsl_parts.append("    Phases {")
-                dsl_parts.append("        # Add phase definitions here")
-                dsl_parts.append("    }")
-            
-            dsl_parts.append("}")
+                
+                if policy.get('scope'):
+                    dsl_parts.append(f"    Scope: {policy['scope']}")
+                
+                if policy.get('decision_type'):
+                    if policy.get('decision_options') and policy['decision_type'] in ["StringList", "ElementList"]:
+                        dsl_parts.append(f"    DecisionType as {policy['decision_type']} : {policy['decision_options']}")
+                    else:
+                        dsl_parts.append(f"    DecisionType as {policy['decision_type']}")
+                
+                if policy.get('participants'):
+                    # Handle multiselect participants
+                    if isinstance(policy['participants'], list):
+                        participants = [p.strip() for p in policy['participants'] if p.strip()]
+                    else:
+                        participants = [p.strip() for p in str(policy['participants']).split(',') if p.strip()]
+                    if participants:
+                        dsl_parts.append(f"    Participant list : {', '.join(participants)}")
+                
+                # Parameters
+                parameters = []
+                if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
+                    parameters.append(f"        ratio: {policy['voting_ratio']}")
+                
+                # Add default decision for LeaderDrivenPolicy
+                if policy_type == "LeaderDrivenPolicy" and policy.get('default_decision'):
+                    parameters.append(f"        default: {policy['default_decision']}")
+                
+                # Add fallback policy for ConsensusPolicy and LazyConsensusPolicy
+                if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] and policy.get('fallback_policy'):
+                    parameters.append(f"        fallback: {policy['fallback_policy']}")
+                
+                if parameters:
+                    dsl_parts.append("    Parameters:")
+                    dsl_parts.extend(parameters)
+                
+                # Add conditions
+                conditions = []
+                if policy.get('condition_type'):
+                    condition_type = policy['condition_type']
+                    
+                    if condition_type == "VetoRight" and policy.get('veto_participants'):
+                        if isinstance(policy['veto_participants'], list):
+                            veto_list = ', '.join(policy['veto_participants'])
+                        else:
+                            veto_list = str(policy['veto_participants'])
+                        conditions.append(f"        VetoRight : {veto_list}")
+                    
+                    elif condition_type == "ParticipantExclusion" and policy.get('excluded_participants'):
+                        if isinstance(policy['excluded_participants'], list):
+                            exclusion_list = ', '.join(policy['excluded_participants'])
+                        else:
+                            exclusion_list = str(policy['excluded_participants'])
+                        conditions.append(f"        ParticipantExclusion : {exclusion_list}")
+                    
+                    elif condition_type == "MinParticipants" and policy.get('min_participants'):
+                        conditions.append(f"        MinParticipants : {policy['min_participants']}")
+                    
+                    elif condition_type == "Deadline":
+                        deadline_parts = []
+                        if policy.get('deadline_offset_value') and policy.get('deadline_offset_unit'):
+                            deadline_parts.append(f"{policy['deadline_offset_value']} {policy['deadline_offset_unit']}")
+                        if policy.get('deadline_date') and policy['deadline_date'].strip():
+                            if deadline_parts:
+                                deadline_parts.append(f", {policy['deadline_date']}")
+                            else:
+                                deadline_parts.append(policy['deadline_date'])
+                        if deadline_parts:
+                            conditions.append(f"        Deadline policy_deadline : {''.join(deadline_parts)}")
+                    
+                    elif condition_type == "MinDecisionTime":
+                        min_decision_parts = []
+                        if policy.get('min_decision_offset_value') and policy.get('min_decision_offset_unit'):
+                            min_decision_parts.append(f"{policy['min_decision_offset_value']} {policy['min_decision_offset_unit']}")
+                        if policy.get('min_decision_date') and policy['min_decision_date'].strip():
+                            if min_decision_parts:
+                                min_decision_parts.append(f", {policy['min_decision_date']}")
+                            else:
+                                min_decision_parts.append(policy['min_decision_date'])
+                        if min_decision_parts:
+                            conditions.append(f"        MinDecisionTime min_time_id : {''.join(min_decision_parts)}")
+                    
+                    elif condition_type == "LabelCondition" and policy.get('label_condition_labels'):
+                        label_type = policy.get('label_condition_type', 'pre')
+                        label_operator = policy.get('label_condition_operator', '')
+                        labels = policy['label_condition_labels']
+                        
+                        if label_operator:
+                            conditions.append(f"        LabelCondition {label_type} {label_operator} : {labels}")
+                        else:
+                            conditions.append(f"        LabelCondition {label_type} : {labels}")
+                
+                if conditions:
+                    dsl_parts.append("    Conditions:")
+                    dsl_parts.extend(conditions)
+                
+                dsl_parts.append("}")
         
         return '\n'.join(dsl_parts) if dsl_parts else "# Fill the form to generate DSL code"
 
@@ -1217,6 +1736,86 @@ MajorityPolicy example_policy {
             
             if attributes:
                 line += f" → {', '.join(attributes)}"
+            
+            display_lines.append(line)
+        
+        return '\n'.join(display_lines)
+    
+    def _extract_scope_names(self, projects_text, activities_text, tasks_text):
+        """Extract all scope names (projects, activities, tasks) for dropdown choices"""
+        scope_names = []
+        
+        # Parse and extract project names
+        projects = self._parse_projects(projects_text)
+        for project in projects:
+            if project['name']:
+                scope_names.append(project['name'])
+        
+        # Parse and extract activity names
+        activities = self._parse_activities(activities_text)
+        for activity in activities:
+            if activity['name']:
+                scope_names.append(activity['name'])
+        
+        # Parse and extract task names
+        tasks = self._parse_tasks(tasks_text)
+        for task in tasks:
+            if task['name']:
+                scope_names.append(task['name'])
+        
+        return sorted(list(set(scope_names)))  # Remove duplicates and sort
+    
+    def _extract_participant_names(self, roles_text, individuals_data, agents_data):
+        """Extract all participant names (roles, individuals, agents) for dropdown choices"""
+        participant_names = []
+        
+        # Extract role names
+        if roles_text.strip():
+            roles = [role.strip() for role in roles_text.split(',') if role.strip()]
+            participant_names.extend(roles)
+        
+        # Extract individual names
+        if individuals_data:
+            for individual in individuals_data:
+                if individual.get('name'):
+                    participant_names.append(individual['name'])
+        
+        # Extract agent names
+        if agents_data:
+            for agent in agents_data:
+                if agent.get('name'):
+                    participant_names.append(f"(Agent) {agent['name']}")
+        
+        return sorted(list(set(participant_names)))  # Remove duplicates and sort
+    
+    def _format_policies_display(self, policies):
+        """Format policies for display in the text area"""
+        if not policies:
+            return "No policies added yet"
+        
+        display_lines = [f"📋 {len(policies)} policy(ies) defined:", ""]
+        for i, policy in enumerate(policies, 1):
+            line = f"{i}. {policy['name']} ({policy['type']})"
+            
+            details = []
+            if policy.get('scope'):
+                details.append(f"🎯 scope: {policy['scope']}")
+            if policy.get('participants'):
+                participant_list = policy['participants'] if isinstance(policy['participants'], list) else [policy['participants']]
+                details.append(f"👥 participants: {', '.join(participant_list)}")
+            if policy.get('decision_type'):
+                details.append(f"🔹 decision: {policy['decision_type']}")
+            
+            # Add type-specific parameters
+            if policy['type'] in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
+                details.append(f"📊 ratio: {policy['voting_ratio']}")
+            if policy['type'] == "LeaderDrivenPolicy" and policy.get('default_decision'):
+                details.append(f"⚡ default: {policy['default_decision']}")
+            if policy['type'] == "ConsensusPolicy" and policy.get('fallback_policy'):
+                details.append(f"🔄 fallback: {policy['fallback_policy']}")
+            
+            if details:
+                line += f" → {', '.join(details)}"
             
             display_lines.append(line)
         

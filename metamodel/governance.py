@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import timedelta, datetime  
 from besser.BUML.metamodel.structural import Element
 from utils.exceptions import (
-    InvalidParticipantException, EmptySetException,
+    InvalidParticipantException, EmptySetException, InvalidScopeException,
     InvalidValueException, InvalidTimeConditionException,
     UndefinedAttributeException
 )
@@ -523,36 +523,58 @@ class SinglePolicy(Policy):
 
 class ConsensusPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, fallback: SinglePolicy):
+                 decision_type: DecisionType, scope: Scope, fallback: Policy):
         super().__init__(name, conditions, participants, decision_type, scope)
         self.fallback = fallback
 
     @classmethod
-    def from_policy(cls, policy: SinglePolicy, fallback: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, fallback: Policy):
         consensus = cls(name=policy.name, conditions=policy.conditions, 
                         participants=policy.participants, decision_type=policy.decision_type,
                         scope=policy.scope, fallback=fallback)
         return consensus
     
     @property
-    def fallback(self) -> SinglePolicy:
+    def fallback(self) -> Policy:
         return self.__fallback
     
     @fallback.setter
-    def fallback(self, fallback: SinglePolicy):
+    def fallback(self, fallback: Policy):
         self.__fallback = fallback
         # Only propagate scope after default is set
-        if self.scope and fallback:
-            self.fallback.scope = self.scope
+        if fallback:
+            if self.scope and not fallback.scope:
+                self.fallback.scope = self.scope
+            elif fallback.scope:
+                if fallback.scope != self.scope:
+                    raise InvalidScopeException(fallback.scope, self.scope)
+    
+    def propagate_scope(self):
+        """Propagates the current scope to the fallback policy if set."""
+        if self.scope and hasattr(self, '_ConsensusPolicy__fallback') and self.__fallback:
+            if self.__fallback.scope:
+                if self.__fallback.scope != self.scope:
+                    raise InvalidScopeException(self.__fallback.scope, self.scope)
+            else:
+                self.fallback.scope = self.scope
+
+    @property
+    def scope(self) -> Scope:
+        return super().scope
+    
+    @scope.setter
+    def scope(self, scope: Scope):
+        super(ConsensusPolicy, type(self)).scope.fset(self, scope)
+        self.propagate_scope()
     
 
 class LazyConsensusPolicy(ConsensusPolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, fallback: SinglePolicy):
+                 decision_type: DecisionType, scope: Scope, fallback: Policy):
         super().__init__(name, conditions, participants, decision_type, scope, fallback)
 
     @classmethod
-    def from_policy(cls, policy: SinglePolicy, fallback: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, fallback: Policy):
         lazy_consensus = cls(name=policy.name, conditions=policy.conditions, 
                              participants=policy.participants, decision_type=policy.decision_type,
                              scope=policy.scope, fallback=fallback)
@@ -622,7 +644,7 @@ class AbsoluteMajorityPolicy(VotingPolicy):
 class LeaderDrivenPolicy(SinglePolicy):
     """LeaderDrivenPolicy extends SinglePolicy and references another SinglePolicy as default"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, default: SinglePolicy = None):
+                 decision_type: DecisionType, scope: Scope, default: Policy = None):
         # Initialize default first to avoid issues during object creation
         self.__default = None
         super().__init__(name, conditions, participants, decision_type, scope)
@@ -630,27 +652,36 @@ class LeaderDrivenPolicy(SinglePolicy):
         self.default = default
     
     @classmethod
-    def from_policy(cls, policy: SinglePolicy, default: SinglePolicy):
+    def from_policy(cls, policy: SinglePolicy, default: Policy):
         leader_driven = cls(name=policy.name, conditions=policy.conditions, 
                             participants=policy.participants, decision_type=policy.decision_type,
                             scope=policy.scope, default=default)
         return leader_driven
 
     @property
-    def default(self) -> SinglePolicy:
+    def default(self) -> Policy:
         return self.__default
     
     @default.setter
-    def default(self, default: SinglePolicy):
+    def default(self, default: Policy):
         self.__default = default
-        # Only propagate scope after default is set
-        if self.scope and default:
-            self.default.scope = self.scope
+        # Only propagate scope after default is set. And only for inline policies
+        if default:
+            if self.scope and not default.scope:
+                self.default.scope = self.scope
+            elif default.scope:
+                if default.scope != self.scope:
+                    raise InvalidScopeException(default.scope, self.scope)
     
+    # # TODO: Review if applicable after alternative to inline policies is implemented
     def propagate_scope(self):
         """Propagates the current scope to the default policy if set."""
         if self.scope and hasattr(self, '_LeaderDrivenPolicy__default') and self.__default:
-            self.default.scope = self.scope
+            if self.__default.scope:
+                if self.__default.scope != self.scope:
+                    raise InvalidScopeException(self.__default.scope, self.scope)
+            else:
+                self.default.scope = self.scope
     
     @property
     def scope(self) -> Scope:

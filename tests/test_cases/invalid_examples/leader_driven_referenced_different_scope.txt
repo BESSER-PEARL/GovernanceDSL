@@ -1,0 +1,21 @@
+Scopes: 
+    Projects :
+        testProject from GitHub : owner/repo
+        testProject2
+Participants:
+    Individuals : leader
+    Roles : maintainers
+MajorityPolicy referencedPolicy {
+    Scope: testProject2 
+    DecisionType as BooleanDecision
+    Participant list : maintainers
+}
+LeaderDrivenPolicy testPolicy {
+    Scope: testProject
+    DecisionType as BooleanDecision
+    Participant list : leader
+    Conditions:
+        Deadline reviewDeadline : 7 days
+    Parameters:
+        default : referencedPolicy
+}

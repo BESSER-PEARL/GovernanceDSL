@@ -11,12 +11,12 @@ from grammar.govdslParser import govdslParser
 from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
-    InvalidParticipantException, UndefinedAttributeException, 
+    InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
     InvalidValueException
 )
 from metamodel.governance import (
     ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
-    Individual, ComposedPolicy,
+    Individual, ComposedPolicy, Project,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
@@ -101,6 +101,19 @@ class testPolicyCreation(unittest.TestCase):
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
             with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+
+    def test_invalid_default_scope(self):
+        """Test LeaderDrivenPolicy with referenced default policy having inconsistent scope."""
+        with open(self.test_cases_path / "invalid_examples/leader_driven_referenced_different_scope.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(InvalidScopeException) as raised_exception:
                 walker.walk(listener, tree)
             exception_message = str(raised_exception.exception)
             print(f"\nException message: {exception_message}")
@@ -482,6 +495,109 @@ class testPolicyCreation(unittest.TestCase):
             
             # Test default policy
             self.assertIsNone(policy.default)
+
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
+    def test_leader_driven_and_consensus_referenced_default_creation(self):
+        """Test the creation of a policy with a leader driven policy with a referenced default policy."""
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_and_consensus_referenced_default.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policies = listener.get_policies()
+            self.assertEqual(len(policies), 3)
+            policy = next(p for p in policies if p.name == "testPolicy")
+            consensus_policy = next(p for p in policies if p.name == "testPolicy2")
+            default_policy = next(p for p in policies if p.name == "referencedPolicy")
+            
+            # Assertions
+            self.assertIsInstance(policy, LeaderDrivenPolicy)
+            self.assertEqual(policy.name, "testPolicy")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "testProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+            
+            # Test leader participants
+            self.assertEqual(len(policy.participants), 1)
+            participant = next(iter(policy.participants))
+            self.assertIsInstance(participant, Individual)
+            self.assertEqual(participant.name, "leader")
+            
+            # Test conditions
+            self.assertEqual(len(policy.conditions), 1)
+            condition = next(iter(policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "reviewDeadline")
+            self.assertEqual(condition.offset, timedelta(days=7))
+            
+            # Test default policy
+            self.assertIsNotNone(policy.default)
+            self.assertEqual(policy.default.name, default_policy.name)
+            self.assertIsInstance(default_policy, MajorityPolicy)
+            self.assertEqual(default_policy.name, "referencedPolicy")
+            
+            # Test default policy participants
+            self.assertEqual(len(default_policy.participants), 1)
+            default_participant = next(iter(default_policy.participants))
+            self.assertIsInstance(default_participant, Role)
+            self.assertEqual(default_participant.name, "maintainers")
+
+            # Test default policy scope
+            self.assertIsNotNone(default_policy.scope)
+            scope = default_policy.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "testProject")
+
+            # Test consensus policy
+            self.assertIsInstance(consensus_policy, ConsensusPolicy)
+            self.assertEqual(consensus_policy.name, "testPolicy2")
+
+            # Test scope
+            self.assertIsNotNone(consensus_policy.scope)
+            scope = consensus_policy.scope
+            self.assertIsInstance(scope, Repository)
+            self.assertEqual(scope.name, "testProject")
+            self.assertEqual(scope.repo_id, "owner/repo")
+
+            # Test participants
+            self.assertEqual(len(consensus_policy.participants), 1)
+            participant = next(iter(consensus_policy.participants))
+            self.assertIsInstance(participant, Role)
+            self.assertEqual(participant.name, "maintainers")
+
+            # Test conditions
+            self.assertEqual(len(consensus_policy.conditions), 1)
+            condition = next(iter(consensus_policy.conditions))
+            self.assertIsInstance(condition, Deadline)
+            self.assertEqual(condition.name, "deadline") # Default name
+            self.assertEqual(condition.offset, timedelta(days=7))
+
+            # Test fallback policy
+            self.assertIsNotNone(consensus_policy.fallback)
+            self.assertEqual(consensus_policy.fallback.name, default_policy.name)
+            self.assertIsInstance(consensus_policy.fallback, MajorityPolicy)
+            self.assertEqual(consensus_policy.fallback.name, "referencedPolicy")
+
+            # Test default policy participants
+            self.assertEqual(len(consensus_policy.fallback.participants), 1)
+            default_participant = next(iter(consensus_policy.fallback.participants))
+            self.assertIsInstance(default_participant, Role)
+            self.assertEqual(default_participant.name, "maintainers")
+
+            # Test default policy scope
+            self.assertIsNotNone(consensus_policy.fallback.scope)
+            scope = consensus_policy.fallback.scope
+            self.assertIsInstance(scope, Project)
+            self.assertEqual(scope.name, "testProject")
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

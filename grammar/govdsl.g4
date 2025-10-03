@@ -71,7 +71,7 @@ offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
 timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; This can be improved with a lexer rule
-participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ;
+participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ; // TODO: ID | 'PRAuthor' | 'RepoOwner' 
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
 passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
@@ -83,8 +83,9 @@ include             : 'include' | 'not';
 parameters          : 'Parameters' ':' (votParams | default | fallback) ;
 votParams           :  ratio ; 
 ratio               : 'ratio' ':' FLOAT ; 
-default             : 'default' ':' nestedPolicy ;
-fallback            : 'fallback' ':' nestedPolicy ;
+default             : 'default' ':' (nestedPolicy | policyReference) ;
+fallback            : 'fallback' ':' (nestedPolicy | policyReference) ;
+policyReference     : ID ;
 
 // Phased policy 
 order               : 'Order' ':' ( orderType orderMode carryOver? ) ; 

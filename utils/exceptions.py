@@ -72,3 +72,14 @@ class UndefinedAttributeException(Exception):
         if self.attribute_value is not None:
             return f'{self.attribute_type}: {self.attribute_value} -> {self.message}'
         return f'{self.attribute_type} -> {self.message}'
+
+class InvalidScopeException(Exception):
+    """Exception raised when a scope is invalid or inconsistent with its parent."""
+    def __init__(self, scope, scope_parent, message="Default or fallback policies must have the same scope as their parent policies."):
+        self.scope = scope.name
+        self.scope_parent = scope_parent.name
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'Scope: {self.scope} (parent: {self.scope_parent}) -> {self.message}'

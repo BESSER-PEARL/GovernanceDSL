@@ -52,7 +52,7 @@ class PolicyCreationListener(govdslListener):
         self.policy_tree = {}  # Maps policy ID to PolicyNode
         self.policy_stack = []  # Tracks the current policy context
         self.composed_policy_stack = []  # Tracks the current composed policies
-        self.referenced_policies = set()  # Track policies referenced by others (like default policies)
+        self.referenced_policies = set()  # Track policies referenced by others (only inline default/fallback policies)
 
     def get_policies(self):
         """Policies: Retrieves the Policy instances."""
@@ -111,8 +111,9 @@ class PolicyCreationListener(govdslListener):
         # Then all fallback policies
         to_process.extend([self.policy_tree[pid] for pid in fallback_policies if pid in self.policy_tree])
         # Then add leaf nodes that aren't default policies
-        to_process.extend([node for node in leaves if node.policy_id not in default_policies and node.policy_id not in fallback_policies])
-        
+        not_default_nor_fallback = [node for node in leaves if node.policy_id not in default_policies and node.policy_id not in fallback_policies]
+        to_process.extend(not_default_nor_fallback)
+
         while to_process:
             node = to_process.pop(0)
             
@@ -120,7 +121,7 @@ class PolicyCreationListener(govdslListener):
             if node.policy_id in processed:
                 continue
             
-            # Get scope - now we can use None initially and set it later
+            # Get scope 
             scope = self.__policy_scopes_map.get(node.policy_id)
             
             # composed policies
@@ -161,18 +162,27 @@ class PolicyCreationListener(govdslListener):
                         
                         fallback_policy = None
                         if fallback_policy_id:
-                            fallback_node = self.policy_tree.get(fallback_policy_id)
-                            if not fallback_node:
-                                raise UndefinedAttributeException("fallback", 
-                                                            f"fallback policy '{fallback_policy_id}' not found in policy tree.")
-                        
-                            # If the fallback policy hasn't been processed yet, prioritize it
-                            if fallback_policy_id not in processed:
-                                # Move the fallback policy to the front of the processing queue
-                                to_process.insert(0, fallback_node)
-                                # Re-add the current node to process after the fallback
-                                to_process.append(node)
-                                continue
+                            # Check if it's a root policy reference
+                            if fallback_policy_id in [n.policy_id for n in not_default_nor_fallback]:
+                                if fallback_policy_id not in processed:
+                                    # Process the referenced root policy first
+                                    continue
+                                # Find the already-processed root policy
+                                fallback_node = next(n for n in not_default_nor_fallback if n.policy_id == fallback_policy_id)
+                                default_policy = fallback_node.policy_object
+                            else:
+                                fallback_node = self.policy_tree.get(fallback_policy_id)
+                                if not fallback_node:
+                                    raise UndefinedAttributeException("fallback", 
+                                                                f"fallback policy '{fallback_policy_id}' not found in policy tree.")
+                            
+                                # If the fallback policy hasn't been processed yet, prioritize it
+                                if fallback_policy_id not in processed:
+                                    # Move the fallback policy to the front of the processing queue
+                                    to_process.insert(0, fallback_node)
+                                    # Re-add the current node to process after the fallback
+                                    to_process.append(node)
+                                    continue
                             
                             fallback_policy = fallback_node.policy_object
                         node.policy_object = ConsensusPolicy.from_policy(base_policy, fallback=fallback_policy)
@@ -182,18 +192,27 @@ class PolicyCreationListener(govdslListener):
                         
                         fallback_policy = None
                         if fallback_policy_id:
-                            fallback_node = self.policy_tree.get(fallback_policy_id)
-                            if not fallback_node:
-                                raise UndefinedAttributeException("fallback", 
-                                                            f"fallback policy '{fallback_policy_id}' not found in policy tree.")
-                        
-                            # If the fallback policy hasn't been processed yet, prioritize it
-                            if fallback_policy_id not in processed:
-                                # Move the fallback policy to the front of the processing queue
-                                to_process.insert(0, fallback_node)
-                                # Re-add the current node to process after the fallback
-                                to_process.append(node)
-                                continue
+                            # Check if it's a root policy reference
+                            if fallback_policy_id in [n.policy_id for n in not_default_nor_fallback]:
+                                if fallback_policy_id not in processed:
+                                    # Process the referenced root policy first
+                                    continue
+                                # Find the already-processed root policy
+                                fallback_node = next(n for n in not_default_nor_fallback if n.policy_id == fallback_policy_id)
+                                default_policy = fallback_node.policy_object
+                            else:
+                                fallback_node = self.policy_tree.get(fallback_policy_id)
+                                if not fallback_node:
+                                    raise UndefinedAttributeException("fallback", 
+                                                                f"fallback policy '{fallback_policy_id}' not found in policy tree.")
+                            
+                                # If the fallback policy hasn't been processed yet, prioritize it
+                                if fallback_policy_id not in processed:
+                                    # Move the fallback policy to the front of the processing queue
+                                    to_process.insert(0, fallback_node)
+                                    # Re-add the current node to process after the fallback
+                                    to_process.append(node)
+                                    continue
                             
                             fallback_policy = fallback_node.policy_object
                         node.policy_object = LazyConsensusPolicy.from_policy(base_policy, fallback=fallback_policy)
@@ -213,24 +232,33 @@ class PolicyCreationListener(govdslListener):
                         
                         default_policy = None
                         if default_policy_id:
-                            default_node = self.policy_tree.get(default_policy_id)
-                            if not default_node:
-                                raise UndefinedAttributeException("default", 
-                                                            f"Default policy '{default_policy_id}' not found in policy tree.")
+                            # Check if it's a root policy reference
+                            if default_policy_id in [n.policy_id for n in not_default_nor_fallback]:
+                                if default_policy_id not in processed:
+                                    # Process the referenced root policy first
+                                    continue
+                                # Find the already-processed root policy
+                                default_node = next(n for n in not_default_nor_fallback if n.policy_id == default_policy_id)
+                                default_policy = default_node.policy_object
+                            else:
+                                default_node = self.policy_tree.get(default_policy_id)
+                                if not default_node:
+                                    raise UndefinedAttributeException("default", 
+                                                                f"Default policy '{default_policy_id}' not found in policy tree.")
                         
-                            # If the default policy hasn't been processed yet, prioritize it
-                            if default_policy_id not in processed:
-                                # Move the default policy to the front of the processing queue
-                                to_process.insert(0, default_node)
-                                # Re-add the current node to process after the default
-                                to_process.append(node)
-                                continue
-                            
-                            default_policy = default_node.policy_object
+                                # If the default policy hasn't been processed yet, prioritize it
+                                if default_policy_id not in processed:
+                                    # Move the default policy to the front of the processing queue
+                                    to_process.insert(0, default_node)
+                                    # Re-add the current node to process after the default
+                                    to_process.append(node)
+                                    continue
+                                
+                                default_policy = default_node.policy_object
 
                         node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
                         
-                        # Scope will be automatically propagated to default policy by the LeaderDrivenPolicy class
+                        # Scope will be automatically propagated to inline default policy by the LeaderDrivenPolicy class. 
             
             # Mark as processed
             processed.add(node.policy_id)
@@ -898,22 +926,31 @@ class PolicyCreationListener(govdslListener):
         # Extract default policy if present (for LeaderDrivenPolicy)
         if ctx.default():
             default_ctx = None
-            if ctx.default().nestedPolicy().nestedSinglePolicy():
-                default_ctx = ctx.default().nestedPolicy().nestedSinglePolicy().ID().getText()
-            elif ctx.default().nestedPolicy().nestedComposedPolicy():
-                default_ctx = ctx.default().nestedPolicy().nestedComposedPolicy().ID().getText()
+            if ctx.default().nestedPolicy():
+                if ctx.default().nestedPolicy().nestedSinglePolicy():
+                    default_ctx = ctx.default().nestedPolicy().nestedSinglePolicy().ID().getText()
+                elif ctx.default().nestedPolicy().nestedComposedPolicy():
+                    default_ctx = ctx.default().nestedPolicy().nestedComposedPolicy().ID().getText()
+            elif ctx.default().policyReference():
+                default_ctx = ctx.default().policyReference().ID().getText()
             self.__policy_parameters_map[current_policy_id]['default'] = default_ctx
 
         # Extract fallback policy if present (for ConsensusPolicy)
         if ctx.fallback():
             fallback_ctx = None
-            if ctx.fallback().nestedPolicy().nestedSinglePolicy():
-                fallback_ctx = ctx.fallback().nestedPolicy().nestedSinglePolicy().ID().getText()
-            elif ctx.fallback().nestedPolicy().nestedComposedPolicy():
-                fallback_ctx = ctx.fallback().nestedPolicy().nestedComposedPolicy().ID().getText()
+            if ctx.fallback().nestedPolicy():
+                if ctx.fallback().nestedPolicy().nestedSinglePolicy():
+                    fallback_ctx = ctx.fallback().nestedPolicy().nestedSinglePolicy().ID().getText()
+                elif ctx.fallback().nestedPolicy().nestedComposedPolicy():
+                    fallback_ctx = ctx.fallback().nestedPolicy().nestedComposedPolicy().ID().getText()
+            elif ctx.fallback().policyReference():
+                fallback_ctx = ctx.fallback().policyReference().ID().getText()
             self.__policy_parameters_map[current_policy_id]['fallback'] = fallback_ctx
 
     def enterDefault(self, ctx:govdslParser.DefaultContext):
+        # Only for inline policies
+        if ctx.policyReference():
+            return
         # Get the current policy context (the LeaderDrivenPolicy)
         if not self.policy_stack:
             raise RuntimeError("Attempting to access policy stack, but it is empty.")
@@ -950,6 +987,9 @@ class PolicyCreationListener(govdslListener):
                     self.__policy_scopes_map[default_policy_id] = parent_scope
     
     def enterFallback(self, ctx:govdslParser.FallbackContext):
+        # Only for inline policies
+        if ctx.policyReference():
+            return
         # Get the current policy context (the ConsensusPolicy)
         if not self.policy_stack:
             raise RuntimeError("Attempting to access policy stack, but it is empty.")

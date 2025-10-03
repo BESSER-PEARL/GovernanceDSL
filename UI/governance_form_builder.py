@@ -827,19 +827,19 @@ class GovernanceFormBuilder:
             if not name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
-                return current_profiles, error_message, "", "", "", gr.Dropdown(choices=[p['name'] for p in current_profiles], value=None)
+                return current_profiles, error_message, "", "", "", None
             
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name already exists\n\n{display_text}" if current_profiles else "❌ Error: Profile name already exists"
-                return current_profiles, error_message, "", "", "", gr.Dropdown(choices=[p['name'] for p in current_profiles], value=None)
+                return current_profiles, error_message, "", "", "", None
             
             # Validate that at least one attribute is provided
             if not gender and not race:
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profiles must have either a race or gender value\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have either a race or gender value"
-                return current_profiles, error_message, "", "", "", gr.Dropdown(choices=[p['name'] for p in current_profiles], value=None)
+                return current_profiles, error_message, "", "", "", None
             
             # Create new profile
             new_profile = {
@@ -854,11 +854,11 @@ class GovernanceFormBuilder:
             display_text = self._format_profiles_display(updated_profiles)
             success_message = f"✅ Profile '{new_profile['name']}' added successfully!\n\n{display_text}"
             
-            return updated_profiles, success_message, "", "", "", gr.Dropdown(choices=[p['name'] for p in updated_profiles], value=None)  # Also update individual profile dropdown
+            return updated_profiles, success_message, "", "", "", None  # Clear individual profile selection
         
         def clear_profiles():
             """Clear all profiles"""
-            return [], "No profiles added yet", gr.Dropdown(choices=[], value=None)
+            return [], "No profiles added yet", None
         
         def add_individual(name, vote_value, profile, role, current_individuals, current_profiles, roles_text):
             """Add a new individual to the list"""
@@ -887,7 +887,7 @@ class GovernanceFormBuilder:
             profile_choices = [p['name'] for p in current_profiles] if current_profiles else []
             role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
             
-            return updated_individuals, success_message, "", 1.0, gr.Dropdown(choices=profile_choices, value=None), gr.Dropdown(choices=role_choices, value=None)
+            return updated_individuals, success_message, "", 1.0, None, None
         
         def clear_individuals():
             """Clear all individuals"""
@@ -927,7 +927,7 @@ class GovernanceFormBuilder:
             # Update role dropdown choices for next agent
             role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
             
-            return updated_agents, success_message, "", None, None, None, gr.Dropdown(choices=role_choices, value=None)
+            return updated_agents, success_message, "", None, None, None, None
         
         def clear_agents():
             """Clear all agents"""
@@ -1275,7 +1275,7 @@ class GovernanceFormBuilder:
                     format_phases_with_error(error_msg),  # added_phases_list
                     "",  # phase_name
                     "MajorityPolicy",  # phase_type
-                    gr.Dropdown(value=None, choices=[]),  # phase_participants - clear completely
+                    [],  # phase_participants - use empty list
                     "BooleanDecision",  # phase_decision_type
                     "",  # phase_decision_options
                     1.0,  # phase_voting_ratio
@@ -1334,7 +1334,7 @@ class GovernanceFormBuilder:
                 success_message,  # added_phases_list
                 "",  # phase_name - clear
                 "MajorityPolicy",  # phase_type - reset
-                gr.Dropdown(value=None, choices=[]),  # phase_participants - clear completely
+                [],  # phase_participants - use empty list
                 "BooleanDecision",  # phase_decision_type - reset
                 "",  # phase_decision_options - clear
                 1.0,  # phase_voting_ratio - reset
@@ -1454,10 +1454,10 @@ class GovernanceFormBuilder:
                 fallback_choices = [p['name'] for p in policies_result]
                 return (
                     policies_result, display_result,  # policies_data, policies_display
-                    "", "MajorityPolicy", None, gr.Dropdown(value=None, choices=[]), "BooleanDecision", "", 1.0,  # Clear form fields with empty participants dropdown
+                    "", "MajorityPolicy", None, [], "BooleanDecision", "", 1.0,  # Clear form fields - use empty list for participants
                     gr.Dropdown(choices=fallback_choices, visible=False),  # default_decision
                     gr.Dropdown(choices=fallback_choices, visible=False),  # fallback_policy
-                    "", gr.Dropdown(value=None, choices=[]), gr.Dropdown(value=None, choices=[]), None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields with empty dropdowns
+                    "", [], [], None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields - use empty lists for participant dropdowns
                 )
             else:
                 # Error: keep form as is, only update policies display
@@ -1555,6 +1555,13 @@ MajorityPolicy example_policy {
                 participant_components['profiles_display'],
                 participant_components['individual_profile']  # Also clear individual profile dropdown
             ]
+        )
+        
+        # Update individual profile dropdown when profiles data changes
+        participant_components['profiles_data'].change(
+            fn=lambda profiles_data: gr.Dropdown(choices=[p['name'] for p in profiles_data] if profiles_data else [], value=None),
+            inputs=[participant_components['profiles_data']],
+            outputs=[participant_components['individual_profile']]
         )
         
         # Individual management handlers
@@ -1739,7 +1746,7 @@ MajorityPolicy example_policy {
                 policy_components['policy_name'],        # Clear/keep name field
                 policy_components['policy_type'],        # Reset/keep policy type
                 policy_components['policy_scope'],       # Clear/keep scope
-                gr.Dropdown(value=None, choices=[]), # Clear participants completely
+                policy_components['policy_participants'], # Clear/keep participants - use component, not new dropdown
                 policy_components['decision_type'],      # Reset/keep decision type
                 policy_components['decision_options'],   # Clear/keep decision options
                 policy_components['voting_ratio'],       # Reset/keep voting ratio

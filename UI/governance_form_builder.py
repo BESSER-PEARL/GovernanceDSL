@@ -15,6 +15,8 @@ class GovernanceFormBuilder:
             'participants': {},
             'policies': {}
         }
+        # Track added conditions for current policy being edited
+        self.current_policy_conditions = []
         
     def create_interface(self):
         """Create the main Gradio interface"""
@@ -425,16 +427,18 @@ class GovernanceFormBuilder:
                     label="Add Condition",
                     choices=[
                         "",  # Empty option for no condition
-                        "VetoRight",
+                        "Deadline",
+                        "MinDecisionTime", 
                         "ParticipantExclusion",
                         "MinParticipants",
-                        "Deadline",
-                        "MinDecisionTime",
+                        "VetoRight",
                         "LabelCondition"
                     ],
                     value="",
                     info="Select a condition type to add to this policy"
                 )
+            
+
             
             # Condition-specific fields (initially hidden)
             with gr.Row():
@@ -464,20 +468,18 @@ class GovernanceFormBuilder:
                 # MinParticipants condition
                 min_participants = gr.Number(
                     label="Minimum Participants",
-                    value=1,
-                    minimum=1,
+                    value=None,
                     visible=False,
-                    info="Minimum number of participants required"
+                    info="Minimum number of participants required (≥1)"
                 )
             
             # Deadline condition fields
             with gr.Row():
                 deadline_offset_value = gr.Number(
                     label="Deadline Offset Value",
-                    value=7,
-                    minimum=1,
+                    value=None,
                     visible=False,
-                    info="Time offset number (e.g., 7 for '7 days')"
+                    info="Time offset number (≥1, e.g., 7 for '7 days')"
                 )
                 
                 deadline_offset_unit = gr.Dropdown(
@@ -500,10 +502,9 @@ class GovernanceFormBuilder:
             with gr.Row():
                 min_decision_offset_value = gr.Number(
                     label="Min Decision Time Offset Value",
-                    value=1,
-                    minimum=1,
+                    value=None,
                     visible=False,
-                    info="Minimum time offset number (e.g., 2 for '2 days')"
+                    info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
                 )
                 
                 min_decision_offset_unit = gr.Dropdown(
@@ -547,6 +548,21 @@ class GovernanceFormBuilder:
                     visible=False,
                     info="Comma-separated list of labels"
                 )
+            
+            # Condition management buttons
+            with gr.Row():
+                add_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
+                clear_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Added conditions display (adaptive height)
+            added_conditions_list = gr.Textbox(
+                label="Added Conditions",
+                value="",
+                interactive=False,
+                lines=2,
+                max_lines=10,
+                info="List of conditions added to this policy"
+            )
             
             with gr.Row():
                 add_policy_btn = gr.Button("➕ Add Policy", variant="secondary")
@@ -615,10 +631,17 @@ class GovernanceFormBuilder:
             'label_condition_type': label_condition_type,
             'label_condition_operator': label_condition_operator,
             'label_condition_labels': label_condition_labels,
+            'add_condition_btn': add_condition_btn,
+            'clear_conditions_btn': clear_conditions_btn,
+            'added_conditions_list': added_conditions_list,
             'add_policy_btn': add_policy_btn,
             'clear_policies_btn': clear_policies_btn,
             'policies_display': policies_display,
-            'policies_data': policies_data
+            'policies_data': policies_data,
+            'is_composed': is_composed,
+            'execution_type': execution_type,
+            'require_all': require_all,
+            'carry_over': carry_over
         }
     
     def _create_preview_panel(self):
@@ -834,7 +857,8 @@ class GovernanceFormBuilder:
                       default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
                       min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
                       min_decision_offset_value, min_decision_offset_unit, min_decision_date,
-                      label_condition_type, label_condition_operator, label_condition_labels, current_policies):
+                      label_condition_type, label_condition_operator, label_condition_labels, 
+                      added_conditions_list, current_policies):
             """Add a new policy to the list"""
             # Validate policy name (mandatory)
             if not name.strip():
@@ -871,6 +895,9 @@ class GovernanceFormBuilder:
                 'voting_ratio': voting_ratio if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] else None,
                 'default_decision': default_decision if policy_type == "LeaderDrivenPolicy" else None,
                 'fallback_policy': fallback_policy if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] else None,
+                # Store the dynamically added conditions
+                'added_conditions': added_conditions_list.strip() if added_conditions_list else None,
+                # Keep backward compatibility with single condition fields for now
                 'condition_type': condition_type if condition_type else None,
                 'veto_participants': veto_participants if condition_type == "VetoRight" else None,
                 'excluded_participants': excluded_participants if condition_type == "ParticipantExclusion" else None,
@@ -898,12 +925,162 @@ class GovernanceFormBuilder:
         def clear_policies():
             """Clear all policies"""
             return [], "No policies added yet"
+
+        def add_condition(condition_type, veto_participants, excluded_participants, min_participants,
+                         deadline_offset_value, deadline_offset_unit, deadline_date,
+                         min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+                         label_condition_type, label_condition_operator, label_condition_labels,
+                         current_conditions_text):
+            """Add a condition to the current policy"""
+            
+            # Parse existing conditions from the display text (ignore error messages and success messages)
+            existing_conditions = []
+            if current_conditions_text.strip():
+                for line in current_conditions_text.strip().split('\n'):
+                    line = line.strip()
+                    # Skip error messages, success messages, and empty lines
+                    if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
+                        existing_conditions.append(line)
+            
+            # Helper function to format the conditions display with error
+            def format_conditions_with_error(error_msg):
+                if existing_conditions:
+                    conditions_text = '\n'.join(existing_conditions)
+                    return f"❌ Error: {error_msg}\n\n{conditions_text}"
+                else:
+                    return f"❌ Error: {error_msg}"
+            
+            # Helper function to return error with all condition fields reset
+            def return_error(error_msg):
+                return (
+                    format_conditions_with_error(error_msg),  # added_conditions_list
+                    gr.Dropdown(value=""),  # condition_type
+                    gr.Dropdown(value=None),  # veto_participants
+                    gr.Dropdown(value=None),  # excluded_participants
+                    None,  # min_participants
+                    None,  # deadline_offset_value  
+                    "days",  # deadline_offset_unit
+                    "",  # deadline_date
+                    None,  # min_decision_offset_value
+                    "days",  # min_decision_offset_unit
+                    "",  # min_decision_date
+                    "pre",  # label_condition_type
+                    "",  # label_condition_operator
+                    ""  # label_condition_labels
+                )
+            
+            if not condition_type:
+                return return_error("Please select a condition type")
+            
+            # Check for duplicates (except LabelCondition)
+            existing_types = []
+            for condition in existing_conditions:
+                if condition.startswith('Deadline'):
+                    existing_types.append('Deadline')
+                elif condition.startswith('MinDecisionTime'):
+                    existing_types.append('MinDecisionTime')
+                elif condition.startswith('ParticipantExclusion'):
+                    existing_types.append('ParticipantExclusion')
+                elif condition.startswith('MinParticipants'):
+                    existing_types.append('MinParticipants')
+                elif condition.startswith('VetoRight'):
+                    existing_types.append('VetoRight')
+                # LabelCondition can have multiple entries, so we don't track it
+            
+            if condition_type != "LabelCondition" and condition_type in existing_types:
+                return return_error(f"{condition_type} already exists. Only LabelCondition can be added multiple times.")
+            
+            # Create the condition string
+            condition_str = ""
+            
+            if condition_type == "VetoRight":
+                if not veto_participants:
+                    return return_error("Please specify veto participants")
+                # veto_participants is already a list from multiselect dropdown
+                participants_list = [p.strip() for p in veto_participants if p.strip()] if isinstance(veto_participants, list) else [veto_participants.strip()]
+                condition_str = f"VetoRight: {', '.join(participants_list)}"
+                
+            elif condition_type == "ParticipantExclusion":
+                if not excluded_participants:
+                    return return_error("Please specify excluded participants")
+                # excluded_participants is already a list from multiselect dropdown
+                participants_list = [p.strip() for p in excluded_participants if p.strip()] if isinstance(excluded_participants, list) else [excluded_participants.strip()]
+                condition_str = f"ParticipantExclusion: {', '.join(participants_list)}"
+                
+            elif condition_type == "MinParticipants":
+                if not min_participants or min_participants < 1:
+                    return return_error("Please specify minimum participants (≥1)")
+                condition_str = f"MinParticipants: {min_participants}"
+                
+            elif condition_type == "Deadline":
+                parts = []
+                if deadline_offset_value and deadline_offset_unit:
+                    if deadline_offset_value < 1:
+                        return return_error("Deadline offset value must be ≥1")
+                    parts.append(f"{deadline_offset_value} {deadline_offset_unit}")
+                if deadline_date and deadline_date.strip():
+                    parts.append(deadline_date.strip())
+                if not parts:
+                    return return_error("Please specify deadline offset or date")
+                condition_str = f"Deadline: {', '.join(parts)}"
+                
+            elif condition_type == "MinDecisionTime":
+                parts = []
+                if min_decision_offset_value and min_decision_offset_unit:
+                    if min_decision_offset_value < 1:
+                        return return_error("Minimum decision time offset value must be ≥1")
+                    parts.append(f"{min_decision_offset_value} {min_decision_offset_unit}")
+                if min_decision_date and min_decision_date.strip():
+                    parts.append(min_decision_date.strip())
+                if not parts:
+                    return return_error("Please specify minimum decision time offset or date")
+                condition_str = f"MinDecisionTime: {', '.join(parts)}"
+                
+            elif condition_type == "LabelCondition":
+                if not label_condition_labels:
+                    return return_error("Please specify labels")
+                labels = [l.strip() for l in label_condition_labels.split(',') if l.strip()]
+                if not labels:
+                    return return_error("Please specify valid labels")
+                
+                type_part = label_condition_type if label_condition_type else "pre"
+                operator_part = f" {label_condition_operator}" if label_condition_operator else ""
+                condition_str = f"LabelCondition {type_part}{operator_part}: {', '.join(labels)}"
+            
+            if condition_str:
+                # Add to existing conditions and format success message
+                updated_conditions = existing_conditions + [condition_str]
+                conditions_text = '\n'.join(updated_conditions)
+                success_message = f"✅ {condition_type} condition added successfully!\n\n{conditions_text}"
+                return (
+                    success_message,  # added_conditions_list
+                    gr.Dropdown(value=""),  # condition_type
+                    gr.Dropdown(value=None),  # veto_participants
+                    gr.Dropdown(value=None),  # excluded_participants
+                    None,  # min_participants
+                    None,  # deadline_offset_value
+                    "days",  # deadline_offset_unit
+                    "",  # deadline_date
+                    None,  # min_decision_offset_value
+                    "days",  # min_decision_offset_unit
+                    "",  # min_decision_date
+                    "pre",  # label_condition_type
+                    "",  # label_condition_operator
+                    ""  # label_condition_labels
+                )
+            
+            return return_error("Unable to add condition")
+        
+        def clear_conditions():
+            """Clear all conditions for the current policy"""
+            return ""
         
         def add_policy_and_clear_form(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
                                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
                                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
                                      min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
-                                     label_condition_type, label_condition_operator, label_condition_labels, current_policies):
+                                     label_condition_type, label_condition_operator, label_condition_labels, 
+                                     added_conditions_list, current_policies):
             """Add policy and clear form fields only on success"""
             # First try to add the policy
             policies_result, display_result = add_policy(
@@ -911,7 +1088,8 @@ class GovernanceFormBuilder:
                 default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
                 min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
                 min_decision_offset_value, min_decision_offset_unit, min_decision_date,
-                label_condition_type, label_condition_operator, label_condition_labels, current_policies
+                label_condition_type, label_condition_operator, label_condition_labels, 
+                added_conditions_list, current_policies
             )
             
             # Check if the addition was successful (no error message)
@@ -924,7 +1102,7 @@ class GovernanceFormBuilder:
                     "", "MajorityPolicy", None, None, "BooleanDecision", "", 1.0,  # Clear form fields
                     gr.Dropdown(choices=fallback_choices, visible=False),  # default_decision
                     gr.Dropdown(choices=fallback_choices, visible=False),  # fallback_policy
-                    "", None, None, 1, 7, "pre", "", ""  # Clear condition fields
+                    "", None, None, None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields + added_conditions_list
                 )
             else:
                 # Error: keep form as is, only update policies display
@@ -935,7 +1113,8 @@ class GovernanceFormBuilder:
                     condition_type, veto_participants, excluded_participants, min_participants,  # Keep basic condition values
                     deadline_offset_value, deadline_offset_unit, deadline_date,  # Keep deadline values
                     min_decision_offset_value, min_decision_offset_unit, min_decision_date,  # Keep min decision values
-                    label_condition_type, label_condition_operator, label_condition_labels  # Keep label condition values
+                    label_condition_type, label_condition_operator, label_condition_labels,  # Keep label condition values
+                    added_conditions_list  # Keep added conditions list
                 )
         
         def update_preview(*args):
@@ -1196,6 +1375,7 @@ MajorityPolicy example_policy {
                 policy_components['label_condition_type'],
                 policy_components['label_condition_operator'],
                 policy_components['label_condition_labels'],
+                policy_components['added_conditions_list'],
                 policy_components['policies_data']
             ],
             outputs=[
@@ -1222,7 +1402,8 @@ MajorityPolicy example_policy {
                 policy_components['min_decision_date'],  # Reset/keep min decision date
                 policy_components['label_condition_type'], # Reset/keep label condition type
                 policy_components['label_condition_operator'], # Reset/keep label operator
-                policy_components['label_condition_labels'] # Clear/keep label condition labels
+                policy_components['label_condition_labels'], # Clear/keep label condition labels
+                policy_components['added_conditions_list'] # Clear/keep added conditions list
             ]
         )
         
@@ -1231,6 +1412,50 @@ MajorityPolicy example_policy {
             outputs=[
                 policy_components['policies_data'],
                 policy_components['policies_display']
+            ]
+        )
+        
+        # Condition management handlers
+        policy_components['add_condition_btn'].click(
+            fn=add_condition,
+            inputs=[
+                policy_components['condition_type'],
+                policy_components['veto_participants'],
+                policy_components['excluded_participants'],
+                policy_components['min_participants'],
+                policy_components['deadline_offset_value'],
+                policy_components['deadline_offset_unit'],
+                policy_components['deadline_date'],
+                policy_components['min_decision_offset_value'],
+                policy_components['min_decision_offset_unit'],
+                policy_components['min_decision_date'],
+                policy_components['label_condition_type'],
+                policy_components['label_condition_operator'],
+                policy_components['label_condition_labels'],
+                policy_components['added_conditions_list']
+            ],
+            outputs=[
+                policy_components['added_conditions_list'],      # success/error message
+                policy_components['condition_type'],            # reset dropdown
+                policy_components['veto_participants'],         # reset multiselect
+                policy_components['excluded_participants'],     # reset multiselect
+                policy_components['min_participants'],          # reset number
+                policy_components['deadline_offset_value'],     # reset number
+                policy_components['deadline_offset_unit'],      # reset dropdown
+                policy_components['deadline_date'],             # reset textbox
+                policy_components['min_decision_offset_value'], # reset number
+                policy_components['min_decision_offset_unit'],  # reset dropdown
+                policy_components['min_decision_date'],         # reset textbox
+                policy_components['label_condition_type'],      # reset dropdown
+                policy_components['label_condition_operator'],  # reset textbox
+                policy_components['label_condition_labels']     # reset textbox
+            ]
+        )
+        
+        policy_components['clear_conditions_btn'].click(
+            fn=clear_conditions,
+            outputs=[
+                policy_components['added_conditions_list']
             ]
         )
         
@@ -1503,7 +1728,32 @@ MajorityPolicy example_policy {
                 
                 # Add conditions
                 conditions = []
-                if policy.get('condition_type'):
+                
+                # Use the dynamically added conditions if available
+                if policy.get('added_conditions'):
+                    condition_lines = [line.strip() for line in policy['added_conditions'].split('\n') if line.strip()]
+                    for condition_line in condition_lines:
+                        # Convert from display format to DSL format
+                        if condition_line.startswith('VetoRight:'):
+                            conditions.append(f"        {condition_line.replace(':', ' :')}")
+                        elif condition_line.startswith('ParticipantExclusion:'):
+                            conditions.append(f"        {condition_line.replace(':', ' :')}")
+                        elif condition_line.startswith('MinParticipants:'):
+                            conditions.append(f"        {condition_line.replace(':', ' :')}")
+                        elif condition_line.startswith('Deadline:'):
+                            condition_content = condition_line.split(':', 1)[1].strip()
+                            conditions.append(f"        Deadline : {condition_content}")
+                        elif condition_line.startswith('MinDecisionTime:'):
+                            condition_content = condition_line.split(':', 1)[1].strip()
+                            conditions.append(f"        MinDecisionTime : {condition_content}")
+                        elif condition_line.startswith('LabelCondition'):
+                            # Parse LabelCondition format: "LabelCondition pre not : label1, label2"
+                            condition_content = condition_line.split(':', 1)[1].strip()
+                            condition_prefix = condition_line.split(':', 1)[0].strip()
+                            conditions.append(f"        {condition_prefix} : {condition_content}")
+                
+                # Fallback to single condition fields for backward compatibility
+                elif policy.get('condition_type'):
                     condition_type = policy['condition_type']
                     
                     if condition_type == "VetoRight" and policy.get('veto_participants'):

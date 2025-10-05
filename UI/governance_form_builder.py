@@ -70,20 +70,29 @@ class GovernanceFormBuilder:
                 project_name = gr.Textbox(
                     label="Project Name *",
                     placeholder="e.g., MyProject, K8sProject",
-                    info="Unique name for this project (required)"
+                    info="Unique name for this project (required - must be unique across all projects, activities, and tasks)"
                 )
                 
-                project_platform = gr.Textbox(
+                project_platform = gr.Dropdown(
                     label="Platform (Optional)",
-                    placeholder="e.g., GitHub, GitLab, Bitbucket",
-                    info="Platform where the project is hosted"
+                    choices=["", "GitHub", "GitLab"],
+                    value="",
+                    info="Select the platform where the project is hosted"
                 )
             
             with gr.Row():
-                project_repo = gr.Textbox(
-                    label="Repository (Optional)",
-                    placeholder="e.g., owner/repo, kubernetes/kubernetes",
-                    info="Repository path or identifier"
+                project_repo_owner = gr.Textbox(
+                    label="Repository Owner *",
+                    placeholder="e.g., kubernetes, microsoft, myorganization",
+                    info="Username or organization name",
+                    visible=False
+                )
+                
+                project_repo_name = gr.Textbox(
+                    label="Repository Name *",
+                    placeholder="e.g., kubernetes, vscode, myproject",
+                    info="Repository name",
+                    visible=False
                 )
             
             with gr.Row():
@@ -111,7 +120,7 @@ class GovernanceFormBuilder:
                 activity_name = gr.Textbox(
                     label="Activity Name *",
                     placeholder="e.g., CodeReview, TestActivity, Documentation",
-                    info="Unique name for this activity (required)"
+                    info="Unique name for this activity (required - must be unique across all projects, activities, and tasks)"
                 )
                 
                 activity_parent = gr.Dropdown(
@@ -147,28 +156,30 @@ class GovernanceFormBuilder:
                 task_name = gr.Textbox(
                     label="Task Name *",
                     placeholder="e.g., MergeTask, PRMerge, ApprovalTask",
-                    info="Unique name for this task (required)"
+                    info="Unique name for this task (required - must be unique across all projects, activities, and tasks)"
                 )
                 
                 task_parent = gr.Dropdown(
-                    label="Parent (Optional)",
-                    choices=[],  # Will be populated dynamically from projects and activities
+                    label="Parent Activity (Optional)",
+                    choices=[],  # Will be populated dynamically from activities only
                     value=None,
                     allow_custom_value=True,
-                    info="Select a parent project or activity"
+                    info="Select a parent activity (tasks can only belong to activities)"
                 )
             
             with gr.Row():
-                task_type = gr.Textbox(
+                task_type = gr.Dropdown(
                     label="Type (Optional)",
-                    placeholder="e.g., Pull request, Issue, Review",
-                    info="Type or category of this task"
+                    choices=["", "Pull request"],
+                    value="",
+                    info="Type of task (following govdsl.g4 grammar)"
                 )
                 
-                task_action = gr.Textbox(
+                task_action = gr.Dropdown(
                     label="Action (Optional)",
-                    placeholder="e.g., merge, approve, review",
-                    info="Specific action this task performs"
+                    choices=["", "merge", "review", "release"],
+                    value="",
+                    info="Specific action this task performs (following govdsl.g4 grammar)"
                 )
             
             with gr.Row():
@@ -190,7 +201,8 @@ class GovernanceFormBuilder:
         return {
             'project_name': project_name,
             'project_platform': project_platform,
-            'project_repo': project_repo,
+            'project_repo_owner': project_repo_owner,
+            'project_repo_name': project_repo_name,
             'add_project_btn': add_project_btn,
             'clear_projects_btn': clear_projects_btn,
             'projects_display': projects_display,
@@ -1040,34 +1052,74 @@ class GovernanceFormBuilder:
             return gr.Dropdown(choices=role_choices, value=None)
         
         # Scope event handlers
-        def add_project(name, platform, repo, current_projects):
+        def add_project(name, platform, repo_owner, repo_name, current_projects, current_activities=None, current_tasks=None):
             """Add a new project to the list"""
             if not name.strip():
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Please enter a project name\n\n{display_text}" if current_projects else "❌ Error: Please enter a project name"
-                return current_projects, error_message, "", "", ""
+                return current_projects, error_message, "", "", "", ""
             
-            # Check if project already exists
-            if any(p['name'] == name.strip() for p in current_projects):
+            # Check for global name uniqueness across projects, activities, and tasks
+            project_name = name.strip()
+            
+            # Check against existing projects
+            if any(p['name'] == project_name for p in current_projects):
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Project name already exists\n\n{display_text}" if current_projects else "❌ Error: Project name already exists"
-                return current_projects, error_message, "", "", ""
+                return current_projects, error_message, "", "", "", ""
+            
+            # Check against existing activities (if provided)
+            if current_activities and any(a['name'] == project_name for a in current_activities):
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Name '{project_name}' already exists as an activity\n\n{display_text}" if current_projects else f"❌ Error: Name '{project_name}' already exists as an activity"
+                return current_projects, error_message, "", "", "", ""
+            
+            # Check against existing tasks (if provided)
+            if current_tasks and any(t['name'] == project_name for t in current_tasks):
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Name '{project_name}' already exists as a task\n\n{display_text}" if current_projects else f"❌ Error: Name '{project_name}' already exists as a task"
+                return current_projects, error_message, "", "", "", ""
+            
+            # Validate platform and repository relationship
+            if platform and platform.strip():
+                if not repo_owner or not repo_owner.strip():
+                    display_text = self._format_projects_display(current_projects)
+                    error_message = f"❌ Error: Repository owner is required when a platform is selected\n\n{display_text}" if current_projects else "❌ Error: Repository owner is required when a platform is selected"
+                    return current_projects, error_message, "", "", "", ""
+                if not repo_name or not repo_name.strip():
+                    display_text = self._format_projects_display(current_projects)
+                    error_message = f"❌ Error: Repository name is required when a platform is selected\n\n{display_text}" if current_projects else "❌ Error: Repository name is required when a platform is selected"
+                    return current_projects, error_message, "", "", "", ""
+                
+                # Check for duplicate platform-repository combination
+                full_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
+                if any(p.get('platform') == platform.strip() and p.get('repo') == full_repo for p in current_projects):
+                    display_text = self._format_projects_display(current_projects)
+                    error_message = f"❌ Error: Repository {full_repo} already exists for {platform}\n\n{display_text}" if current_projects else f"❌ Error: Repository {full_repo} already exists for {platform}"
+                    return current_projects, error_message, "", "", "", ""
             
             # Create new project
             new_project = {
                 'name': name.strip(),
-                'platform': platform.strip() if platform.strip() else None,
-                'repo': repo.strip() if repo.strip() else None
+                'platform': platform.strip() if platform and platform.strip() else None,
+                'repo': f"{repo_owner.strip()}/{repo_name.strip()}" if repo_owner and repo_owner.strip() and repo_name and repo_name.strip() else None
             }
             
             updated_projects = current_projects + [new_project]
             success_message = self._format_projects_display(updated_projects)
             
-            return updated_projects, success_message, "", "", ""
+            return updated_projects, success_message, "", "", "", ""
         
         def clear_projects():
             """Clear all projects"""
             return [], "No projects added yet. Create projects to define your organizational structure."
+        
+        def update_repository_visibility(platform):
+            """Show/hide repository fields based on platform selection"""
+            if platform and platform.strip():
+                return gr.Textbox(visible=True), gr.Textbox(visible=True)
+            else:
+                return gr.Textbox(value="", visible=False), gr.Textbox(value="", visible=False)
         
         def add_activity(name, parent, current_activities, current_projects):
             """Add a new activity to the list"""
@@ -1076,15 +1128,24 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Please enter an activity name\n\n{display_text}" if current_activities else "❌ Error: Please enter an activity name"
                 return current_activities, error_message, "", None
             
-            # Check if activity already exists
-            if any(a['name'] == name.strip() for a in current_activities):
+            # Check for global name uniqueness across projects and activities
+            activity_name = name.strip()
+            
+            # Check against existing projects
+            if any(p['name'] == activity_name for p in current_projects):
+                display_text = self._format_activities_display(current_activities)
+                error_message = f"❌ Error: Name '{activity_name}' already exists as a project\n\n{display_text}" if current_activities else f"❌ Error: Name '{activity_name}' already exists as a project"
+                return current_activities, error_message, "", None
+            
+            # Check against existing activities
+            if any(a['name'] == activity_name for a in current_activities):
                 display_text = self._format_activities_display(current_activities)
                 error_message = f"❌ Error: Activity name already exists\n\n{display_text}" if current_activities else "❌ Error: Activity name already exists"
                 return current_activities, error_message, "", None
             
             # Create new activity
             new_activity = {
-                'name': name.strip(),
+                'name': activity_name,
                 'parent': parent if parent else None
             }
             
@@ -1109,18 +1170,40 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Please enter a task name\n\n{display_text}" if current_tasks else "❌ Error: Please enter a task name"
                 return current_tasks, error_message, "", None, "", ""
             
-            # Check if task already exists
-            if any(t['name'] == name.strip() for t in current_tasks):
+            # Check for global name uniqueness across projects, activities, and tasks
+            task_name = name.strip()
+            
+            # Check against existing projects
+            if any(p['name'] == task_name for p in current_projects):
+                display_text = self._format_tasks_display(current_tasks)
+                error_message = f"❌ Error: Name '{task_name}' already exists as a project\n\n{display_text}" if current_tasks else f"❌ Error: Name '{task_name}' already exists as a project"
+                return current_tasks, error_message, "", None, "", ""
+            
+            # Check against existing activities
+            if any(a['name'] == task_name for a in current_activities):
+                display_text = self._format_tasks_display(current_tasks)
+                error_message = f"❌ Error: Name '{task_name}' already exists as an activity\n\n{display_text}" if current_tasks else f"❌ Error: Name '{task_name}' already exists as an activity"
+                return current_tasks, error_message, "", None, "", ""
+            
+            # Check against existing tasks
+            if any(t['name'] == task_name for t in current_tasks):
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Task name already exists\n\n{display_text}" if current_tasks else "❌ Error: Task name already exists"
                 return current_tasks, error_message, "", None, "", ""
             
+            # Validate parent is an activity (if provided)
+            if parent and parent.strip():
+                if not any(a['name'] == parent for a in current_activities):
+                    display_text = self._format_tasks_display(current_tasks)
+                    error_message = f"❌ Error: Parent '{parent}' is not a valid activity\n\n{display_text}" if current_tasks else f"❌ Error: Parent '{parent}' is not a valid activity"
+                    return current_tasks, error_message, "", None, "", ""
+            
             # Create new task
             new_task = {
-                'name': name.strip(),
-                'parent': parent if parent else None,
-                'type': task_type.strip() if task_type.strip() else None,
-                'action': action.strip() if action.strip() else None
+                'name': task_name,
+                'parent': parent if parent and parent.strip() else None,
+                'type': task_type if task_type and task_type.strip() else None,
+                'action': action if action and action.strip() else None
             }
             
             updated_tasks = current_tasks + [new_task]
@@ -1132,11 +1215,9 @@ class GovernanceFormBuilder:
             """Clear all tasks"""
             return [], "No tasks added yet. Create tasks to define specific governance actions."
         
-        def update_task_parent_dropdown(current_projects, current_activities):
-            """Update task parent dropdown when projects or activities change"""
-            parent_choices = []
-            parent_choices.extend([p['name'] for p in current_projects])
-            parent_choices.extend([a['name'] for a in current_activities])
+        def update_task_parent_dropdown(current_activities):
+            """Update task parent dropdown when activities change (tasks can only have activities as parents)"""
+            parent_choices = [a['name'] for a in current_activities]
             return gr.Dropdown(choices=parent_choices, value=None)
         
         def update_scope_dropdown(projects_data, activities_data, tasks_data):
@@ -1744,29 +1825,60 @@ MajorityPolicy example_policy {
         
         # Scope management handlers
         # Project management
+        def add_project_and_clear_form(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
+            """Add project and return cleared form with proper repository visibility"""
+            # First add the project
+            updated_projects, message, clear_name, clear_platform, clear_repo_owner, clear_repo_name = add_project(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks)
+            
+            # After clearing, repository fields should be hidden and empty since platform is cleared
+            hidden_repo_owner = gr.Textbox(value="", visible=False)
+            hidden_repo_name = gr.Textbox(value="", visible=False)
+            
+            return updated_projects, message, clear_name, clear_platform, hidden_repo_owner, hidden_repo_name
+        
         scope_components['add_project_btn'].click(
-            fn=add_project,
+            fn=add_project_and_clear_form,
             inputs=[
                 scope_components['project_name'],
                 scope_components['project_platform'],
-                scope_components['project_repo'],
-                scope_components['projects_data']
+                scope_components['project_repo_owner'],
+                scope_components['project_repo_name'],
+                scope_components['projects_data'],
+                scope_components['activities_data'],
+                scope_components['tasks_data']
             ],
             outputs=[
                 scope_components['projects_data'],
                 scope_components['projects_display'],
                 scope_components['project_name'],        # Clear name field
                 scope_components['project_platform'],    # Clear platform field
-                scope_components['project_repo']         # Clear repo field
+                scope_components['project_repo_owner'],  # Clear and hide repo owner field
+                scope_components['project_repo_name']    # Clear and hide repo name field
             ]
         )
         
+        def clear_projects_and_reset_form():
+            """Clear all projects and reset form with proper repository visibility"""
+            projects_data, display_message = clear_projects()
+            hidden_repo_owner = gr.Textbox(value="", visible=False)
+            hidden_repo_name = gr.Textbox(value="", visible=False)
+            return projects_data, display_message, hidden_repo_owner, hidden_repo_name
+        
         scope_components['clear_projects_btn'].click(
-            fn=clear_projects,
+            fn=clear_projects_and_reset_form,
             outputs=[
                 scope_components['projects_data'],
-                scope_components['projects_display']
+                scope_components['projects_display'],
+                scope_components['project_repo_owner'],  # Hide repository owner field
+                scope_components['project_repo_name']    # Hide repository name field
             ]
+        )
+        
+        # Show/hide repository fields based on platform selection
+        scope_components['project_platform'].change(
+            fn=update_repository_visibility,
+            inputs=[scope_components['project_platform']],
+            outputs=[scope_components['project_repo_owner'], scope_components['project_repo_name']]
         )
         
         # Activity management
@@ -1831,13 +1943,12 @@ MajorityPolicy example_policy {
             outputs=[scope_components['activity_parent']]
         )
         
-        # Update task parent dropdown when projects or activities change
-        for data_component in [scope_components['projects_data'], scope_components['activities_data']]:
-            data_component.change(
-                fn=update_task_parent_dropdown,
-                inputs=[scope_components['projects_data'], scope_components['activities_data']],
-                outputs=[scope_components['task_parent']]
-            )
+        # Update task parent dropdown when activities change (tasks can only have activities as parents)
+        scope_components['activities_data'].change(
+            fn=update_task_parent_dropdown,
+            inputs=[scope_components['activities_data']],
+            outputs=[scope_components['task_parent']]
+        )
         
         # Profile management handlers
         participant_components['add_profile_btn'].click(

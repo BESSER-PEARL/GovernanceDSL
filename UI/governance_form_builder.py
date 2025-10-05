@@ -275,13 +275,31 @@ class GovernanceFormBuilder:
         
         with gr.Accordion("Roles", open=True):
             gr.Markdown("### Define Roles")
-            gr.Markdown("*Format: Comma-separated list*")
+            gr.Markdown("*Define individual roles for your project*")
+            gr.Markdown("**Note:** Role names must be unique across all participants (roles, individuals, agents)")
             
-            roles_text = gr.Textbox(
-                label="Roles",
-                placeholder="e.g., maintainer, reviewer, approver, owner",
-                info="List the different roles in your project"
+            with gr.Row():
+                role_name = gr.Textbox(
+                    label="Role Name *",
+                    placeholder="e.g., maintainer, reviewer, approver, owner",
+                    info="Unique name for this role (required - must be unique across all participants)"
+                )
+            
+            with gr.Row():
+                add_role_btn = gr.Button("➕ Add Role", variant="secondary")
+                clear_roles_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added roles
+            roles_display = gr.Textbox(
+                label="Added Roles",
+                lines=4,
+                interactive=False,
+                placeholder="No roles added yet. Create roles to define project responsibilities.",
+                info="Roles you've added will appear here"
             )
+            
+            # Hidden component to store roles data
+            roles_data = gr.State([])
         
         with gr.Accordion("Individuals", open=True):
             gr.Markdown("### Individual Participants")
@@ -414,7 +432,11 @@ class GovernanceFormBuilder:
             'clear_profiles_btn': clear_profiles_btn,
             'profiles_display': profiles_display,
             'profiles_data': profiles_data,
-            'roles_text': roles_text,
+            'role_name': role_name,
+            'add_role_btn': add_role_btn,
+            'clear_roles_btn': clear_roles_btn,
+            'roles_display': roles_display,
+            'roles_data': roles_data,
             'individual_name': individual_name,
             'individual_vote_value': individual_vote_value,
             'individual_profile': individual_profile,
@@ -533,39 +555,39 @@ class GovernanceFormBuilder:
                     info="Policy to use when consensus cannot be reached (Showing only policies with same scope)"
                 )
             
-            # Conditions section
-            gr.Markdown("#### Policy Conditions (Optional)")
-            
-            with gr.Row():
-                condition_type = gr.Dropdown(
-                    label="Add Condition",
-                    choices=[
-                        "",  # Empty option for no condition
-                        "Deadline",
-                        "MinDecisionTime", 
-                        "ParticipantExclusion",
-                        "MinParticipants",
-                        "VetoRight",
-                        "LabelCondition"
-                    ],
-                    value="",
-                    info="Select a condition type to add to this policy"
-                )
-            
-
-            
-            # Condition-specific fields (initially hidden)
-            with gr.Row():
-                # VetoRight condition
-                veto_participants = gr.Dropdown(
-                    label="Veto Right Participants",
-                    choices=[],  # Will be populated from participants
-                    value=None,
-                    multiselect=True,
-                    allow_custom_value=True,
-                    visible=False,
-                    info="Participants who can veto this decision"
-                )
+            # Conditions section wrapped in a visual box
+            with gr.Group():
+                gr.Markdown("#### 📜 Policy Conditions (Optional)")
+                gr.Markdown("*Configure additional rules and constraints for this policy*")
+                
+                with gr.Row():
+                    condition_type = gr.Dropdown(
+                        label="Add Condition",
+                        choices=[
+                            "",  # Empty option for no condition
+                            "Deadline",
+                            "MinDecisionTime", 
+                            "ParticipantExclusion",
+                            "MinParticipants",
+                            "VetoRight",
+                            "LabelCondition"
+                        ],
+                        value="",
+                        info="Select a condition type to add to this policy"
+                    )
+                
+                # Condition-specific fields (initially hidden)
+                with gr.Row():
+                    # VetoRight condition
+                    veto_participants = gr.Dropdown(
+                        label="Veto Right Participants",
+                        choices=[],  # Will be populated from participants
+                        value=None,
+                        multiselect=True,
+                        allow_custom_value=True,
+                        visible=False,
+                        info="Participants who can veto this decision"
+                    )
                 
                 # ParticipantExclusion condition
                 excluded_participants = gr.Dropdown(
@@ -578,105 +600,105 @@ class GovernanceFormBuilder:
                     info="Participants excluded from this decision"
                 )
             
-            with gr.Row():
-                # MinParticipants condition
-                min_participants = gr.Number(
-                    label="Minimum Participants",
-                    value=None,
-                    visible=False,
-                    info="Minimum number of participants required (≥1)"
-                )
-            
-            # Deadline condition fields
-            with gr.Row():
-                deadline_offset_value = gr.Number(
-                    label="Deadline Offset Value",
-                    value=None,
-                    visible=False,
-                    info="Time offset number (≥1, e.g., 7 for '7 days')"
-                )
+                with gr.Row():
+                    # MinParticipants condition
+                    min_participants = gr.Number(
+                        label="Minimum Participants",
+                        value=None,
+                        visible=False,
+                        info="Minimum number of participants required (≥1)"
+                    )
                 
-                deadline_offset_unit = gr.Dropdown(
-                    label="Deadline Offset Unit",
-                    choices=["days", "weeks", "months", "years"],
-                    value="days",
-                    visible=False,
-                    info="Time unit for the offset"
-                )
-            
-            with gr.Row():
-                deadline_date = gr.Textbox(
-                    label="Deadline Date (DD/MM/YYYY)",
-                    placeholder="e.g., 25/12/2024",
-                    visible=False,
-                    info="Specific deadline date (optional, can be used with or without offset)"
-                )
-            
-            # MinDecisionTime condition fields  
-            with gr.Row():
-                min_decision_offset_value = gr.Number(
-                    label="Min Decision Time Offset Value",
-                    value=None,
-                    visible=False,
-                    info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
-                )
+                # Deadline condition fields
+                with gr.Row():
+                    deadline_offset_value = gr.Number(
+                        label="Deadline Offset Value",
+                        value=None,
+                        visible=False,
+                        info="Time offset number (≥1, e.g., 7 for '7 days')"
+                    )
+                    
+                    deadline_offset_unit = gr.Dropdown(
+                        label="Deadline Offset Unit",
+                        choices=["days", "weeks", "months", "years"],
+                        value="days",
+                        visible=False,
+                        info="Time unit for the offset"
+                    )
                 
-                min_decision_offset_unit = gr.Dropdown(
-                    label="Min Decision Time Offset Unit",
-                    choices=["days", "weeks", "months", "years"],
-                    value="days",
-                    visible=False,
-                    info="Time unit for the minimum decision time"
-                )
-            
-            with gr.Row():
-                min_decision_date = gr.Textbox(
-                    label="Min Decision Date (DD/MM/YYYY)",
-                    placeholder="e.g., 01/01/2024",
-                    visible=False,
-                    info="Specific minimum decision date (optional, can be used with or without offset)"
-                )
-            
-            with gr.Row():
-                # LabelCondition fields
-                label_condition_type = gr.Dropdown(
-                    label="Label Condition Type",
-                    choices=["pre", "post"],
-                    value="pre",
-                    visible=False,
-                    info="When to check labels (pre/post decision)"
-                )
+                with gr.Row():
+                    deadline_date = gr.Textbox(
+                        label="Deadline Date (DD/MM/YYYY)",
+                        placeholder="e.g., 25/12/2024",
+                        visible=False,
+                        info="Specific deadline date (optional, can be used with or without offset)"
+                    )
                 
-                label_condition_operator = gr.Dropdown(
-                    label="Label Operator",
-                    choices=["", "not"],
-                    value="",
-                    visible=False,
-                    info="Label condition operator (empty for required, 'not' for forbidden)"
-                )
-            
-            with gr.Row():
-                label_condition_labels = gr.Textbox(
-                    label="Labels",
-                    placeholder="e.g., lgtm, approved",
-                    visible=False,
-                    info="Comma-separated list of labels"
-                )
-            
-            # Condition management buttons
-            with gr.Row():
-                add_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
-                clear_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
-            
-            # Added conditions display (adaptive height)
-            added_conditions_list = gr.Textbox(
-                label="Added Conditions",
-                value="",
-                interactive=False,
-                lines=2,
-                max_lines=10,
-                info="List of conditions added to this policy"
-            )
+                # MinDecisionTime condition fields  
+                with gr.Row():
+                    min_decision_offset_value = gr.Number(
+                        label="Min Decision Time Offset Value",
+                        value=None,
+                        visible=False,
+                        info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
+                    )
+                    
+                    min_decision_offset_unit = gr.Dropdown(
+                        label="Min Decision Time Offset Unit",
+                        choices=["days", "weeks", "months", "years"],
+                        value="days",
+                        visible=False,
+                        info="Time unit for the minimum decision time"
+                    )
+                
+                with gr.Row():
+                    min_decision_date = gr.Textbox(
+                        label="Min Decision Date (DD/MM/YYYY)",
+                        placeholder="e.g., 01/01/2024",
+                        visible=False,
+                        info="Specific minimum decision date (optional, can be used with or without offset)"
+                    )
+                
+                with gr.Row():
+                    # LabelCondition fields
+                    label_condition_type = gr.Dropdown(
+                        label="Label Condition Type",
+                        choices=["pre", "post"],
+                        value="pre",
+                        visible=False,
+                        info="When to check labels (pre/post decision)"
+                    )
+                    
+                    label_condition_operator = gr.Dropdown(
+                        label="Label Operator",
+                        choices=["", "not"],
+                        value="",
+                        visible=False,
+                        info="Label condition operator (empty for required, 'not' for forbidden)"
+                    )
+                
+                with gr.Row():
+                    label_condition_labels = gr.Textbox(
+                        label="Labels",
+                        placeholder="e.g., lgtm, approved",
+                        visible=False,
+                        info="Comma-separated list of labels"
+                    )
+                
+                    # Condition management buttons
+                    with gr.Row():
+                        add_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
+                        clear_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
+                    
+                    # Added conditions display (adaptive height)
+                    added_conditions_list = gr.Textbox(
+                        label="Added Conditions",
+                        value="",
+                        interactive=False,
+                        lines=2,
+                        max_lines=10,
+                        info="List of conditions added to this policy"
+                    )
             
             with gr.Row():
                 add_policy_btn = gr.Button("➕ Add Policy", variant="secondary")
@@ -973,13 +995,62 @@ class GovernanceFormBuilder:
             """Clear all profiles"""
             return [], "No profiles added yet", None
         
-        def add_individual(name, vote_value, profile, role, current_individuals, current_profiles, roles_text):
+        def add_role(name, current_roles, current_individuals, current_agents):
+            """Add a new role to the list"""
+            if not name.strip():
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
+                return current_roles, error_message, ""
+            
+            # Check for global name uniqueness across all participant types
+            role_name = name.strip()
+            
+            # Check against existing individuals
+            if any(i['name'] == role_name for i in current_individuals):
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Name '{role_name}' already exists as an individual\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an individual"
+                return current_roles, error_message, ""
+            
+            # Check against existing agents
+            if any(a['name'] == role_name for a in current_agents):
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Name '{role_name}' already exists as an agent\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an agent"
+                return current_roles, error_message, ""
+            
+            # Check against existing roles
+            if any(r['name'] == role_name for r in current_roles):
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Role name already exists\n\n{display_text}" if current_roles else "❌ Error: Role name already exists"
+                return current_roles, error_message, ""
+            
+            # Add new role
+            new_role = {'name': role_name}
+            updated_roles = current_roles + [new_role]
+            display_text = self._format_roles_display(updated_roles)
+            return updated_roles, display_text, ""
+        
+        def clear_all_roles():
+            """Clear all roles"""
+            return [], "No roles added yet. Create roles to define project responsibilities.", ""
+        
+        def add_individual(name, vote_value, profile, role, current_individuals, current_profiles, current_roles, current_agents):
             """Add a new individual to the list"""
             if not name.strip():
                 return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
             
-            # Check if individual already exists
-            if any(i['name'] == name.strip() for i in current_individuals):
+            # Check for global name uniqueness across all participant types
+            individual_name = name.strip()
+            
+            # Check against existing roles
+            if any(r['name'] == individual_name for r in current_roles):
+                return current_individuals, f"❌ Name '{individual_name}' already exists as a role", "", 1.0, None, None
+            
+            # Check against existing agents
+            if any(a['name'] == individual_name for a in current_agents):
+                return current_individuals, f"❌ Name '{individual_name}' already exists as an agent", "", 1.0, None, None
+            
+            # Check against existing individuals
+            if any(i['name'] == individual_name for i in current_individuals):
                 return current_individuals, "❌ Individual name already exists", "", 1.0, None, None
             
             # Create new individual
@@ -998,7 +1069,7 @@ class GovernanceFormBuilder:
             
             # Update dropdown choices for next individual
             profile_choices = [p['name'] for p in current_profiles] if current_profiles else []
-            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+            role_choices = [r['name'] for r in current_roles] if current_roles else []
             
             return updated_individuals, success_message, "", 1.0, None, None
         
@@ -1006,20 +1077,31 @@ class GovernanceFormBuilder:
             """Clear all individuals"""
             return [], "No individuals added yet"
         
-        def update_individual_dropdowns(roles_text, current_profiles):
+        def update_individual_dropdowns(current_roles, current_profiles):
             """Update individual dropdown choices when roles or profiles change"""
             profile_choices = [p['name'] for p in current_profiles] if current_profiles else []
-            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+            role_choices = [r['name'] for r in current_roles] if current_roles else []
             
             return gr.Dropdown(choices=profile_choices, value=None), gr.Dropdown(choices=role_choices, value=None)
         
-        def add_agent(name, confidence, autonomy_level, explainability, role, current_agents, roles_text):
+        def add_agent(name, confidence, autonomy_level, explainability, role, current_agents, current_roles, current_individuals):
             """Add a new agent to the list"""
             if not name.strip():
                 return current_agents, "❌ Please enter an agent name", "", None, None, None, None
             
-            # Check if agent already exists
-            if any(a['name'] == name.strip() for a in current_agents):
+            # Check for global name uniqueness across all participant types
+            agent_name = name.strip()
+            
+            # Check against existing roles
+            if any(r['name'] == agent_name for r in current_roles):
+                return current_agents, f"❌ Name '{agent_name}' already exists as a role", "", None, None, None, None
+            
+            # Check against existing individuals
+            if any(i['name'] == agent_name for i in current_individuals):
+                return current_agents, f"❌ Name '{agent_name}' already exists as an individual", "", None, None, None, None
+            
+            # Check against existing agents
+            if any(a['name'] == agent_name for a in current_agents):
                 return current_agents, "❌ Agent name already exists", "", None, None, None, None
             
             # Create new agent
@@ -1038,7 +1120,7 @@ class GovernanceFormBuilder:
             success_message = f"✅ Agent '{new_agent['name']}' added successfully!\n\n{display_text}"
             
             # Update role dropdown choices for next agent
-            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+            role_choices = [r['name'] for r in current_roles] if current_roles else []
             
             return updated_agents, success_message, "", None, None, None, None
         
@@ -1046,9 +1128,9 @@ class GovernanceFormBuilder:
             """Clear all agents"""
             return [], "No agents added yet"
         
-        def update_agent_role_dropdown(roles_text):
-            """Update agent role dropdown when roles text changes"""
-            role_choices = [role.strip() for role in roles_text.split(',') if role.strip()] if roles_text else []
+        def update_agent_role_dropdown(current_roles):
+            """Update agent role dropdown when roles change"""
+            role_choices = [r['name'] for r in current_roles] if current_roles else []
             return gr.Dropdown(choices=role_choices, value=None)
         
         # Scope event handlers
@@ -1237,18 +1319,18 @@ class GovernanceFormBuilder:
             
             return gr.Dropdown(choices=sorted(list(set(scope_choices))), value=None)
         
-        def update_participant_dropdown(roles_text, individuals_data, agents_data):
+        def update_participant_dropdown(roles_data, individuals_data, agents_data):
             """Update policy participants dropdown when participant definitions change"""
-            participant_choices = self._extract_participant_names(roles_text, individuals_data, agents_data)
+            participant_choices = self._extract_participant_names(roles_data, individuals_data, agents_data)
             return (
                 gr.Dropdown(choices=participant_choices, value=None),  # policy_participants
                 gr.Dropdown(choices=participant_choices, value=None),  # veto_participants
                 gr.Dropdown(choices=participant_choices, value=None)   # excluded_participants
             )
         
-        def update_phase_participant_dropdown(roles_text, individuals_data, agents_data):
+        def update_phase_participant_dropdown(roles_data, individuals_data, agents_data):
             """Update phase participants dropdown when participant definitions change"""
-            participant_choices = self._extract_participant_names(roles_text, individuals_data, agents_data)
+            participant_choices = self._extract_participant_names(roles_data, individuals_data, agents_data)
             return gr.Dropdown(choices=participant_choices, value=None)
         
         def update_policy_reference_dropdowns(policies_data, current_scope=None):
@@ -1985,6 +2067,32 @@ MajorityPolicy example_policy {
             outputs=[participant_components['individual_profile']]
         )
         
+        # Roles management handlers
+        participant_components['add_role_btn'].click(
+            fn=add_role,
+            inputs=[
+                participant_components['role_name'], 
+                participant_components['roles_data'],
+                participant_components['individuals_data'],
+                participant_components['agents_data']
+            ],
+            outputs=[
+                participant_components['roles_data'], 
+                participant_components['roles_display'], 
+                participant_components['role_name']
+            ]
+        )
+        
+        participant_components['clear_roles_btn'].click(
+            fn=clear_all_roles,
+            inputs=[],
+            outputs=[
+                participant_components['roles_data'], 
+                participant_components['roles_display'], 
+                participant_components['role_name']
+            ]
+        )
+        
         # Individual management handlers
         participant_components['add_individual_btn'].click(
             fn=add_individual,
@@ -1995,7 +2103,8 @@ MajorityPolicy example_policy {
                 participant_components['individual_role'],
                 participant_components['individuals_data'],
                 participant_components['profiles_data'],    # For profile dropdown choices
-                participant_components['roles_text']        # For role dropdown choices
+                participant_components['roles_data'],        # For global uniqueness check
+                participant_components['agents_data']         # For global uniqueness check
             ],
             outputs=[
                 participant_components['individuals_data'],
@@ -2025,7 +2134,8 @@ MajorityPolicy example_policy {
                 participant_components['agent_explainability'],
                 participant_components['agent_role'],
                 participant_components['agents_data'],
-                participant_components['roles_text']        # For role dropdown choices
+                participant_components['roles_data'],        # For global uniqueness check
+                participant_components['individuals_data']    # For global uniqueness check
             ],
             outputs=[
                 participant_components['agents_data'],
@@ -2046,11 +2156,11 @@ MajorityPolicy example_policy {
             ]
         )
         
-        # Update individual and agent dropdowns when roles text changes
-        participant_components['roles_text'].change(
+        # Update individual and agent dropdowns when roles data changes
+        participant_components['roles_data'].change(
             fn=update_individual_dropdowns,
             inputs=[
-                participant_components['roles_text'],
+                participant_components['roles_data'],
                 participant_components['profiles_data']
             ],
             outputs=[
@@ -2059,10 +2169,10 @@ MajorityPolicy example_policy {
             ]
         )
         
-        # Update agent role dropdown when roles text changes
-        participant_components['roles_text'].change(
+        # Update agent role dropdown when roles data changes
+        participant_components['roles_data'].change(
             fn=update_agent_role_dropdown,
-            inputs=[participant_components['roles_text']],
+            inputs=[participant_components['roles_data']],
             outputs=[participant_components['agent_role']]
         )
         
@@ -2079,11 +2189,11 @@ MajorityPolicy example_policy {
             )
         
         # Update policy participants dropdown when participant definitions change
-        for participant_component in [participant_components['roles_text'], participant_components['individuals_data'], participant_components['agents_data']]:
+        for participant_component in [participant_components['roles_data'], participant_components['individuals_data'], participant_components['agents_data']]:
             participant_component.change(
                 fn=update_participant_dropdown,
                 inputs=[
-                    participant_components['roles_text'],
+                    participant_components['roles_data'],
                     participant_components['individuals_data'],
                     participant_components['agents_data']
                 ],
@@ -2334,11 +2444,11 @@ MajorityPolicy example_policy {
         )
         
         # Update phase participant dropdown when participant definitions change
-        for participant_component in [participant_components['roles_text'], participant_components['individuals_data'], participant_components['agents_data']]:
+        for participant_component in [participant_components['roles_data'], participant_components['individuals_data'], participant_components['agents_data']]:
             participant_component.change(
                 fn=update_phase_participant_dropdown,
                 inputs=[
-                    participant_components['roles_text'],
+                    participant_components['roles_data'],
                     participant_components['individuals_data'],
                     participant_components['agents_data']
                 ],
@@ -2388,7 +2498,7 @@ MajorityPolicy example_policy {
         # Participant components
         preview_components.extend([
             participant_components['profiles_data'],
-            participant_components['roles_text'],
+            participant_components['roles_data'],
             participant_components['individuals_data'],
             participant_components['agents_data']
         ])
@@ -2412,7 +2522,7 @@ MajorityPolicy example_policy {
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
-        (projects_data, activities_data, tasks_data, profiles_data, roles_text, individuals_data, agents_data,
+        (projects_data, activities_data, tasks_data, profiles_data, roles_data, individuals_data, agents_data,
          policies_data, composed_policies_data) = form_values
         
         dsl_parts = []
@@ -2539,8 +2649,8 @@ MajorityPolicy example_policy {
                 participants_section.append("        }")
         
         # Add Roles section
-        if roles_text.strip():
-            roles_list = [role.strip() for role in roles_text.split(',') if role.strip()]
+        if roles_data:
+            roles_list = [role['name'] for role in roles_data]
             participants_section.append(f"    Roles : {', '.join(roles_list)}")
         
         # Add Individuals section
@@ -3014,6 +3124,17 @@ MajorityPolicy example_policy {
         
         return '\n'.join(display_lines)
    
+    def _format_roles_display(self, roles):
+        """Format roles for display in the text area"""
+        if not roles:
+            return "No roles added yet. Create roles to define project responsibilities."
+        
+        display_lines = [f"👥 {len(roles)} role(s) defined:", ""]
+        for i, role in enumerate(roles, 1):
+            display_lines.append(f"{i}. 🔹 **{role['name']}**")
+        
+        return '\n'.join(display_lines)
+   
     def _format_projects_display(self, projects):
         """Format projects for display in the text area"""
         if not projects:
@@ -3094,14 +3215,13 @@ MajorityPolicy example_policy {
         
         return sorted(list(set(scope_names)))  # Remove duplicates and sort
     
-    def _extract_participant_names(self, roles_text, individuals_data, agents_data):
+    def _extract_participant_names(self, roles_data, individuals_data, agents_data):
         """Extract all participant names (roles, individuals, agents) for dropdown choices"""
         participant_names = []
         
         # Extract role names
-        if roles_text.strip():
-            roles = [role.strip() for role in roles_text.split(',') if role.strip()]
-            participant_names.extend(roles)
+        if roles_data:
+            participant_names.extend([role['name'] for role in roles_data])
         
         # Extract individual names
         if individuals_data:

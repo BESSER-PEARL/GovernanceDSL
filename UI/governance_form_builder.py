@@ -705,6 +705,8 @@ class GovernanceFormBuilder:
                                 max_lines=10,
                                 info="List of conditions added to this policy"
                             )
+                        with gr.Row():
+                            gr.HTML("") # Vertical spacer
                     gr.HTML("")  # End of visual containment
             with gr.Row():
                 add_policy_btn = gr.Button("➕ Add Policy", variant="secondary")
@@ -848,6 +850,160 @@ class GovernanceFormBuilder:
                     info="Fallback policy for Consensus/LazyConsensus phases"
                 )
             
+            # Phase Conditions Section
+            with gr.Group():
+                gr.Markdown("#### 📜 Phase Conditions (Optional)")
+                gr.Markdown("*Configure additional rules and constraints for this phase*")
+                
+                # Add visual containment with padding following same structure
+                with gr.Row():
+                    gr.HTML("")  # Left spacer
+                    with gr.Column(scale=100):  # Main content area
+                        with gr.Row():
+                            phase_condition_type = gr.Dropdown(
+                                label="Add Condition",
+                                choices=[
+                                    "",  # Empty option for no condition
+                                    "Deadline",
+                                    "MinDecisionTime", 
+                                    "ParticipantExclusion",
+                                    "MinParticipants",
+                                    "VetoRight",
+                                    "LabelCondition"
+                                ],
+                                value="",
+                                info="Select a condition type to add to this phase"
+                            )
+                        # VetoRight condition
+                        with gr.Row():
+                            phase_veto_participants = gr.Dropdown(
+                                label="Veto Participants",
+                                choices=[],  # Will be populated from participants
+                                value=None,
+                                multiselect=True,
+                                allow_custom_value=True,
+                                visible=False,
+                                info="Participants with veto power for this phase"
+                            )
+                
+                        # ParticipantExclusion condition
+                        with gr.Row():
+                            phase_excluded_participants = gr.Dropdown(
+                                label="Excluded Participants",
+                                choices=[],  # Will be populated from participants
+                                value=None,
+                                multiselect=True,
+                                allow_custom_value=True,
+                                visible=False,
+                                info="Participants excluded from this phase decision"
+                            )
+                
+                        # MinParticipants condition
+                        with gr.Row():
+                            phase_min_participants = gr.Number(
+                                label="Minimum Participants",
+                                value=None,
+                                visible=False,
+                                info="Minimum number of participants required for this phase (≥1)"
+                            )
+                
+                        # Deadline condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                phase_deadline_offset_value = gr.Number(
+                                    label="Deadline Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Time offset number (≥1, e.g., 7 for '7 days')"
+                                )
+                                
+                                phase_deadline_offset_unit = gr.Dropdown(
+                                    label="Deadline Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the offset"
+                                )
+                            
+                            phase_deadline_date = gr.Textbox(
+                                label="Deadline Date (DD/MM/YYYY)",
+                                placeholder="e.g., 25/12/2024",
+                                visible=False,
+                                info="Specific deadline date (optional, can be used with or without offset)"
+                            )
+                
+                        # MinDecisionTime condition fields  
+                        with gr.Row():
+                            with gr.Row():
+                                phase_min_decision_offset_value = gr.Number(
+                                    label="Min Decision Time Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
+                                )
+                                
+                                phase_min_decision_offset_unit = gr.Dropdown(
+                                    label="Min Decision Time Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the minimum decision time"
+                                )
+                            
+                            phase_min_decision_date = gr.Textbox(
+                                label="Min Decision Date (DD/MM/YYYY)",
+                                placeholder="e.g., 01/01/2024",
+                                visible=False,
+                                info="Specific minimum decision date (optional, can be used with or without offset)"
+                            )
+                
+                        # LabelCondition fields
+                        with gr.Row():
+                            with gr.Row():
+                                phase_label_condition_type = gr.Dropdown(
+                                    label="Label Condition Type",
+                                    choices=["pre", "post"],
+                                    value="pre",
+                                    visible=False,
+                                    info="When to check labels (pre/post decision)"
+                                )
+                                
+                                phase_label_condition_operator = gr.Dropdown(
+                                    label="Label Operator",
+                                    choices=["", "not"],
+                                    value="",
+                                    visible=False,
+                                    info="Label condition operator (empty for required, 'not' for forbidden)"
+                                )
+                            
+                            phase_label_condition_labels = gr.Textbox(
+                                label="Labels",
+                                placeholder="e.g., lgtm, approved",
+                                visible=False,
+                                info="Comma-separated list of labels"
+                            )
+                
+                        # Phase condition management buttons
+                        with gr.Row():
+                            with gr.Row():
+                                add_phase_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
+                                clear_phase_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
+                
+                        # Added phase conditions display
+                        with gr.Row():
+                            added_phase_conditions_list = gr.Textbox(
+                                label="Added Conditions",
+                                value="",
+                                interactive=False,
+                                lines=2,
+                                max_lines=10,
+                                info="List of conditions added to this phase"
+                            )
+                        with gr.Row():
+                            gr.HTML("") # Vertical spacer
+                    gr.HTML("")
+            
+            # Phase management buttons
             with gr.Row():
                 add_phase_btn = gr.Button("➕ Add Phase", variant="secondary")
                 clear_phases_btn = gr.Button("🗑️ Clear All Phases", variant="secondary")
@@ -924,6 +1080,23 @@ class GovernanceFormBuilder:
             'phase_voting_ratio': phase_voting_ratio,
             'phase_default_decision': phase_default_decision,
             'phase_fallback_policy': phase_fallback_policy,
+            # Phase condition components
+            'phase_condition_type': phase_condition_type,
+            'phase_veto_participants': phase_veto_participants,
+            'phase_excluded_participants': phase_excluded_participants,
+            'phase_min_participants': phase_min_participants,
+            'phase_deadline_offset_value': phase_deadline_offset_value,
+            'phase_deadline_offset_unit': phase_deadline_offset_unit,
+            'phase_deadline_date': phase_deadline_date,
+            'phase_min_decision_offset_value': phase_min_decision_offset_value,
+            'phase_min_decision_offset_unit': phase_min_decision_offset_unit,
+            'phase_min_decision_date': phase_min_decision_date,
+            'phase_label_condition_type': phase_label_condition_type,
+            'phase_label_condition_operator': phase_label_condition_operator,
+            'phase_label_condition_labels': phase_label_condition_labels,
+            'add_phase_condition_btn': add_phase_condition_btn,
+            'clear_phase_conditions_btn': clear_phase_conditions_btn,
+            'added_phase_conditions_list': added_phase_conditions_list,
             'add_phase_btn': add_phase_btn,
             'clear_phases_btn': clear_phases_btn,
             'added_phases_list': added_phases_list,
@@ -1331,7 +1504,10 @@ class GovernanceFormBuilder:
             return (
                 gr.Dropdown(choices=participant_choices, value=None),  # policy_participants
                 gr.Dropdown(choices=participant_choices, value=None),  # veto_participants
-                gr.Dropdown(choices=participant_choices, value=None)   # excluded_participants
+                gr.Dropdown(choices=participant_choices, value=None),  # excluded_participants
+                gr.Dropdown(choices=participant_choices, value=None),  # phase_participants
+                gr.Dropdown(choices=participant_choices, value=None),  # phase_veto_participants
+                gr.Dropdown(choices=participant_choices, value=None)   # phase_excluded_participants
             )
         
         def update_phase_participant_dropdown(roles_data, individuals_data, agents_data):
@@ -1629,6 +1805,177 @@ class GovernanceFormBuilder:
         def clear_conditions():
             """Clear all conditions for the current policy"""
             return ""
+        
+        def add_phase_condition(phase_condition_type, phase_veto_participants, phase_excluded_participants, 
+                               phase_min_participants, phase_deadline_offset_value, phase_deadline_offset_unit, 
+                               phase_deadline_date, phase_min_decision_offset_value, phase_min_decision_offset_unit, 
+                               phase_min_decision_date, phase_label_condition_type, phase_label_condition_operator, 
+                               phase_label_condition_labels, current_phase_conditions_text):
+            """Add a condition to the current phase"""
+            
+            # Parse existing conditions from the display text (ignore error messages and success messages)
+            existing_conditions = []
+            if current_phase_conditions_text.strip():
+                for line in current_phase_conditions_text.strip().split('\n'):
+                    line = line.strip()
+                    # Skip error messages, success messages, and empty lines
+                    if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
+                        existing_conditions.append(line)
+            
+            # Helper function to format the conditions display with error
+            def format_conditions_with_error(error_msg):
+                if existing_conditions:
+                    conditions_text = '\n'.join(existing_conditions)
+                    return f"❌ Error: {error_msg}\n\n{conditions_text}"
+                else:
+                    return f"❌ Error: {error_msg}"
+            
+            # Helper function to return error with all condition fields reset
+            def return_error(error_msg):
+                return (
+                    format_conditions_with_error(error_msg),  # added_phase_conditions_list
+                    gr.Dropdown(value=""),  # phase_condition_type
+                    gr.Dropdown(value=None),  # phase_veto_participants
+                    gr.Dropdown(value=None),  # phase_excluded_participants
+                    None,  # phase_min_participants
+                    None,  # phase_deadline_offset_value  
+                    "days",  # phase_deadline_offset_unit
+                    "",  # phase_deadline_date
+                    None,  # phase_min_decision_offset_value
+                    "days",  # phase_min_decision_offset_unit
+                    "",  # phase_min_decision_date
+                    "pre",  # phase_label_condition_type
+                    "",  # phase_label_condition_operator
+                    ""  # phase_label_condition_labels
+                )
+            
+            if not phase_condition_type:
+                return return_error("Please select a condition type")
+            
+            # Check for duplicates (except LabelCondition)
+            existing_types = []
+            for condition in existing_conditions:
+                if condition.startswith('Deadline'):
+                    existing_types.append('Deadline')
+                elif condition.startswith('MinDecisionTime'):
+                    existing_types.append('MinDecisionTime')
+                elif condition.startswith('ParticipantExclusion'):
+                    existing_types.append('ParticipantExclusion')
+                elif condition.startswith('MinParticipants'):
+                    existing_types.append('MinParticipants')
+                elif condition.startswith('VetoRight'):
+                    existing_types.append('VetoRight')
+                # LabelCondition can have multiple entries, so we don't track it
+            
+            if phase_condition_type != "LabelCondition" and phase_condition_type in existing_types:
+                return return_error(f"{phase_condition_type} already exists. Only LabelCondition can be added multiple times.")
+            
+            # Create the condition string
+            condition_str = ""
+            
+            if phase_condition_type == "VetoRight":
+                if not phase_veto_participants:
+                    return return_error("Please specify veto participants")
+                participants_list = [p.strip() for p in phase_veto_participants if p.strip()] if isinstance(phase_veto_participants, list) else [phase_veto_participants.strip()]
+                condition_str = f"VetoRight: {', '.join(participants_list)}"
+                
+            elif phase_condition_type == "ParticipantExclusion":
+                if not phase_excluded_participants:
+                    return return_error("Please specify excluded participants")
+                participants_list = [p.strip() for p in phase_excluded_participants if p.strip()] if isinstance(phase_excluded_participants, list) else [phase_excluded_participants.strip()]
+                condition_str = f"ParticipantExclusion: {', '.join(participants_list)}"
+                
+            elif phase_condition_type == "MinParticipants":
+                if not phase_min_participants or phase_min_participants < 1:
+                    return return_error("Please specify minimum participants (≥1)")
+                condition_str = f"MinParticipants: {phase_min_participants}"
+                
+            elif phase_condition_type == "Deadline":
+                parts = []
+                if phase_deadline_offset_value and phase_deadline_offset_unit:
+                    if phase_deadline_offset_value < 1:
+                        return return_error("Deadline offset value must be ≥1")
+                    parts.append(f"{phase_deadline_offset_value} {phase_deadline_offset_unit}")
+                if phase_deadline_date and phase_deadline_date.strip():
+                    parts.append(phase_deadline_date.strip())
+                if not parts:
+                    return return_error("Please specify deadline offset or date")
+                condition_str = f"Deadline: {', '.join(parts)}"
+                
+            elif phase_condition_type == "MinDecisionTime":
+                parts = []
+                if phase_min_decision_offset_value and phase_min_decision_offset_unit:
+                    if phase_min_decision_offset_value < 1:
+                        return return_error("Minimum decision time offset value must be ≥1")
+                    parts.append(f"{phase_min_decision_offset_value} {phase_min_decision_offset_unit}")
+                if phase_min_decision_date and phase_min_decision_date.strip():
+                    parts.append(phase_min_decision_date.strip())
+                if not parts:
+                    return return_error("Please specify minimum decision time offset or date")
+                condition_str = f"MinDecisionTime: {', '.join(parts)}"
+                
+            elif phase_condition_type == "LabelCondition":
+                if not phase_label_condition_labels:
+                    return return_error("Please specify labels")
+                labels = [l.strip() for l in phase_label_condition_labels.split(',') if l.strip()]
+                if not labels:
+                    return return_error("Please specify valid labels")
+                
+                type_part = phase_label_condition_type if phase_label_condition_type else "pre"
+                operator_part = f" {phase_label_condition_operator}" if phase_label_condition_operator else""
+                condition_str = f"LabelCondition {type_part}{operator_part}: {', '.join(labels)}"
+            
+            if condition_str:
+                # Add to existing conditions and format success message
+                updated_conditions = existing_conditions + [condition_str]
+                conditions_text = '\n'.join(updated_conditions)
+                success_message = f"✅ {phase_condition_type} condition added successfully!\n\n{conditions_text}"
+                return (
+                    success_message,  # added_phase_conditions_list
+                    gr.Dropdown(value=""),  # phase_condition_type
+                    gr.Dropdown(value=None),  # phase_veto_participants
+                    gr.Dropdown(value=None),  # phase_excluded_participants
+                    None,  # phase_min_participants
+                    None,  # phase_deadline_offset_value
+                    "days",  # phase_deadline_offset_unit
+                    "",  # phase_deadline_date
+                    None,  # phase_min_decision_offset_value
+                    "days",  # phase_min_decision_offset_unit
+                    "",  # phase_min_decision_date
+                    "pre",  # phase_label_condition_type
+                    "",  # phase_label_condition_operator
+                    ""  # phase_label_condition_labels
+                )
+            
+            return return_error("Unable to add condition")
+        
+        def clear_phase_conditions():
+            """Clear all conditions for the current phase"""
+            return ""
+        
+        def update_phase_condition_visibility(phase_condition_type):
+            """Update visibility of phase condition fields based on condition type"""
+            show_veto = phase_condition_type == "VetoRight"
+            show_exclusion = phase_condition_type == "ParticipantExclusion"
+            show_min_participants = phase_condition_type == "MinParticipants"
+            show_deadline = phase_condition_type == "Deadline"
+            show_min_decision = phase_condition_type == "MinDecisionTime"
+            show_label = phase_condition_type == "LabelCondition"
+            
+            return [
+                gr.Dropdown(visible=show_veto),       # phase_veto_participants
+                gr.Dropdown(visible=show_exclusion),  # phase_excluded_participants 
+                gr.Number(visible=show_min_participants), # phase_min_participants
+                gr.Number(visible=show_deadline),     # phase_deadline_offset_value
+                gr.Dropdown(visible=show_deadline),   # phase_deadline_offset_unit
+                gr.Textbox(visible=show_deadline),    # phase_deadline_date
+                gr.Number(visible=show_min_decision), # phase_min_decision_offset_value
+                gr.Dropdown(visible=show_min_decision), # phase_min_decision_offset_unit
+                gr.Textbox(visible=show_min_decision), # phase_min_decision_date
+                gr.Dropdown(visible=show_label),     # phase_label_condition_type
+                gr.Dropdown(visible=show_label),     # phase_label_condition_operator
+                gr.Textbox(visible=show_label)       # phase_label_condition_labels
+            ]
         
         # Composed Policy Functions
         def add_phase(phase_name, phase_type, phase_participants, phase_decision_type, phase_decision_options, 
@@ -2206,7 +2553,10 @@ MajorityPolicy example_policy {
                 outputs=[
                     policy_components['policy_participants'],
                     policy_components['veto_participants'],
-                    policy_components['excluded_participants']
+                    policy_components['excluded_participants'],
+                    policy_components['phase_participants'],
+                    policy_components['phase_veto_participants'],
+                    policy_components['phase_excluded_participants']
                 ]
             )
         
@@ -2355,6 +2705,69 @@ MajorityPolicy example_policy {
             fn=clear_conditions,
             outputs=[
                 policy_components['added_conditions_list']
+            ]
+        )
+        
+        # Phase condition event handlers
+        policy_components['phase_condition_type'].change(
+            fn=update_phase_condition_visibility,
+            inputs=[policy_components['phase_condition_type']],
+            outputs=[
+                policy_components['phase_veto_participants'],
+                policy_components['phase_excluded_participants'],
+                policy_components['phase_min_participants'],
+                policy_components['phase_deadline_offset_value'],
+                policy_components['phase_deadline_offset_unit'],
+                policy_components['phase_deadline_date'],
+                policy_components['phase_min_decision_offset_value'],
+                policy_components['phase_min_decision_offset_unit'],
+                policy_components['phase_min_decision_date'],
+                policy_components['phase_label_condition_type'],
+                policy_components['phase_label_condition_operator'],
+                policy_components['phase_label_condition_labels']
+            ]
+        )
+        
+        policy_components['add_phase_condition_btn'].click(
+            fn=add_phase_condition,
+            inputs=[
+                policy_components['phase_condition_type'],
+                policy_components['phase_veto_participants'],
+                policy_components['phase_excluded_participants'],
+                policy_components['phase_min_participants'],
+                policy_components['phase_deadline_offset_value'],
+                policy_components['phase_deadline_offset_unit'],
+                policy_components['phase_deadline_date'],
+                policy_components['phase_min_decision_offset_value'],
+                policy_components['phase_min_decision_offset_unit'],
+                policy_components['phase_min_decision_date'],
+                policy_components['phase_label_condition_type'],
+                policy_components['phase_label_condition_operator'],
+                policy_components['phase_label_condition_labels'],
+                policy_components['added_phase_conditions_list']
+            ],
+            outputs=[
+                policy_components['added_phase_conditions_list'],      # success/error message
+                policy_components['phase_condition_type'],            # reset dropdown
+                policy_components['phase_veto_participants'],         # reset multiselect
+                policy_components['phase_excluded_participants'],     # reset multiselect
+                policy_components['phase_min_participants'],          # reset number
+                policy_components['phase_deadline_offset_value'],     # reset number
+                policy_components['phase_deadline_offset_unit'],      # reset dropdown
+                policy_components['phase_deadline_date'],             # reset textbox
+                policy_components['phase_min_decision_offset_value'], # reset number
+                policy_components['phase_min_decision_offset_unit'],  # reset dropdown
+                policy_components['phase_min_decision_date'],         # reset textbox
+                policy_components['phase_label_condition_type'],      # reset dropdown
+                policy_components['phase_label_condition_operator'],  # reset textbox
+                policy_components['phase_label_condition_labels']     # reset textbox
+            ]
+        )
+        
+        policy_components['clear_phase_conditions_btn'].click(
+            fn=clear_phase_conditions,
+            outputs=[
+                policy_components['added_phase_conditions_list']
             ]
         )
         

@@ -560,146 +560,152 @@ class GovernanceFormBuilder:
                 gr.Markdown("#### 📜 Policy Conditions (Optional)")
                 gr.Markdown("*Configure additional rules and constraints for this policy*")
                 
+                # Add visual containment with padding
+                # We add left and right spacers to make it visual that it's contained
                 with gr.Row():
-                    condition_type = gr.Dropdown(
-                        label="Add Condition",
-                        choices=[
-                            "",  # Empty option for no condition
-                            "Deadline",
-                            "MinDecisionTime", 
-                            "ParticipantExclusion",
-                            "MinParticipants",
-                            "VetoRight",
-                            "LabelCondition"
-                        ],
-                        value="",
-                        info="Select a condition type to add to this policy"
-                    )
-                
-                # Condition-specific fields (initially hidden)
-                with gr.Row():
-                    # VetoRight condition
-                    veto_participants = gr.Dropdown(
-                        label="Veto Right Participants",
-                        choices=[],  # Will be populated from participants
-                        value=None,
-                        multiselect=True,
-                        allow_custom_value=True,
-                        visible=False,
-                        info="Participants who can veto this decision"
-                    )
-                
-                # ParticipantExclusion condition
-                excluded_participants = gr.Dropdown(
-                    label="Excluded Participants",
-                    choices=[],  # Will be populated from participants
-                    value=None,
-                    multiselect=True,
-                    allow_custom_value=True,
-                    visible=False,
-                    info="Participants excluded from this decision"
-                )
-            
-                with gr.Row():
-                    # MinParticipants condition
-                    min_participants = gr.Number(
-                        label="Minimum Participants",
-                        value=None,
-                        visible=False,
-                        info="Minimum number of participants required (≥1)"
-                    )
-                
-                # Deadline condition fields
-                with gr.Row():
-                    deadline_offset_value = gr.Number(
-                        label="Deadline Offset Value",
-                        value=None,
-                        visible=False,
-                        info="Time offset number (≥1, e.g., 7 for '7 days')"
-                    )
-                    
-                    deadline_offset_unit = gr.Dropdown(
-                        label="Deadline Offset Unit",
-                        choices=["days", "weeks", "months", "years"],
-                        value="days",
-                        visible=False,
-                        info="Time unit for the offset"
-                    )
-                
-                with gr.Row():
-                    deadline_date = gr.Textbox(
-                        label="Deadline Date (DD/MM/YYYY)",
-                        placeholder="e.g., 25/12/2024",
-                        visible=False,
-                        info="Specific deadline date (optional, can be used with or without offset)"
-                    )
-                
-                # MinDecisionTime condition fields  
-                with gr.Row():
-                    min_decision_offset_value = gr.Number(
-                        label="Min Decision Time Offset Value",
-                        value=None,
-                        visible=False,
-                        info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
-                    )
-                    
-                    min_decision_offset_unit = gr.Dropdown(
-                        label="Min Decision Time Offset Unit",
-                        choices=["days", "weeks", "months", "years"],
-                        value="days",
-                        visible=False,
-                        info="Time unit for the minimum decision time"
-                    )
-                
-                with gr.Row():
-                    min_decision_date = gr.Textbox(
-                        label="Min Decision Date (DD/MM/YYYY)",
-                        placeholder="e.g., 01/01/2024",
-                        visible=False,
-                        info="Specific minimum decision date (optional, can be used with or without offset)"
-                    )
-                
-                with gr.Row():
-                    # LabelCondition fields
-                    label_condition_type = gr.Dropdown(
-                        label="Label Condition Type",
-                        choices=["pre", "post"],
-                        value="pre",
-                        visible=False,
-                        info="When to check labels (pre/post decision)"
-                    )
-                    
-                    label_condition_operator = gr.Dropdown(
-                        label="Label Operator",
-                        choices=["", "not"],
-                        value="",
-                        visible=False,
-                        info="Label condition operator (empty for required, 'not' for forbidden)"
-                    )
-                
-                with gr.Row():
-                    label_condition_labels = gr.Textbox(
-                        label="Labels",
-                        placeholder="e.g., lgtm, approved",
-                        visible=False,
-                        info="Comma-separated list of labels"
-                    )
-                
-                    # Condition management buttons
-                    with gr.Row():
-                        add_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
-                        clear_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
-                    
-                    # Added conditions display (adaptive height)
-                    added_conditions_list = gr.Textbox(
-                        label="Added Conditions",
-                        value="",
-                        interactive=False,
-                        lines=2,
-                        max_lines=10,
-                        info="List of conditions added to this policy"
-                    )
-            
+                    gr.HTML("")
+                    with gr.Column(scale=100): 
+                        with gr.Row():
+                            condition_type = gr.Dropdown(
+                                label="Add Condition",
+                                choices=[
+                                    "",  # Empty option for no condition
+                                    "Deadline",
+                                    "MinDecisionTime", 
+                                    "ParticipantExclusion",
+                                    "MinParticipants",
+                                    "VetoRight",
+                                    "LabelCondition"
+                                ],
+                                value="",
+                                info="Select a condition type to add to this policy"
+                            )
+                        
+                        # Condition-specific fields (initially hidden)
+                        with gr.Row():
+                            veto_participants = gr.Dropdown(
+                                label="Veto Right Participants",
+                                choices=[],  # Will be populated from participants
+                                value=None,
+                                multiselect=True,
+                                allow_custom_value=True,
+                                visible=False,
+                                info="Participants who can veto this decision"
+                            )
+                        
+                            # ParticipantExclusion condition
+                            excluded_participants = gr.Dropdown(
+                                label="Excluded Participants",
+                                choices=[],  # Will be populated from participants
+                                value=None,
+                                multiselect=True,
+                                allow_custom_value=True,
+                                visible=False,
+                                info="Participants excluded from this decision"
+                            )
+                        
+                        with gr.Row():
+                            # MinParticipants condition
+                            min_participants = gr.Number(
+                                label="Minimum Participants",
+                                value=None,
+                                visible=False,
+                                info="Minimum number of participants required (≥1)"
+                            )
+                        
+                        # Deadline condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                deadline_offset_value = gr.Number(
+                                    label="Deadline Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Time offset number (≥1, e.g., 7 for '7 days')"
+                                )
+                                
+                                deadline_offset_unit = gr.Dropdown(
+                                    label="Deadline Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the offset"
+                                )
+                            
+                            deadline_date = gr.Textbox(
+                                label="Deadline Date (DD/MM/YYYY)",
+                                placeholder="e.g., 25/12/2024",
+                                visible=False,
+                                info="Specific deadline date (optional, can be used with or without offset)"
+                            )
+                        
+                        # MinDecisionTime condition fields  
+                        with gr.Row():
+                            with gr.Row():
+                                min_decision_offset_value = gr.Number(
+                                    label="Min Decision Time Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Minimum time offset number (≥1, e.g., 2 for '2 days')"
+                                )
+                                
+                                min_decision_offset_unit = gr.Dropdown(
+                                    label="Min Decision Time Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the minimum decision time"
+                                )
+                            
+                            min_decision_date = gr.Textbox(
+                                label="Min Decision Date (DD/MM/YYYY)",
+                                placeholder="e.g., 01/01/2024",
+                                visible=False,
+                                info="Specific minimum decision date (optional, can be used with or without offset)"
+                            )
+                        
+                        with gr.Row():
+                            with gr.Row():
+                                # LabelCondition fields
+                                label_condition_type = gr.Dropdown(
+                                    label="Label Condition Type",
+                                    choices=["pre", "post"],
+                                    value="pre",
+                                    visible=False,
+                                    info="When to check labels (pre/post decision)"
+                                )
+                                
+                                label_condition_operator = gr.Dropdown(
+                                    label="Label Operator",
+                                    choices=["", "not"],
+                                    value="",
+                                    visible=False,
+                                    info="Label condition operator (empty for required, 'not' for forbidden)"
+                                )
+                            
+                            label_condition_labels = gr.Textbox(
+                                label="Labels",
+                                placeholder="e.g., lgtm, approved",
+                                visible=False,
+                                info="Comma-separated list of labels"
+                            )
+                        
+                        # Condition management buttons
+                        with gr.Row():
+                            with gr.Row():
+                                add_condition_btn = gr.Button("➕ Add Condition", variant="secondary")
+                                clear_conditions_btn = gr.Button("🗑️ Clear All", variant="secondary")
+
+                        # Added conditions display (adaptive height)
+                        with gr.Row():
+                            added_conditions_list = gr.Textbox(
+                                label="Added Conditions",
+                                value="",
+                                interactive=False,
+                                lines=2,
+                                max_lines=10,
+                                info="List of conditions added to this policy"
+                            )
+                    gr.HTML("")  # End of visual containment
             with gr.Row():
                 add_policy_btn = gr.Button("➕ Add Policy", variant="secondary")
                 clear_policies_btn = gr.Button("🗑️ Clear All", variant="secondary")

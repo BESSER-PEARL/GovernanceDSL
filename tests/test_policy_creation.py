@@ -15,7 +15,7 @@ from utils.exceptions import (
     InvalidValueException
 )
 from metamodel.governance import (
-    ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
+    AppealRight, ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
     Individual, ComposedPolicy, Project,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
@@ -213,7 +213,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertIn("alexander", individuals_names, "alexander should be in reviewer role")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 6)
+            self.assertEqual(len(policy.conditions), 7)
             
             # Find and test Deadline condition
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
@@ -247,6 +247,19 @@ class testPolicyCreation(unittest.TestCase):
             min_part = next(iter(min_part_conditions))
             self.assertEqual(min_part.name, "minParticipantsCondition")
             self.assertEqual(min_part.min_participants, 2)
+
+            # Find and test AppealRight condition
+            appeal_conditions = {c for c in policy.conditions if isinstance(c, AppealRight) and c.name == "AppealRightCondition"}
+            self.assertEqual(len(appeal_conditions), 1)
+            appeal = next(iter(appeal_conditions))
+            self.assertEqual(appeal.name, "AppealRightCondition")
+
+            ## Verify appealers set
+            self.assertEqual(len(appeal.appealers), 1)
+            owner = next((a for a in appeal.appealers if a.name == "owner"), None)
+            self.assertIsInstance(owner, Individual)
+            self.assertEqual(owner.name, "owner")
+
 
             # Find and test LabelCondition condition
             label_conditions = [c for c in policy.conditions if isinstance(c, LabelCondition)]

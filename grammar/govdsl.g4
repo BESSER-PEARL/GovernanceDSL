@@ -63,7 +63,7 @@ partID              : ID hasRole? ;
 hasRole             : 'as' ID ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? passedTests? labelsCondition* ; // + extension
+conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? appealRight? passedTests? labelsCondition* ; // + extension
 deadline            : 'Deadline' deadlineID? ':' ( offset | date | (offset ',' date) ) ;
 minDecisionTime     : 'MinDecisionTime' ID? ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
@@ -73,6 +73,7 @@ date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; 
 participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ; // TODO: ID | 'PRAuthor' | 'RepoOwner' 
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
+appealRight         : 'AppealRight' ':' ID (',' ID)* ; 
 passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;

@@ -539,6 +539,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#appealRight.
+    def enterAppealRight(self, ctx:govdslParser.AppealRightContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#appealRight.
+    def exitAppealRight(self, ctx:govdslParser.AppealRightContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#passedTests.
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
         pass

@@ -43,6 +43,7 @@ MajorityPolicy testPolicy {
         MinDecisionTime : 4 days
         ParticipantExclusion : mike
         MinParticipants : 2
+        AppealRight : owner
         LabelCondition pre not : Label1
         LabelCondition : Label2
     Parameters:

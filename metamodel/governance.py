@@ -45,7 +45,7 @@ class Scope(Element):
 class Project(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
-        self.__activities = None
+        self.activities = None
 
     @property
     def activities(self) -> set['Activity']:
@@ -58,8 +58,8 @@ class Project(Scope):
 class Activity(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
-        self.__tasks = None
-        self.__project = None
+        self.tasks = None
+        self.project = None
 
     @property
     def tasks(self) -> set['Task']:
@@ -81,7 +81,7 @@ class Activity(Scope):
 class Task(Scope):
     def __init__(self, name: str, status: StatusEnum):
         super().__init__(name, status)
-        self.__activity = None
+        self.activity = None
 
     @property
     def activity(self) -> Activity:
@@ -156,20 +156,20 @@ class Profile(Element):
 class Individual(Participant):
     def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name, vote_value)
-        self.__role_assignement = None
+        self.role_assignement = None
     
     @property
     def role_assignement(self) -> 'hasRole':
         return self.__role_assignement
     
     @role_assignement.setter
-    def role(self, role_assignement: 'hasRole'):
+    def role_assignement(self, role_assignement: 'hasRole'):
         self.__role_assignement = role_assignement
 
 class Human(Individual):
     def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
         super().__init__(name, vote_value)
-        self.__profile = profile
+        self.profile = profile
 
     @property
     def profile(self) -> Profile:
@@ -182,9 +182,9 @@ class Human(Individual):
 class Agent(Individual):
     def __init__(self, name: str, vote_value: float = 1.0, confidence: float = 1.0, autonomy_level: float = 1.0, explainability: float = 1.0):
         super().__init__(name, vote_value)
-        self.__confidence = confidence
-        self.__autonomy_level = autonomy_level
-        self.__explainability = explainability
+        self.confidence = confidence
+        self.autonomy_level = autonomy_level
+        self.explainability = explainability
 
     @property
     def confidence(self) -> float:
@@ -219,7 +219,7 @@ class Agent(Individual):
 class Role(Participant):
     def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name, vote_value)
-        self.__individuals = set()
+        self.individuals = set()
     
     @property
     def individuals(self) -> set[Individual]:
@@ -302,9 +302,9 @@ class Deadline(Condition):
         super().__init__(name)
         if offset is None and date is None:
             raise InvalidTimeConditionException(name)
-        self.offset = offset
-        self.date = date
-    
+        self.__offset = offset
+        self.__date = date
+
     @property
     def offset(self) -> timedelta:
         return self.__offset
@@ -330,9 +330,9 @@ class MinDecisionTime(Condition):
         super().__init__(name)
         if offset is None and date is None:
             raise InvalidTimeConditionException(name)
-        self.offset = offset
-        self.date = date
-    
+        self.__offset = offset
+        self.__date = date
+
     @property
     def offset(self) -> timedelta:
         return self.__offset
@@ -396,6 +396,19 @@ class VetoRight(Condition):
     def vetoers(self, vetoers: set[Participant]):
         self.__vetoers = vetoers
 
+class AppealRight(Condition):
+    def __init__(self, name: str, appealers: set[Participant]):
+        super().__init__(name)
+        self.appealers = appealers
+
+    @property
+    def appealers(self) -> set[Participant]:
+        return self.__appealers
+
+    @appealers.setter
+    def appealers(self, appealers: set[Participant]):
+        self.__appealers = appealers
+
 # DecisionType
 class DecisionType(Element):
     def __init__(self, name: str):
@@ -453,7 +466,7 @@ class Policy(Element):
     def __init__(self, name: str, scope: Scope = None):
         self.name = name
         self.scope = scope
-        self.__parent = None
+        self.parent = None
     
     @property
     def name(self) -> str:

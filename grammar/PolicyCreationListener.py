@@ -15,7 +15,7 @@ from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
 )
 from metamodel.governance import (
-    Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
+    AppealRight, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
@@ -669,7 +669,7 @@ class PolicyCreationListener(govdslListener):
                     scope = self.__policy_scopes_map.get(current_policy_id)
                     if scope:
                         role_assignment = hasRole(f"{participant.name}_{role_name}", role_obj, participant, scope)
-                        participant.role = role_assignment
+                        participant.role_assignement = role_assignment
                     else:
                         raise UndefinedAttributeException("scope", message="No scope defined for role assignment (Hint: Might be a parsing error).")
                 else:
@@ -856,6 +856,28 @@ class PolicyCreationListener(govdslListener):
         
         # Register with current policy
         self._register_condition_with_current_policy(veto_right_obj)
+
+    def enterAppealRight(self, ctx:govdslParser.AppealRightContext):
+        
+        appealers_obj = set()
+        # Appealers might not be participants of the current policy
+        for a in ctx.ID():
+            # Check if the appealer is already registered
+            appealer_name = a.getText()
+            appealer = None
+            if appealer_name in self.__policy_participants_map:
+                # Get the existing participant object
+                appealer = next(p for p in self.__policy_participants_map if p.name == appealer_name)
+            else:
+                # We create an Individual by default
+                appealer = Individual(name=appealer_name)
+            appealers_obj.add(appealer)
+        
+        # Create the AppealRight object
+        appeal_right_obj = AppealRight(name="AppealRightCondition", appealers=appealers_obj)
+        
+        # Register with current policy
+        self._register_condition_with_current_policy(appeal_right_obj)
 
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
         

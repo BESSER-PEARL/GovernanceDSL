@@ -287,6 +287,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#role.
+    def enterRole(self, ctx:govdslParser.RoleContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#role.
+    def exitRole(self, ctx:govdslParser.RoleContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#individuals.
     def enterIndividuals(self, ctx:govdslParser.IndividualsContext):
         pass

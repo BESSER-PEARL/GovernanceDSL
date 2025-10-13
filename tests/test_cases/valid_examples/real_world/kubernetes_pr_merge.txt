@@ -22,7 +22,7 @@ ComposedPolicy pr_merge {
             Participant list : Reviewers
             Conditions:
                 ParticipantExclusion : PRAuthor
-                MinParticipants : 2
+                MinParticipants : 1
                 LabelCondition post : lgtm
             Parameters:
                 ratio 1.0

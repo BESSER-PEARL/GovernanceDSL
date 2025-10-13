@@ -19,7 +19,7 @@ Participants:
             gender : male
             race : hispanic
         }
-    Roles : maintainer, reviewer, owner
+    Roles : maintainer { vote value : 1.5}, reviewer, owner 
     Individuals : 
         joe {
             vote value : 0.7

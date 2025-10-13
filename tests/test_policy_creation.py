@@ -170,6 +170,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(individual.vote_value, 0.7)
             self.assertIsNotNone(individual.role_assignement)
             self.assertEqual(individual.role_assignement.name, "joe_maintainer")
+            self.assertEqual(individual.role_assignement.role.vote_value, 1.5)
             profile = individual.profile
             self.assertIsNotNone(profile)
             self.assertEqual(profile.name, "joeProfile")
@@ -183,6 +184,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(agent.confidence, 0.8)
             self.assertIsNotNone(agent.role_assignement)
             self.assertEqual(agent.role_assignement.name, "mike_maintainer")
+            self.assertEqual(agent.role_assignement.role.vote_value, 1.5)
             
             
             # Test Role participants
@@ -193,11 +195,13 @@ class testPolicyCreation(unittest.TestCase):
             maintainer_role = next((r for r in roles if r.name == "maintainer"), None)
             self.assertIsNotNone(maintainer_role, "maintainer role not found")
             self.assertEqual(maintainer_role.name, "maintainer")
+            self.assertEqual(maintainer_role.vote_value, 1.5)
             
             # Test reviewer role with composed individuals
             reviewer_role = next((r for r in roles if r.name == "reviewer"), None)
             self.assertIsNotNone(reviewer_role, "reviewer role not found")
             self.assertEqual(reviewer_role.name, "reviewer")
+            self.assertEqual(reviewer_role.vote_value, 1.0) # Default vote value
             
             # Check the individuals composed in the reviewer role
             self.assertIsNotNone(reviewer_role.individuals, "reviewer role should have individuals")

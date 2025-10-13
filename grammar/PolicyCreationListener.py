@@ -678,11 +678,13 @@ class PolicyCreationListener(govdslListener):
                 
     def enterRoles(self, ctx:govdslParser.RolesContext): 
 
-        for roleID in ctx.ID():
-            roleID = roleID.getText()
-            role = Role(name=roleID)
-            self.__participants_map[roleID] = role
-     
+        for role in ctx.role():
+            roleID = role.ID().getText()
+            role_instance = Role(name=roleID)
+            if role.voteValue():
+                role_instance.vote_value = float(role.voteValue().FLOAT().getText())
+            self.__participants_map[roleID] = role_instance
+
     def enterIndividual(self, ctx:govdslParser.IndividualContext):
         name = ctx.ID().getText()
         individual = Human(name=name)

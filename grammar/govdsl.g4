@@ -25,7 +25,7 @@ activities          : 'Activities' ':' activity+ ;
 activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
 tasks               : 'Tasks' ':' task+ ;
 task                : ID (':' taskType)? ('{' taskContent '}')? ;
-taskType            : 'Issue' | 'Pull request' | 'All' ; 
+taskType            : 'Issue' | 'Pull request' | 'All' ; //TODO: Update with Patch / PR
 taskContent         : status | action | actionWithLabels ;
 actionWithLabels    : action labels ;
 status              : 'Status' ':' statusEnum ;
@@ -42,9 +42,8 @@ elementList         : 'ElementList' ':' ID (',' ID)* ;
 
 // Participants group
 participants        : 'Participants' ':' (roles | individuals | profiles)+ ;
-roles               : 'Roles' ':' ID (',' ID)* ;
-// roleID              : ID ('composed of' ':' participantID (',' participantID)*)? ;
-// participantID       : ID  ;
+roles               : 'Roles' ':' role (',' role)* ;
+role                : ID ('{' voteValue?'}')? ;
 individuals         : 'Individuals' ':' individualEntry ((',')? individualEntry)* ;
 individualEntry     : individual | agent ;
 individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}')? ; 

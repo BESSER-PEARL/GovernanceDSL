@@ -53,7 +53,10 @@ class InvalidValueException(Exception):
         self.attribute_name = attribute_name
         self.value = value
         self.min_value = min_value
-        self.max_value = max_value
+        if attribute_name == "vote_value":
+            max_value = 2
+        else:
+            self.max_value = max_value
         self.message = f"{attribute_name} must be between {min_value} and {max_value}, but got {value}."
         super().__init__(self.message)
 

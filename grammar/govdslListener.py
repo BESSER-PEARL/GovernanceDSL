@@ -269,6 +269,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#communicationChannel.
+    def enterCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#communicationChannel.
+    def exitCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#participants.
     def enterParticipants(self, ctx:govdslParser.ParticipantsContext):
         pass

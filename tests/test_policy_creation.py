@@ -211,6 +211,10 @@ class testPolicyCreation(unittest.TestCase):
             individuals_names = {ind.name for ind in reviewer_role.individuals}
             self.assertIn("mike", individuals_names, "mike should be in reviewer role")
             self.assertIn("alexander", individuals_names, "alexander should be in reviewer role")
+
+            # Test communication channel
+            self.assertIsNotNone(policy.channel)
+            self.assertEqual(policy.channel.name, "Discord")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 7)

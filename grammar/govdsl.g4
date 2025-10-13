@@ -5,11 +5,11 @@ governance          : (scopes participants policy+) EOF ;
 policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)
-topLevelSinglePolicy    : policyType ID '{' scope decisionType policyParticipants? conditions? parameters? '}' ;
+topLevelSinglePolicy    : policyType ID '{' scope decisionType policyParticipants? communicationChannel? conditions? parameters? '}' ;
 topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 
 // Nested policies (no scope)
-nestedSinglePolicy      : policyType ID '{' decisionType policyParticipants? conditions? parameters? '}' ;
+nestedSinglePolicy      : policyType ID '{' decisionType policyParticipants? communicationChannel? conditions? parameters? '}' ;
 nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
@@ -39,6 +39,9 @@ decisionType        : 'DecisionType' 'as' (booleanDecision | stringList | elemen
 booleanDecision     : 'BooleanDecision' ;
 stringList          : 'StringList' ':' ID (',' ID)* ;
 elementList         : 'ElementList' ':' ID (',' ID)* ;
+
+// Communication channel
+communicationChannel: 'CommunicationChannel' ':' ID ;
 
 // Participants group
 participants        : 'Participants' ':' (roles | individuals | profiles)+ ;

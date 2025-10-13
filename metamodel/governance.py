@@ -91,6 +91,27 @@ class Task(Scope):
     def activity(self, activity: Activity):
         self.__activity = activity
 
+class CommunicationChannel(Element):
+    def __init__(self, name: str, platform: str = None):
+        self.name = name
+        self.platform = platform
+
+    @property
+    def name(self) -> str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name: str):
+        self.__name = name
+
+    @property
+    def platform(self) -> str:
+        return self.__platform
+
+    @platform.setter
+    def platform(self, platform: str):
+        self.__platform = platform
+
 # Participant
 class Participant(Element):
     def __init__(self, name: str, vote_value: float = 1.0):
@@ -467,7 +488,7 @@ class Policy(Element):
         self.name = name
         self.scope = scope
         self.parent = None
-    
+
     @property
     def name(self) -> str:
         return self.__name
@@ -499,12 +520,13 @@ class Policy(Element):
 
 class SinglePolicy(Policy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope = None):
+                 decision_type: DecisionType, scope: Scope = None, channel: CommunicationChannel = None):
         super().__init__(name, scope)
         self.conditions = conditions
         self.participants = participants
         self.decision_type = decision_type
         self.scope = scope
+        self.channel = channel
     
     @property
     def conditions(self) -> set[Condition]:
@@ -534,18 +556,26 @@ class SinglePolicy(Policy):
             raise UndefinedAttributeException("decision_type", None)
         self.__decision_type = decision_type
 
+    @property
+    def channel(self) -> CommunicationChannel:
+        return self.__channel
+    
+    @channel.setter
+    def channel(self, channel: CommunicationChannel):
+        self.__channel = channel
+
 
 class ConsensusPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, fallback: Policy):
-        super().__init__(name, conditions, participants, decision_type, scope)
+                 decision_type: DecisionType, scope: Scope, channel: CommunicationChannel, fallback: Policy):
+        super().__init__(name, conditions, participants, decision_type, scope, channel)
         self.fallback = fallback
 
     @classmethod
     def from_policy(cls, policy: SinglePolicy, fallback: Policy):
         consensus = cls(name=policy.name, conditions=policy.conditions, 
                         participants=policy.participants, decision_type=policy.decision_type,
-                        scope=policy.scope, fallback=fallback)
+                        scope=policy.scope, channel=policy.channel, fallback=fallback)
         return consensus
     
     @property
@@ -584,28 +614,28 @@ class ConsensusPolicy(SinglePolicy):
 
 class LazyConsensusPolicy(ConsensusPolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, fallback: Policy):
-        super().__init__(name, conditions, participants, decision_type, scope, fallback)
+                 decision_type: DecisionType, scope: Scope, channel: CommunicationChannel, fallback: Policy):
+        super().__init__(name, conditions, participants, decision_type, scope, channel, fallback)
 
     @classmethod
     def from_policy(cls, policy: SinglePolicy, fallback: Policy):
         lazy_consensus = cls(name=policy.name, conditions=policy.conditions, 
                              participants=policy.participants, decision_type=policy.decision_type,
-                             scope=policy.scope, fallback=fallback)
+                             scope=policy.scope, channel=policy.channel, fallback=fallback)
         return lazy_consensus
 
 
 class VotingPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type : DecisionType, scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, decision_type, scope)
+                 decision_type : DecisionType, scope: Scope, channel: CommunicationChannel, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope, channel)
         self.ratio = ratio
     
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
         voting = cls(name=policy.name, conditions=policy.conditions, 
                      participants=policy.participants, decision_type=policy.decision_type,
-                     scope=policy.scope, ratio=ratio)
+                     scope=policy.scope, channel=policy.channel, ratio=ratio)
         return voting
     
     @property
@@ -622,9 +652,9 @@ class VotingPolicy(SinglePolicy):
 class MajorityPolicy(VotingPolicy):
     """MajorityPolicy extends VotingPolicy"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, decision_type, scope, ratio)
-    
+                 decision_type: DecisionType, scope: Scope, channel: CommunicationChannel, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope, channel, ratio)
+
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
         if isinstance(policy, VotingPolicy):
@@ -633,16 +663,16 @@ class MajorityPolicy(VotingPolicy):
         
         majority = cls(name=policy.name, conditions=policy.conditions, 
                        participants=policy.participants, decision_type=policy.decision_type,
-                       scope=policy.scope, ratio=ratio)
+                       scope=policy.scope, channel=policy.channel, ratio=ratio)
         return majority
 
 
 class AbsoluteMajorityPolicy(VotingPolicy):
     """AbsoluteMajorityPolicy extends VotingPolicy"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, ratio: float = None):
-        super().__init__(name, conditions, participants, decision_type, scope, ratio)
-    
+                 decision_type: DecisionType, scope: Scope, channel: CommunicationChannel, ratio: float = None):
+        super().__init__(name, conditions, participants, decision_type, scope, channel, ratio)
+
     @classmethod
     def from_policy(cls, policy: SinglePolicy, ratio: float = None):
         if isinstance(policy, VotingPolicy):
@@ -651,17 +681,17 @@ class AbsoluteMajorityPolicy(VotingPolicy):
         
         abs_majority = cls(name=policy.name, conditions=policy.conditions, 
                            participants=policy.participants, decision_type=policy.decision_type,
-                           scope=policy.scope, ratio=ratio)
+                           scope=policy.scope, channel=policy.channel, ratio=ratio)
         return abs_majority
 
 
 class LeaderDrivenPolicy(SinglePolicy):
     """LeaderDrivenPolicy extends SinglePolicy and references another SinglePolicy as default"""
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 
-                 decision_type: DecisionType, scope: Scope, default: Policy = None):
+                 decision_type: DecisionType, scope: Scope, channel: CommunicationChannel, default: Policy = None):
         # Initialize default first to avoid issues during object creation
         self.__default = None
-        super().__init__(name, conditions, participants, decision_type, scope)
+        super().__init__(name, conditions, participants, decision_type, scope, channel)
         # Now set default through the property setter
         self.default = default
     
@@ -669,7 +699,7 @@ class LeaderDrivenPolicy(SinglePolicy):
     def from_policy(cls, policy: SinglePolicy, default: Policy):
         leader_driven = cls(name=policy.name, conditions=policy.conditions, 
                             participants=policy.participants, decision_type=policy.decision_type,
-                            scope=policy.scope, default=default)
+                            scope=policy.scope, channel=policy.channel, default=default)
         return leader_driven
 
     @property

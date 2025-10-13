@@ -15,7 +15,7 @@ from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
 )
 from metamodel.governance import (
-    AppealRight, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
+    AppealRight, CommunicationChannel, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,
     ConsensusPolicy, MinimumParticipant, VetoRight, Agent, BooleanDecision,
@@ -42,6 +42,7 @@ class PolicyCreationListener(govdslListener):
         self.__policy_order_map = {}
         self.__policy_parameters_map = {}
         self.__policy_decision_type_map = {}
+        self.__communication_channels_map = {}
 
         # Maps to track scopes and participants predefined
         self.__scopes_map = {}
@@ -147,12 +148,14 @@ class PolicyCreationListener(govdslListener):
             
             else: # single policy
                 decision_type = self.__policy_decision_type_map.get(node.policy_id)
+                channel = self.__communication_channels_map.get(node.policy_id)
                 participants = self.__policy_participants_map.get(node.policy_id, set())
                 conditions = self.__policy_conditions_map.get(node.policy_id, set())
                 base_policy = SinglePolicy(name=node.policy_id,
                                             conditions=conditions,
                                             participants=participants,
                                             decision_type=decision_type,
+                                            channel=channel,
                                             scope=scope)
                 
                 match node.policy_type:
@@ -363,6 +366,29 @@ class PolicyCreationListener(govdslListener):
         
         # Associate the rule with the current policy
         self.__policy_rules_map[current_policy_id].add(rule)
+
+    def _register_communication_channel_with_current_policy(self, channel_obj):
+        """
+        Registers a communication channel object with the current policy.
+        
+        Args:
+            channel_obj: The communication channel object to register
+            
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # Get the current policy context
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        
+        current_policy_id = self.policy_stack[-1].policy_id
+        
+        # Initialize the communication channel for this policy if needed
+        if current_policy_id in self.__communication_channels_map:
+            raise Exception("Communication channel already defined for policy.") # TODO: Handle this case
+        
+        # Associate the communication channel with the current policy
+        self.__communication_channels_map[current_policy_id] = channel_obj
 
     def _register_decision_type_with_current_policy(self, decision_obj):
         """
@@ -649,6 +675,10 @@ class PolicyCreationListener(govdslListener):
                 # For regular tasks
                 task = Task(name=task_name, status=status)
             self.__scopes_map[task_name] = task
+
+    def enterCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        channel = CommunicationChannel(name=ctx.ID().getText())
+        self._register_communication_channel_with_current_policy(channel)
 
     def enterPolicyParticipants(self, ctx:govdslParser.PolicyParticipantsContext):
         participants_list = ctx.partID()

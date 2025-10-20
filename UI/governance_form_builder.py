@@ -284,6 +284,13 @@ class GovernanceFormBuilder:
                     placeholder="e.g., maintainer, reviewer, approver, owner",
                     info="Unique name for this role (required - must be unique across all participants)"
                 )
+                
+                role_vote_value = gr.Number(
+                    label="Vote Value (Optional)",
+                    value=1.0,
+                    step=0.1,
+                    info="Weight of this role's vote (must be between 0.0 and 2.0, default: 1.0)"
+                )
             
             with gr.Row():
                 add_role_btn = gr.Button("➕ Add Role", variant="secondary")
@@ -316,11 +323,9 @@ class GovernanceFormBuilder:
             with gr.Row():
                 individual_vote_value = gr.Number(
                     label="Vote Value (Optional)",
-                    value=None,
-                    minimum=0.0,
-                    maximum=2.0,
+                    value=1.0,
                     step=0.1,
-                    info="Weight of this individual's vote (default: 1.0)"
+                    info="Weight of this individual's vote (must be between 0.0 and 2.0, default: 1.0)"
                 )
                 
                 individual_profile = gr.Dropdown(
@@ -366,6 +371,13 @@ class GovernanceFormBuilder:
                     label="Agent Name",
                     placeholder="e.g., k8s-ci-robot, dependabot",
                     info="Unique name for this automated agent"
+                )
+                
+                agent_vote_value = gr.Number(
+                    label="Vote Value (Optional)",
+                    value=1.0,
+                    step=0.1,
+                    info="Weight of this agent's vote (must be between 0.0 and 2.0, default: 1.0)"
                 )
                 
             with gr.Row():
@@ -433,6 +445,7 @@ class GovernanceFormBuilder:
             'profiles_display': profiles_display,
             'profiles_data': profiles_data,
             'role_name': role_name,
+            'role_vote_value': role_vote_value,
             'add_role_btn': add_role_btn,
             'clear_roles_btn': clear_roles_btn,
             'roles_display': roles_display,
@@ -446,6 +459,7 @@ class GovernanceFormBuilder:
             'individuals_display': individuals_display,
             'individuals_data': individuals_data,
             'agent_name': agent_name,
+            'agent_vote_value': agent_vote_value,
             'agent_confidence': agent_confidence,
             'agent_autonomy_level': agent_autonomy_level,
             'agent_explainability': agent_explainability,
@@ -1192,12 +1206,19 @@ class GovernanceFormBuilder:
             """Clear all profiles"""
             return [], "No profiles added yet", None
         
-        def add_role(name, current_roles, current_individuals, current_agents):
+        def add_role(name, vote_value, current_roles, current_individuals, current_agents):
             """Add a new role to the list"""
             if not name.strip():
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
-                return current_roles, error_message, ""
+                return current_roles, error_message, "", None
+            
+            # Validate vote_value is within acceptable range if provided
+            if vote_value is not None:
+                if vote_value < 0.0 or vote_value > 2.0:
+                    display_text = self._format_roles_display(current_roles)
+                    error_message = f"❌ Error: Vote value must be between 0.0 and 2.0\n\n{display_text}" if current_roles else "❌ Error: Vote value must be between 0.0 and 2.0"
+                    return current_roles, error_message, "", None
             
             # Check for global name uniqueness across all participant types
             role_name = name.strip()
@@ -1206,34 +1227,43 @@ class GovernanceFormBuilder:
             if any(i['name'] == role_name for i in current_individuals):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Name '{role_name}' already exists as an individual\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an individual"
-                return current_roles, error_message, ""
+                return current_roles, error_message, "", None
             
             # Check against existing agents
             if any(a['name'] == role_name for a in current_agents):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Name '{role_name}' already exists as an agent\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an agent"
-                return current_roles, error_message, ""
+                return current_roles, error_message, "", None
             
             # Check against existing roles
             if any(r['name'] == role_name for r in current_roles):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Role name already exists\n\n{display_text}" if current_roles else "❌ Error: Role name already exists"
-                return current_roles, error_message, ""
+                return current_roles, error_message, "", None
             
-            # Add new role
-            new_role = {'name': role_name}
+            # Add new role with optional vote value
+            new_role = {
+                'name': role_name,
+                'vote_value': vote_value if vote_value != 1.0 else None  # Only store if different from default 1.0
+            }
             updated_roles = current_roles + [new_role]
             display_text = self._format_roles_display(updated_roles)
-            return updated_roles, display_text, ""
+            success_message = f"✅ Role '{role_name}' added successfully!\n\n{display_text}"
+            return updated_roles, success_message, "", None
         
         def clear_all_roles():
             """Clear all roles"""
-            return [], "No roles added yet. Create roles to define project responsibilities.", ""
+            return [], "No roles added yet. Create roles to define project responsibilities.", "", None
         
         def add_individual(name, vote_value, profile, role, current_individuals, current_profiles, current_roles, current_agents):
             """Add a new individual to the list"""
             if not name.strip():
                 return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
+            
+            # Validate vote_value is within acceptable range if provided
+            if vote_value is not None:
+                if vote_value < 0.0 or vote_value > 2.0:
+                    return current_individuals, "❌ Vote value must be between 0.0 and 2.0", "", 1.0, None, None
             
             # Check for global name uniqueness across all participant types
             individual_name = name.strip()
@@ -1253,7 +1283,7 @@ class GovernanceFormBuilder:
             # Create new individual
             new_individual = {
                 'name': name.strip(),
-                'vote_value': vote_value if vote_value != 1.0 else None,  # Only store if different from default
+                'vote_value': vote_value if vote_value not in (None, 1.0) else None,  # Only store if different from default 1.0
                 'profile': profile if profile else None,
                 'role': role if role else None
             }
@@ -1278,29 +1308,35 @@ class GovernanceFormBuilder:
                 gr.Dropdown(choices=[r['name'] for r in current_roles] if current_roles else [], value=None)
             )
         
-        def add_agent(name, confidence, autonomy_level, explainability, role, current_agents, current_roles, current_individuals):
+        def add_agent(name, vote_value, confidence, autonomy_level, explainability, role, current_agents, current_roles, current_individuals):
             """Add a new agent to the list"""
             if not name.strip():
-                return current_agents, "❌ Please enter an agent name", "", None, None, None, None
+                return current_agents, "❌ Please enter an agent name", "", 1.0, None, None, None, None
+            
+            # Validate vote_value is within acceptable range if provided
+            if vote_value is not None:
+                if vote_value < 0.0 or vote_value > 2.0:
+                    return current_agents, "❌ Vote value must be between 0.0 and 2.0", "", 1.0, None, None, None, None
             
             # Check for global name uniqueness across all participant types
             agent_name = name.strip()
             
             # Check against existing roles
             if any(r['name'] == agent_name for r in current_roles):
-                return current_agents, f"❌ Name '{agent_name}' already exists as a role", "", None, None, None, None
+                return current_agents, f"❌ Name '{agent_name}' already exists as a role", "", 1.0, None, None, None, None
             
             # Check against existing individuals
             if any(i['name'] == agent_name for i in current_individuals):
-                return current_agents, f"❌ Name '{agent_name}' already exists as an individual", "", None, None, None, None
+                return current_agents, f"❌ Name '{agent_name}' already exists as an individual", "", 1.0, None, None, None, None
             
             # Check against existing agents
             if any(a['name'] == agent_name for a in current_agents):
-                return current_agents, "❌ Agent name already exists", "", None, None, None, None
+                return current_agents, "❌ Agent name already exists", "", 1.0, None, None, None, None
             
             # Create new agent
             new_agent = {
                 'name': name.strip(),
+                'vote_value': vote_value if vote_value != 1.0 else None,  # Only store if different from default 1.0
                 'confidence': confidence if confidence is not None else None,
                 'autonomy_level': autonomy_level if autonomy_level is not None else None,
                 'explainability': explainability if explainability is not None else None,
@@ -1313,7 +1349,7 @@ class GovernanceFormBuilder:
             display_text = self._format_agents_display(updated_agents)
             success_message = f"✅ Agent '{new_agent['name']}' added successfully!\n\n{display_text}"
             
-            return updated_agents, success_message, "", None, None, None, None
+            return updated_agents, success_message, "", 1.0, None, None, None, None
         
         def clear_agents():
             """Clear all agents"""
@@ -2410,7 +2446,8 @@ class GovernanceFormBuilder:
         participant_components['add_role_btn'].click(
             fn=add_role,
             inputs=[
-                participant_components['role_name'], 
+                participant_components['role_name'],
+                participant_components['role_vote_value'],
                 participant_components['roles_data'],
                 participant_components['individuals_data'],
                 participant_components['agents_data']
@@ -2418,7 +2455,8 @@ class GovernanceFormBuilder:
             outputs=[
                 participant_components['roles_data'], 
                 participant_components['roles_display'], 
-                participant_components['role_name']
+                participant_components['role_name'],
+                participant_components['role_vote_value']
             ]
         )
         
@@ -2428,7 +2466,8 @@ class GovernanceFormBuilder:
             outputs=[
                 participant_components['roles_data'], 
                 participant_components['roles_display'], 
-                participant_components['role_name']
+                participant_components['role_name'],
+                participant_components['role_vote_value']
             ]
         )
         
@@ -2468,6 +2507,7 @@ class GovernanceFormBuilder:
             fn=add_agent,
             inputs=[
                 participant_components['agent_name'],
+                participant_components['agent_vote_value'],
                 participant_components['agent_confidence'],
                 participant_components['agent_autonomy_level'],
                 participant_components['agent_explainability'],
@@ -2480,6 +2520,7 @@ class GovernanceFormBuilder:
                 participant_components['agents_data'],
                 participant_components['agents_display'],
                 participant_components['agent_name'],           # Clear name field
+                participant_components['agent_vote_value'],     # Reset vote value to default
                 participant_components['agent_confidence'],     # Clear confidence field
                 participant_components['agent_autonomy_level'], # Clear autonomy level field
                 participant_components['agent_explainability'], # Clear explainability field
@@ -2930,6 +2971,18 @@ class GovernanceFormBuilder:
             # This will be connected properly when we have the preview panel components
             pass
     
+    def _format_float(self, value):
+        """Format a number as a FLOAT (with decimal point) for DSL compliance"""
+        if value is None:
+            return None
+        # Convert to float and format with decimal point
+        float_val = float(value)
+        # If it's a whole number, add .0; otherwise keep as is
+        if float_val == int(float_val):
+            return f"{int(float_val)}.0"
+        else:
+            return str(float_val)
+    
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
@@ -3060,8 +3113,15 @@ class GovernanceFormBuilder:
         
         # Add Roles section
         if roles_data:
-            roles_list = [role['name'] for role in roles_data]
-            participants_section.append(f"    Roles : {', '.join(roles_list)}")
+            participants_section.append("    Roles :")
+            for role in roles_data:
+                line = f"        {role['name']}"
+                if role.get('vote_value') is not None:
+                    formatted_vote = self._format_float(role['vote_value'])
+                    line += f" {{ vote value : {formatted_vote} }}"
+                    participants_section.append(line + ",")
+                else:
+                    participants_section.append(line + ",")
         
         # Add Individuals section
         if individuals or agents:
@@ -3070,11 +3130,12 @@ class GovernanceFormBuilder:
             # Add regular individuals
             for individual in individuals:
                 line_parts = [f"        {individual['name']}"]
-                if individual.get('vote_value') or individual.get('profile') or individual.get('role'):
+                if individual.get('vote_value') is not None or individual.get('profile') or individual.get('role'):
                     line_parts[0] += " {"
                     attributes = []
-                    if individual.get('vote_value'):
-                        attributes.append(f"            vote value : {individual['vote_value']}")
+                    if individual.get('vote_value') is not None:
+                        formatted_vote = self._format_float(individual['vote_value'])
+                        attributes.append(f"            vote value : {formatted_vote}")
                     if individual.get('profile'):
                         attributes.append(f"            profile : {individual['profile']}")
                     if individual.get('role'):
@@ -3092,15 +3153,26 @@ class GovernanceFormBuilder:
             # Add agents
             for agent in agents:
                 line_parts = [f"        (Agent) {agent['name']}"]
-                if any(agent.get(key) for key in ['confidence', 'autonomy_level', 'explainability', 'role']):
+                has_attributes = (agent.get('vote_value') is not None or 
+                                 agent.get('confidence') is not None or 
+                                 agent.get('autonomy_level') is not None or 
+                                 agent.get('explainability') is not None or 
+                                 agent.get('role'))
+                if has_attributes:
                     line_parts[0] += " {"
                     attributes = []
+                    if agent.get('vote_value') is not None:
+                        formatted_vote = self._format_float(agent['vote_value'])
+                        attributes.append(f"            vote value : {formatted_vote}")
                     if agent.get('confidence'):
-                        attributes.append(f"            confidence : {agent['confidence']}")
+                        formatted_confidence = self._format_float(agent['confidence'])
+                        attributes.append(f"            confidence : {formatted_confidence}")
                     if agent.get('autonomy_level'):
-                        attributes.append(f"            autonomy level: {agent['autonomy_level']}")
+                        formatted_autonomy = self._format_float(agent['autonomy_level'])
+                        attributes.append(f"            autonomy level: {formatted_autonomy}")
                     if agent.get('explainability'):
-                        attributes.append(f"            explainability: {agent['explainability']}")
+                        formatted_explainability = self._format_float(agent['explainability'])
+                        attributes.append(f"            explainability: {formatted_explainability}")
                     if agent.get('role'):
                         attributes.append(f"            role : {agent['role']}")
                     
@@ -3235,7 +3307,8 @@ class GovernanceFormBuilder:
                 # Parameters (must come after conditions)
                 parameters = []
                 if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
-                    parameters.append(f"        ratio: {policy['voting_ratio']}")
+                    formatted_ratio = self._format_float(policy['voting_ratio'])
+                    parameters.append(f"        ratio: {formatted_ratio}")
                 
                 # Add default decision for LeaderDrivenPolicy
                 if policy_type == "LeaderDrivenPolicy" and policy.get('default_decision'):
@@ -3384,7 +3457,8 @@ class GovernanceFormBuilder:
                             # Add parameters section if any parameters exist
                             parameters = []
                             if ratio:
-                                parameters.append(f"                ratio: {ratio}")
+                                formatted_ratio = self._format_float(ratio)
+                                parameters.append(f"                ratio: {formatted_ratio}")
                             if default_decision:
                                 parameters.append(f"                default: {default_decision}")
                             if fallback_policy:
@@ -3481,8 +3555,13 @@ class GovernanceFormBuilder:
         for i, individual in enumerate(individuals, 1):
             line = f"{i}. {individual['name']}"
             attributes = []
-            if individual.get('vote_value'):
-                attributes.append(f"🗳️ vote: {individual['vote_value']}")
+            
+            # Always show vote value
+            vote_value = individual.get('vote_value')
+            if vote_value is None:
+                vote_value = 1.0  # Show default if not set
+            attributes.append(f"🗳️ vote: {vote_value}")
+            
             if individual.get('profile'):
                 attributes.append(f"📋 profile: {individual['profile']}")
             if individual.get('role'):
@@ -3504,6 +3583,13 @@ class GovernanceFormBuilder:
         for i, agent in enumerate(agents, 1):
             line = f"{i}. {agent['name']}"
             attributes = []
+            
+            # Always show vote value
+            vote_value = agent.get('vote_value')
+            if vote_value is None:
+                vote_value = 1.0  # Show default if not set
+            attributes.append(f"🗳️ vote: {vote_value}")
+            
             if agent.get('confidence') is not None:
                 attributes.append(f"🔍 confidence: {agent['confidence']}")
             if agent.get('autonomy_level') is not None:
@@ -3587,7 +3673,11 @@ class GovernanceFormBuilder:
         
         display_lines = [f"👥 {len(roles)} role(s) defined:", ""]
         for i, role in enumerate(roles, 1):
-            display_lines.append(f"{i}. 🔹 **{role['name']}**")
+            vote_value = role.get('vote_value')
+            if vote_value is None:
+                vote_value = 1.0  # Show default if not set
+            line = f"{i}. 🔹 **{role['name']}** (vote value: {vote_value})"
+            display_lines.append(line)
         
         return '\n'.join(display_lines)
    

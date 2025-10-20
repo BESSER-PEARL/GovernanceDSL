@@ -1992,7 +1992,8 @@ class GovernanceFormBuilder:
         
         # Composed Policy Functions
         def add_phase(phase_name, phase_type, phase_participants, phase_decision_type, phase_decision_options, 
-                      phase_voting_ratio, phase_default_decision, phase_fallback_policy, phase_communication_channel, current_phases_text):
+                      phase_voting_ratio, phase_default_decision, phase_fallback_policy, phase_communication_channel, 
+                      current_phases_text, added_phase_conditions_text):
             """Add a phase to the current composed policy"""
             # Parse existing phases from the display text (ignore error messages and success messages)
             existing_phases = []
@@ -2023,7 +2024,8 @@ class GovernanceFormBuilder:
                     1.0,  # phase_voting_ratio
                     None,  # phase_default_decision
                     None,  # phase_fallback_policy
-                    ""   # phase_communication_channel
+                    "",   # phase_communication_channel
+                    ""    # added_phase_conditions_text - clear conditions
                 )
 
             # Validate phase name (mandatory)
@@ -2072,6 +2074,17 @@ class GovernanceFormBuilder:
             if details:
                 phase_display += f", {', '.join(details)}"
 
+            # Append conditions to the phase display if any
+            if added_phase_conditions_text and added_phase_conditions_text.strip():
+                # Filter out error/success messages from conditions
+                clean_conditions = []
+                for line in added_phase_conditions_text.strip().split('\n'):
+                    line = line.strip()
+                    if line and not line.startswith('❌') and not line.startswith('✅'):
+                        clean_conditions.append(line)
+                if clean_conditions:
+                    phase_display += f" [Conditions: {', '.join(clean_conditions)}]"
+
             # Add to existing phases and format success message
             updated_phases = existing_phases + [phase_display]
             phases_text = '\n'.join(updated_phases)
@@ -2087,7 +2100,8 @@ class GovernanceFormBuilder:
                 1.0,  # phase_voting_ratio - reset
                 None,  # phase_default_decision - clear
                 None,   # phase_fallback_policy - clear
-                ""     # phase_communication_channel - clear
+                "",     # phase_communication_channel - clear
+                ""      # added_phase_conditions_text - clear conditions
             )
 
         def clear_phases():
@@ -2784,7 +2798,8 @@ class GovernanceFormBuilder:
                 policy_components['phase_default_decision'],
                 policy_components['phase_fallback_policy'],
                 policy_components['phase_communication_channel'],
-                policy_components['added_phases_list']
+                policy_components['added_phases_list'],
+                policy_components['added_phase_conditions_list']
             ],
             outputs=[
                 policy_components['added_phases_list'],
@@ -2796,7 +2811,8 @@ class GovernanceFormBuilder:
                 policy_components['phase_voting_ratio'],
                 policy_components['phase_default_decision'],
                 policy_components['phase_fallback_policy'],
-                policy_components['phase_communication_channel']
+                policy_components['phase_communication_channel'],
+                policy_components['added_phase_conditions_list']
             ]
         )
         
@@ -3266,7 +3282,7 @@ class GovernanceFormBuilder:
                     dsl_parts.append("    Phases {")
                     
                     for phase_display in composed_policy['phases']:
-                        # Parse phase from display format: "PhaseName (PolicyType) → participants: p1, p2"
+                        # Parse phase from display format: "PhaseName (PolicyType) → participants: p1, p2 [Conditions: ...]"
                         if ' (' in phase_display and ') →' in phase_display:
                             # Extract phase name and type
                             name_part = phase_display.split(' (')[0].strip()
@@ -3280,42 +3296,52 @@ class GovernanceFormBuilder:
                             fallback_policy = None
                             options = None
                             channel = None
+                            phase_conditions = []
                             
                             # Parse the display string more carefully
                             if 'participants: ' in phase_display:
                                 after_participants = phase_display.split('participants: ')[1]
                                 
-                                # Extract participants (everything before the first comma with a keyword)
-                                if ', decision:' in after_participants:
-                                    participants_part = after_participants.split(', decision:')[0]
-                                elif ', ratio:' in after_participants:
-                                    participants_part = after_participants.split(', ratio:')[0]
-                                elif ', default:' in after_participants:
-                                    participants_part = after_participants.split(', default:')[0]
-                                elif ', fallback:' in after_participants:
-                                    participants_part = after_participants.split(', fallback:')[0]
-                                elif ', options:' in after_participants:
-                                    participants_part = after_participants.split(', options:')[0]
+                                # Extract conditions if present (check for [Conditions: ...])
+                                if ' [Conditions: ' in after_participants:
+                                    base_part = after_participants.split(' [Conditions: ')[0]
+                                    conditions_part = after_participants.split(' [Conditions: ')[1].rstrip(']')
+                                    # Parse conditions: split by comma, then strip and add to list
+                                    phase_conditions = [c.strip() for c in conditions_part.split(',')]
                                 else:
-                                    participants_part = after_participants
+                                    base_part = after_participants
+                                
+                                # Extract participants (everything before the first comma with a keyword)
+                                if ', decision:' in base_part:
+                                    participants_part = base_part.split(', decision:')[0]
+                                elif ', ratio:' in base_part:
+                                    participants_part = base_part.split(', ratio:')[0]
+                                elif ', default:' in base_part:
+                                    participants_part = base_part.split(', default:')[0]
+                                elif ', fallback:' in base_part:
+                                    participants_part = base_part.split(', fallback:')[0]
+                                elif ', options:' in base_part:
+                                    participants_part = base_part.split(', options:')[0]
+                                else:
+                                    participants_part = base_part
                             
                             # Extract parameters from the details section
                             if ', decision: ' in phase_display:
-                                decision_type = phase_display.split(', decision: ')[1].split(',')[0].strip()
+                                decision_type = phase_display.split(', decision: ')[1].split(',')[0].split(' [')[0].strip()
                             
                             if ', ratio: ' in phase_display:
-                                ratio = phase_display.split(', ratio: ')[1].split(',')[0].strip()
+                                ratio = phase_display.split(', ratio: ')[1].split(',')[0].split(' [')[0].strip()
                             
                             if ', default: ' in phase_display:
-                                default_decision = phase_display.split(', default: ')[1].split(',')[0].strip()
+                                default_decision = phase_display.split(', default: ')[1].split(',')[0].split(' [')[0].strip()
                             
                             if ', fallback: ' in phase_display:
-                                fallback_policy = phase_display.split(', fallback: ')[1].split(',')[0].strip()
+                                fallback_policy = phase_display.split(', fallback: ')[1].split(',')[0].split(' [')[0].strip()
                             
                             if ', options: ' in phase_display:
-                                options = phase_display.split(', options: ')[1].strip()
+                                options = phase_display.split(', options: ')[1].split(' [')[0].strip()
                             if ', channel: ' in phase_display:
-                                channel = phase_display.split(', channel: ')[1].split(',')[0].strip()
+                                channel = phase_display.split(', channel: ')[1].split(',')[0].split(' [')[0].strip()
                             
                             # Generate DSL for this phase
                             dsl_parts.append(f"        {type_part} {name_part} {{")
@@ -3328,6 +3354,32 @@ class GovernanceFormBuilder:
                             # Optional communication channel for phase
                             if channel:
                                 dsl_parts.append(f"            CommunicationChannel : {channel}")
+                            
+                            # Add conditions if present
+                            if phase_conditions:
+                                dsl_parts.append("            Conditions:")
+                                for condition in phase_conditions:
+                                    # Convert from display format to DSL format
+                                    if condition.startswith('VetoRight:'):
+                                        dsl_parts.append(f"                {condition.replace(':', ' :')}")
+                                    elif condition.startswith('ParticipantExclusion:'):
+                                        dsl_parts.append(f"                {condition.replace(':', ' :')}")
+                                    elif condition.startswith('MinParticipants:'):
+                                        dsl_parts.append(f"                {condition.replace(':', ' :')}")
+                                    elif condition.startswith('Deadline:'):
+                                        condition_content = condition.split(':', 1)[1].strip()
+                                        dsl_parts.append(f"                Deadline : {condition_content}")
+                                    elif condition.startswith('MinDecisionTime:'):
+                                        condition_content = condition.split(':', 1)[1].strip()
+                                        dsl_parts.append(f"                MinDecisionTime : {condition_content}")
+                                    elif condition.startswith('LabelCondition'):
+                                        # Parse LabelCondition format: "LabelCondition pre not : label1, label2"
+                                        condition_content = condition.split(':', 1)[1].strip() if ':' in condition else ""
+                                        condition_prefix = condition.split(':')[0].strip()
+                                        if condition_content:
+                                            dsl_parts.append(f"                {condition_prefix} : {condition_content}")
+                                        else:
+                                            dsl_parts.append(f"                {condition_prefix}")
                             
                             # Add parameters section if any parameters exist
                             parameters = []

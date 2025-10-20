@@ -4,9 +4,7 @@ A Gradio-based interface for creating governance policies through forms
 """
 
 import gradio as gr
-import json
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Optional
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -17,6 +15,8 @@ class GovernanceFormBuilder:
         }
         # Track added conditions for current policy being edited
         self.current_policy_conditions = []
+        # Preview component placeholder (initialized in _create_preview_panel)
+        self.preview_code: Optional[gr.Textbox] = None
         
     def create_interface(self):
         """Create the main Gradio interface"""
@@ -28,7 +28,7 @@ class GovernanceFormBuilder:
             .form-section { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0; }
             .preview-panel { background-color: #f8f9fa; padding: 15px; border-radius: 8px; }
             """
-        ) as interface:
+        ) as ui:
             
             gr.Markdown("# 🏛️ Governance Policy Builder")
             gr.Markdown("Define governance rules for your software project using an intuitive form interface.")
@@ -54,7 +54,7 @@ class GovernanceFormBuilder:
             # Update handlers
             self._setup_event_handlers(scope_components, participant_components, policy_components, form_state)
             
-        return interface
+        return ui
     
     def _create_scope_forms(self):
         """Create forms for defining scopes (Projects, Activities, Tasks)"""
@@ -507,6 +507,14 @@ class GovernanceFormBuilder:
                     info="Select participants from defined roles/individuals (required)"
                 )
             
+            # Optional communication channel for this policy
+            with gr.Row():
+                communication_channel = gr.Textbox(
+                    label="Communication Channel (Optional)",
+                    placeholder="e.g., slack, email, github",
+                    info="Medium used for decision discussion/notification"
+                )
+            
             with gr.Row():
                 # Decision type
                 decision_type = gr.Dropdown(
@@ -812,6 +820,14 @@ class GovernanceFormBuilder:
                     value="BooleanDecision"
                 )
             
+            # Optional communication channel for this phase
+            with gr.Row():
+                phase_communication_channel = gr.Textbox(
+                    label="Phase Communication Channel (Optional)",
+                    placeholder="e.g., slack, email, github",
+                    info="Medium used for this phase's communication"
+                )
+            
             with gr.Row():
                 # Options for StringList and ElementList
                 phase_decision_options = gr.Textbox(
@@ -1040,6 +1056,7 @@ class GovernanceFormBuilder:
             'policy_type': policy_type,
             'policy_scope': policy_scope,
             'policy_participants': policy_participants,
+            'communication_channel': communication_channel,
             'decision_type': decision_type,
             'decision_options': decision_options,
             'voting_ratio': voting_ratio,
@@ -1075,6 +1092,7 @@ class GovernanceFormBuilder:
             'phase_name': phase_name,
             'phase_type': phase_type,
             'phase_participants': phase_participants,
+            'phase_communication_channel': phase_communication_channel,
             'phase_decision_type': phase_decision_type,
             'phase_decision_options': phase_decision_options,
             'phase_voting_ratio': phase_voting_ratio,
@@ -1133,7 +1151,7 @@ class GovernanceFormBuilder:
             'load_example_btn': load_example_btn
         }
     
-    def _setup_event_handlers(self, scope_components, participant_components, policy_components, form_state):
+    def _setup_event_handlers(self, scope_components, participant_components, policy_components, _form_state):
         """Set up event handlers for form interactions"""
         
         def add_profile(name, gender, race, current_profiles):
@@ -1247,9 +1265,6 @@ class GovernanceFormBuilder:
             success_message = f"✅ Individual '{new_individual['name']}' added successfully!\n\n{display_text}"
             
             # Update dropdown choices for next individual
-            profile_choices = [p['name'] for p in current_profiles] if current_profiles else []
-            role_choices = [r['name'] for r in current_roles] if current_roles else []
-            
             return updated_individuals, success_message, "", 1.0, None, None
         
         def clear_individuals():
@@ -1258,10 +1273,10 @@ class GovernanceFormBuilder:
         
         def update_individual_dropdowns(current_roles, current_profiles):
             """Update individual dropdown choices when roles or profiles change"""
-            profile_choices = [p['name'] for p in current_profiles] if current_profiles else []
-            role_choices = [r['name'] for r in current_roles] if current_roles else []
-            
-            return gr.Dropdown(choices=profile_choices, value=None), gr.Dropdown(choices=role_choices, value=None)
+            return (
+                gr.Dropdown(choices=[p['name'] for p in current_profiles] if current_profiles else [], value=None),
+                gr.Dropdown(choices=[r['name'] for r in current_roles] if current_roles else [], value=None)
+            )
         
         def add_agent(name, confidence, autonomy_level, explainability, role, current_agents, current_roles, current_individuals):
             """Add a new agent to the list"""
@@ -1298,9 +1313,6 @@ class GovernanceFormBuilder:
             display_text = self._format_agents_display(updated_agents)
             success_message = f"✅ Agent '{new_agent['name']}' added successfully!\n\n{display_text}"
             
-            # Update role dropdown choices for next agent
-            role_choices = [r['name'] for r in current_roles] if current_roles else []
-            
             return updated_agents, success_message, "", None, None, None, None
         
         def clear_agents():
@@ -1309,8 +1321,7 @@ class GovernanceFormBuilder:
         
         def update_agent_role_dropdown(current_roles):
             """Update agent role dropdown when roles change"""
-            role_choices = [r['name'] for r in current_roles] if current_roles else []
-            return gr.Dropdown(choices=role_choices, value=None)
+            return gr.Dropdown(choices=[r['name'] for r in current_roles] if current_roles else [], value=None)
         
         # Scope event handlers
         def add_project(name, platform, repo_owner, repo_name, current_projects, current_activities=None, current_tasks=None):
@@ -1588,7 +1599,8 @@ class GovernanceFormBuilder:
                       default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
                       min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
                       min_decision_offset_value, min_decision_offset_unit, min_decision_date,
-                      label_condition_type, label_condition_operator, label_condition_labels, 
+              label_condition_type, label_condition_operator, label_condition_labels, 
+              communication_channel,
                       added_conditions_list, current_policies):
             """Add a new policy to the list"""
             # Validate policy name (mandatory)
@@ -1626,6 +1638,7 @@ class GovernanceFormBuilder:
                 'voting_ratio': voting_ratio if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] else None,
                 'default_decision': default_decision if policy_type == "LeaderDrivenPolicy" else None,
                 'fallback_policy': fallback_policy if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] else None,
+                'communication_channel': communication_channel.strip() if communication_channel and communication_channel.strip() else None,
                 # Store the dynamically added conditions
                 'added_conditions': added_conditions_list.strip() if added_conditions_list else None,
                 # Keep backward compatibility with single condition fields for now
@@ -1654,7 +1667,7 @@ class GovernanceFormBuilder:
             return updated_policies, success_message
         
         def clear_policies():
-            """Clear all policies"""
+            # Clear all policies
             return [], "No policies added yet"
 
         def add_condition(condition_type, veto_participants, excluded_participants, min_participants,
@@ -1979,7 +1992,7 @@ class GovernanceFormBuilder:
         
         # Composed Policy Functions
         def add_phase(phase_name, phase_type, phase_participants, phase_decision_type, phase_decision_options, 
-                     phase_voting_ratio, phase_default_decision, phase_fallback_policy, current_phases_text):
+                      phase_voting_ratio, phase_default_decision, phase_fallback_policy, phase_communication_channel, current_phases_text):
             """Add a phase to the current composed policy"""
             # Parse existing phases from the display text (ignore error messages and success messages)
             existing_phases = []
@@ -1989,7 +2002,7 @@ class GovernanceFormBuilder:
                     # Skip error messages, success messages, and empty lines
                     if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
                         existing_phases.append(line)
-            
+
             # Helper function to format the phases display with error
             def format_phases_with_error(error_msg):
                 if existing_phases:
@@ -1997,7 +2010,7 @@ class GovernanceFormBuilder:
                     return f"❌ Error: {error_msg}\n\n{phases_text}"
                 else:
                     return f"❌ Error: {error_msg}"
-            
+
             # Helper function to return error with all phase fields reset
             def return_phase_error(error_msg):
                 return (
@@ -2009,56 +2022,61 @@ class GovernanceFormBuilder:
                     "",  # phase_decision_options
                     1.0,  # phase_voting_ratio
                     None,  # phase_default_decision
-                    None   # phase_fallback_policy
+                    None,  # phase_fallback_policy
+                    ""   # phase_communication_channel
                 )
-            
+
             # Validate phase name (mandatory)
             if not phase_name.strip():
                 return return_phase_error("Please enter a phase name")
-            
+
             # Check for duplicates
             phase_names = [line.split(' (')[0] for line in existing_phases]  # Extract names from display format
             if phase_name.strip() in phase_names:
                 return return_phase_error(f"Phase '{phase_name.strip()}' already exists")
-            
+
             # Validate phase participants (mandatory)
             if not phase_participants or (isinstance(phase_participants, list) and len(phase_participants) == 0):
                 return return_phase_error("Please select at least one participant for this phase")
-            
+
             # Create phase display string
             participants_list = phase_participants if isinstance(phase_participants, list) else [phase_participants]
             phase_display = f"{phase_name.strip()} ({phase_type}) → participants: {', '.join(participants_list)}"
-            
+
             # Add type-specific details
             details = []
             if phase_decision_type != "BooleanDecision":
                 details.append(f"decision: {phase_decision_type}")
-            
+
             # Show voting ratio for voting-related policies (always show, not just when != 1.0)
             if phase_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"]:
                 details.append(f"ratio: {phase_voting_ratio}")
-            
+
             # Show default decision only for LeaderDrivenPolicy
             if phase_type == "LeaderDrivenPolicy" and phase_default_decision:
                 details.append(f"default: {phase_default_decision}")
-            
+
             # Show fallback policy only for ConsensusPolicy and LazyConsensusPolicy
             if phase_type in ["ConsensusPolicy", "LazyConsensusPolicy"] and phase_fallback_policy:
                 details.append(f"fallback: {phase_fallback_policy}")
-            
+
             # Show decision options if specified and not BooleanDecision
             if phase_decision_options and phase_decision_options.strip() and phase_decision_type != "BooleanDecision":
                 options_clean = phase_decision_options.strip()
                 details.append(f"options: {options_clean}")
-            
+
+            # Optional communication channel detail
+            if phase_communication_channel and phase_communication_channel.strip():
+                details.append(f"channel: {phase_communication_channel.strip()}")
+
             if details:
                 phase_display += f", {', '.join(details)}"
-            
+
             # Add to existing phases and format success message
             updated_phases = existing_phases + [phase_display]
             phases_text = '\n'.join(updated_phases)
             success_message = f"✅ Phase '{phase_name.strip()}' added successfully!\n\n{phases_text}"
-            
+
             return (
                 success_message,  # added_phases_list
                 "",  # phase_name - clear
@@ -2068,13 +2086,14 @@ class GovernanceFormBuilder:
                 "",  # phase_decision_options - clear
                 1.0,  # phase_voting_ratio - reset
                 None,  # phase_default_decision - clear
-                None   # phase_fallback_policy - clear
+                None,   # phase_fallback_policy - clear
+                ""     # phase_communication_channel - clear
             )
-        
+
         def clear_phases():
             """Clear all phases for the current composed policy"""
             return ""
-        
+
         def add_composed_policy(name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies):
             """Add a new composed policy to the list"""
             # Validate composed policy name (mandatory)
@@ -2082,13 +2101,13 @@ class GovernanceFormBuilder:
                 display_text = self._format_composed_policies_display(current_composed_policies)
                 error_message = f"❌ Error: Please enter a composed policy name\n\n{display_text}" if current_composed_policies else "❌ Error: Please enter a composed policy name"
                 return current_composed_policies, error_message
-            
+
             # Validate composed policy scope (mandatory)
             if not scope:
                 display_text = self._format_composed_policies_display(current_composed_policies)
                 error_message = f"❌ Error: Please select a composed policy scope\n\n{display_text}" if current_composed_policies else "❌ Error: Please select a composed policy scope"
                 return current_composed_policies, error_message
-            
+
             # Validate phases (at least one phase required)
             phases = []
             if phases_text.strip():
@@ -2097,18 +2116,18 @@ class GovernanceFormBuilder:
                     # Skip error messages, success messages, and empty lines
                     if line and not line.startswith('❌ Error:') and not line.startswith('✅'):
                         phases.append(line)
-            
+
             if not phases:
                 display_text = self._format_composed_policies_display(current_composed_policies)
                 error_message = f"❌ Error: Please add at least one phase\n\n{display_text}" if current_composed_policies else "❌ Error: Please add at least one phase"
                 return current_composed_policies, error_message
-            
+
             # Check if composed policy already exists
             if any(p['name'] == name.strip() for p in current_composed_policies):
                 display_text = self._format_composed_policies_display(current_composed_policies)
                 error_message = f"❌ Error: Composed policy name '{name.strip()}' already exists\n\n{display_text}"
                 return current_composed_policies, error_message
-            
+
             # Create new composed policy
             new_composed_policy = {
                 'type': 'ComposedPolicy',
@@ -2119,25 +2138,25 @@ class GovernanceFormBuilder:
                 'carry_over': carry_over,
                 'phases': phases
             }
-            
+
             # Add to the list
             updated_composed_policies = current_composed_policies + [new_composed_policy]
             display_text = self._format_composed_policies_display(updated_composed_policies)
             success_message = f"✅ Composed policy '{name.strip()}' added successfully!\n\n{display_text}"
-            
+
             return updated_composed_policies, success_message
-        
+
         def clear_composed_policies():
             """Clear all composed policies"""
             return [], "No composed policies added yet"
-        
+
         def add_composed_policy_and_clear_form(name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies):
             """Add composed policy and clear form fields only on success"""
             # First try to add the composed policy
             policies_result, display_result = add_composed_policy(
                 name, scope, execution_type, require_all, carry_over, phases_text, current_composed_policies
             )
-            
+
             # Check if the addition was successful (no error message)
             if "❌ Error:" not in display_result:
                 # Success: clear the form fields
@@ -2157,14 +2176,14 @@ class GovernanceFormBuilder:
                     name, scope, execution_type, require_all, carry_over,  # Keep form values
                     phases_text  # Keep phases
                 )
-        
 
         def add_policy_and_clear_form(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
-                                     default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
-                                     min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
-                                     min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
-                                     label_condition_type, label_condition_operator, label_condition_labels, 
-                                     added_conditions_list, current_policies):
+                                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                                      min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
+                                      label_condition_type, label_condition_operator, label_condition_labels, 
+                                      communication_channel,
+                                      added_conditions_list, current_policies):
             """Add policy and clear form fields only on success"""
             # First try to add the policy
             policies_result, display_result = add_policy(
@@ -2173,9 +2192,10 @@ class GovernanceFormBuilder:
                 min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
                 min_decision_offset_value, min_decision_offset_unit, min_decision_date,
                 label_condition_type, label_condition_operator, label_condition_labels, 
+                communication_channel,
                 added_conditions_list, current_policies
             )
-            
+
             # Check if the addition was successful (no error message)
             if "❌ Error:" not in display_result:
                 # Success: clear the form and update dropdowns
@@ -2186,7 +2206,8 @@ class GovernanceFormBuilder:
                     "", "MajorityPolicy", None, [], "BooleanDecision", "", 1.0,  # Clear form fields - use empty list for participants
                     gr.Dropdown(choices=fallback_choices, visible=False),  # default_decision
                     gr.Dropdown(choices=fallback_choices, visible=False),  # fallback_policy
-                    "", [], [], None, None, "days", "", None, "days", "", "pre", "", "", ""  # Clear condition fields - use empty lists for participant dropdowns
+                    "", [], [], None, None, "days", "", None, "days", "", "pre", "", "", "",  # Clear condition fields - use empty lists for participant dropdowns
+                    ""  # communication_channel clear
                 )
             else:
                 # Error: keep form as is, only update policies display
@@ -2198,79 +2219,30 @@ class GovernanceFormBuilder:
                     deadline_offset_value, deadline_offset_unit, deadline_date,  # Keep deadline values
                     min_decision_offset_value, min_decision_offset_unit, min_decision_date,  # Keep min decision values
                     label_condition_type, label_condition_operator, label_condition_labels,  # Keep label condition values
-                    added_conditions_list  # Keep added conditions list
+                    added_conditions_list,  # Keep added conditions list
+                    communication_channel  # keep
                 )
-        
+
         def update_preview(*args):
             """Update the preview based on current form values"""
-            try:
-                dsl_code = self._generate_dsl_from_form(*args)
-                return dsl_code
-            except Exception as e:
-                return f"Error generating DSL: {str(e)}"
-        
-        def load_example():
-            """Load an example configuration"""
-            example_dsl = """Scopes: 
-    Projects :
-        ExampleProject from GitHub : owner/repo {
-            Activities :
-                ExampleActivity {
-                    Tasks :
-                        ExampleTask : Pull request {
-                            Action : merge
-                        }
-                }
-        }
-Participants:
-    Profiles:
-        diverse_profile {
-            gender : non-binary
-            race : mixed
-        }
-    Roles : maintainer, reviewer, approver
-    Individuals :
-        john_doe {
-            vote value : 0.8
-            profile : diverse_profile
-            role : maintainer
-        },
-        (Agent) security-bot {
-            confidence : 0.9
-            autonomy level: 0.8
-            explainability: 1.0
-            role : reviewer
-        }
-MajorityPolicy example_policy {
-    Scope: ExampleTask
-    DecisionType as BooleanDecision
-    Participant list : maintainer, john_doe
-    Conditions:
-        MinParticipants : 2
-    Parameters:
-        ratio: 1.0
-}"""
-            return example_dsl
-        
-        # Get all form components for change tracking
-        all_components = []
-        all_components.extend(scope_components.values())
-        all_components.extend(participant_components.values())
-        all_components.extend(policy_components.values())
-        
-        # Scope management handlers
-        # Project management
+            return self._generate_dsl_from_form(*args)
+
+        # removed unused local load_example (can be reintroduced and wired when enabling example loading)
+
+        # Scope management handlers - Project-specific helpers
         def add_project_and_clear_form(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
             """Add project and return cleared form with proper repository visibility"""
             # First add the project
-            updated_projects, message, clear_name, clear_platform, clear_repo_owner, clear_repo_name = add_project(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks)
-            
+            updated_projects, message, clear_name, clear_platform, _, _ = add_project(
+                name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks
+            )
+
             # After clearing, repository fields should be hidden and empty since platform is cleared
             hidden_repo_owner = gr.Textbox(value="", visible=False)
             hidden_repo_name = gr.Textbox(value="", visible=False)
-            
+
             return updated_projects, message, clear_name, clear_platform, hidden_repo_owner, hidden_repo_name
-        
+
         scope_components['add_project_btn'].click(
             fn=add_project_and_clear_form,
             inputs=[
@@ -2291,14 +2263,14 @@ MajorityPolicy example_policy {
                 scope_components['project_repo_name']    # Clear and hide repo name field
             ]
         )
-        
+
         def clear_projects_and_reset_form():
             """Clear all projects and reset form with proper repository visibility"""
             projects_data, display_message = clear_projects()
             hidden_repo_owner = gr.Textbox(value="", visible=False)
             hidden_repo_name = gr.Textbox(value="", visible=False)
             return projects_data, display_message, hidden_repo_owner, hidden_repo_name
-        
+
         scope_components['clear_projects_btn'].click(
             fn=clear_projects_and_reset_form,
             outputs=[
@@ -2624,6 +2596,7 @@ MajorityPolicy example_policy {
                 policy_components['label_condition_type'],
                 policy_components['label_condition_operator'],
                 policy_components['label_condition_labels'],
+                policy_components['communication_channel'],
                 policy_components['added_conditions_list'],
                 policy_components['policies_data']
             ],
@@ -2652,7 +2625,8 @@ MajorityPolicy example_policy {
                 policy_components['label_condition_type'], # Reset/keep label condition type
                 policy_components['label_condition_operator'], # Reset/keep label operator
                 policy_components['label_condition_labels'], # Clear/keep label condition labels
-                policy_components['added_conditions_list'] # Clear/keep added conditions list
+                policy_components['added_conditions_list'], # Clear/keep added conditions list
+                policy_components['communication_channel'] # Clear/keep communication channel
             ]
         )
         
@@ -2809,6 +2783,7 @@ MajorityPolicy example_policy {
                 policy_components['phase_voting_ratio'],
                 policy_components['phase_default_decision'],
                 policy_components['phase_fallback_policy'],
+                policy_components['phase_communication_channel'],
                 policy_components['added_phases_list']
             ],
             outputs=[
@@ -2820,7 +2795,8 @@ MajorityPolicy example_policy {
                 policy_components['phase_decision_options'],
                 policy_components['phase_voting_ratio'],
                 policy_components['phase_default_decision'],
-                policy_components['phase_fallback_policy']
+                policy_components['phase_fallback_policy'],
+                policy_components['phase_communication_channel']
             ]
         )
         
@@ -2965,7 +2941,6 @@ MajorityPolicy example_policy {
         # Get all activity names (explicit + implicit from task parents)
         explicit_activity_names = {a['name'] for a in activities}
         implicit_activity_names = {t['parent'] for t in tasks if t['parent'] and t['parent'] not in explicit_activity_names and t['parent'] not in all_project_names}
-        all_activity_names = explicit_activity_names | implicit_activity_names
         
         # Generate Projects with their hierarchical structure
         if all_project_names:
@@ -3152,23 +3127,9 @@ MajorityPolicy example_policy {
                         participants = [p.strip() for p in str(policy['participants']).split(',') if p.strip()]
                     if participants:
                         dsl_parts.append(f"    Participant list : {', '.join(participants)}")
-                
-                # Parameters
-                parameters = []
-                if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
-                    parameters.append(f"        ratio: {policy['voting_ratio']}")
-                
-                # Add default decision for LeaderDrivenPolicy
-                if policy_type == "LeaderDrivenPolicy" and policy.get('default_decision'):
-                    parameters.append(f"        default: {policy['default_decision']}")
-                
-                # Add fallback policy for ConsensusPolicy and LazyConsensusPolicy
-                if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] and policy.get('fallback_policy'):
-                    parameters.append(f"        fallback: {policy['fallback_policy']}")
-                
-                if parameters:
-                    dsl_parts.append("    Parameters:")
-                    dsl_parts.extend(parameters)
+                # Optional communication channel (must appear immediately after participants)
+                if policy.get('communication_channel'):
+                    dsl_parts.append(f"    CommunicationChannel : {policy['communication_channel']}")
                 
                 # Add conditions
                 conditions = []
@@ -3254,6 +3215,23 @@ MajorityPolicy example_policy {
                 if conditions:
                     dsl_parts.append("    Conditions:")
                     dsl_parts.extend(conditions)
+
+                # Parameters (must come after conditions)
+                parameters = []
+                if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
+                    parameters.append(f"        ratio: {policy['voting_ratio']}")
+                
+                # Add default decision for LeaderDrivenPolicy
+                if policy_type == "LeaderDrivenPolicy" and policy.get('default_decision'):
+                    parameters.append(f"        default: {policy['default_decision']}")
+                
+                # Add fallback policy for ConsensusPolicy and LazyConsensusPolicy
+                if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] and policy.get('fallback_policy'):
+                    parameters.append(f"        fallback: {policy['fallback_policy']}")
+                
+                if parameters:
+                    dsl_parts.append("    Parameters:")
+                    dsl_parts.extend(parameters)
                 
                 dsl_parts.append("}")
         
@@ -3301,6 +3279,7 @@ MajorityPolicy example_policy {
                             default_decision = None
                             fallback_policy = None
                             options = None
+                            channel = None
                             
                             # Parse the display string more carefully
                             if 'participants: ' in phase_display:
@@ -3335,6 +3314,8 @@ MajorityPolicy example_policy {
                             
                             if ', options: ' in phase_display:
                                 options = phase_display.split(', options: ')[1].strip()
+                            if ', channel: ' in phase_display:
+                                channel = phase_display.split(', channel: ')[1].split(',')[0].strip()
                             
                             # Generate DSL for this phase
                             dsl_parts.append(f"        {type_part} {name_part} {{")
@@ -3343,6 +3324,10 @@ MajorityPolicy example_policy {
                             if participants_part:
                                 participants_list = [p.strip() for p in participants_part.split(',')]
                                 dsl_parts.append(f"            Participant list: {', '.join(participants_list)}")
+                            
+                            # Optional communication channel for phase
+                            if channel:
+                                dsl_parts.append(f"            CommunicationChannel : {channel}")
                             
                             # Add parameters section if any parameters exist
                             parameters = []
@@ -3725,13 +3710,13 @@ MajorityPolicy example_policy {
 def main():
     """Main function to run the Gradio interface"""
     builder = GovernanceFormBuilder()
-    interface = builder.create_interface()
+    app = builder.create_interface()
     
-    return interface
+    return app
 
 if __name__ == "__main__":
-    interface = main()
-    interface.launch(
+    app = main()
+    app.launch(
         server_name="localhost",
         server_port=7860,
         share=False,

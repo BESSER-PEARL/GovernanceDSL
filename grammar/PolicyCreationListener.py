@@ -304,6 +304,44 @@ class PolicyCreationListener(govdslListener):
             if hasattr(node, 'policy_object') and node.policy_object:
                 node.policy_object.validate()
     
+    def _current_policy_id(self) -> str:
+        """
+        Retrieves the policy ID of the current policy context.
+        Returns:
+            The policy ID of the current policy.
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        # TODO: Adapt code so that uses this helper method
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        return self.policy_stack[-1].policy_id
+    
+    def _get_current_policy_scope(self):
+        """
+        Retrieves the Scope object associated with the current policy.
+        Returns:
+            The Scope object associated with the current policy.
+        Raises:
+            RuntimeError: If not within a policy context
+        """
+        pid = self._current_policy_id()
+        return self.__policy_scopes_map.get(pid)
+
+    def _resolve_project_from_scope(self, scope):
+        # Project scope
+        if scope is None:
+            return None
+        # If the scope itself is a Project (or Repository), return it
+        if isinstance(scope, (Project, Repository)):
+            return scope
+        # Activity -> Project
+        if isinstance(scope, Activity):
+            return scope.project
+        # Task -> Activity -> Project
+        if isinstance(scope, Task) and scope.activity:
+            return getattr(scope.activity, "project", None)
+
     def _register_scope_with_current_policy(self, scope_obj):
         """
         Registers a scope object (Activity, Project, Task) with the current policy.
@@ -315,10 +353,7 @@ class PolicyCreationListener(govdslListener):
             RuntimeError: If not within a policy context
         """
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the scopes set for this policy if needed
         if current_policy_id in self.__policy_scopes_map:
@@ -337,11 +372,8 @@ class PolicyCreationListener(govdslListener):
         Raises:
             RuntimeError: If not within a policy context
         """
-        # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        # Get the current policy context        
+        current_policy_id = self._current_policy_id()
         
         # Initialize the participants set for this policy if needed
         if current_policy_id not in self.__policy_participants_map:
@@ -361,10 +393,7 @@ class PolicyCreationListener(govdslListener):
             RuntimeError: If not within a policy context
         """
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the conditions set for this policy if needed
         if current_policy_id not in self.__policy_conditions_map:
@@ -384,10 +413,7 @@ class PolicyCreationListener(govdslListener):
             RuntimeError: If not within a policy context
         """
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the rules set for this policy if needed
         if current_policy_id not in self.__policy_rules_map:
@@ -407,10 +433,7 @@ class PolicyCreationListener(govdslListener):
             RuntimeError: If not within a policy context
         """
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the communication channel for this policy if needed
         if current_policy_id in self.__communication_channels_map:
@@ -430,10 +453,7 @@ class PolicyCreationListener(govdslListener):
             RuntimeError: If not within a policy context
         """
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the decision types set for this policy if needed
         if current_policy_id in self.__policy_decision_type_map:
@@ -868,24 +888,43 @@ class PolicyCreationListener(govdslListener):
         min_decision_time = MinDecisionTime(name=name, offset=offset, date=date)
         self._register_condition_with_current_policy(min_decision_time)
 
-    def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):
-        # TODO: This condition needs more refinement. We will include primitive types.
+    def enterParticipantExclusion(self, ctx:govdslParser.ParticipantExclusionContext):        
+        excluded_ids = [e.getText() for e in ctx.ID()]
+        scope = self._get_current_policy_scope()
+        if scope is None:
+            raise UndefinedAttributeException("scope", 
+                                              message="No scope defined for policy of ParticipantExclusion (check parsing order).")
         
-        excluded_objs = set()
-        for e in ctx.ID():
-            excluded_name = e.getText()
-            excluded_participant = None
-            if excluded_name in self.__policy_participants_map:
-                # Get the existing individual object; 
-                # Check also if it is an Individual for name collision with Roles (which should not happen, though)
-                excluded_participant = next(p for p in self.__policy_participants_map if p.name == excluded_name and isinstance(p, Individual)) 
+        if "PRAuthor" in excluded_ids:
+            if not isinstance(scope, Patch) or not isinstance(getattr(scope, "element", None), PullRequest):
+                raise UndefinedAttributeException(
+                    "ParticipantExclusion",
+                    message="Constraint violation: PRAuthor only valid when policy scope is a Patch on a PullRequest, now: {}.".format(type(scope).__name__)
+                )
+        if "RepoOwner" in excluded_ids:
+            project = self._resolve_project_from_scope(scope)
+            if not project:
+                raise UndefinedAttributeException(
+                    "ParticipantExclusion",
+                    message="Constraint violation: RepoOwner only valid when policy scope is associated with a Repository, now: {}.".format(type(scope).__name__)
+                )
+        
+        excluded_set = set()
+        for excluded_name in excluded_ids:
+            participant = self.__participants_map.get(excluded_name)
+            if participant:
+                excluded_set.add(participant)
+                continue
+            # We create an Individual if complies with default values, for now:
+            # PRAuthor, RepoOwner
+            if excluded_name in ["PRAuthor", "RepoOwner"]:
+                excluded_set.add(Individual(name=excluded_name))
             else:
-                # We create an Individual (TODO: Maybe add primitive types)
-                excluded_participant = Individual(name=excluded_name)
-            excluded_objs.add(excluded_participant)
+                raise UndefinedAttributeException("participant",
+                                                    message="Participant {} not defined. Default values allowed: PRAuthor, RepoOwner".format(excluded_name))
 
         # we just put a name by default
-        cond = ParticipantExclusion(name="partExcl", excluded=excluded_objs)
+        cond = ParticipantExclusion(name="partExcl", excluded=excluded_set)
         self._register_condition_with_current_policy(cond)
 
     def enterMinParticipant(self, ctx:govdslParser.MinParticipantContext):
@@ -1020,10 +1059,7 @@ class PolicyCreationListener(govdslListener):
 
     def enterParameters(self, ctx:govdslParser.ParametersContext):
         # Get the current policy context
-        if not self.policy_stack:
-            raise RuntimeError("Attempting to access policy stack, but it is empty.")
-        
-        current_policy_id = self.policy_stack[-1].policy_id
+        current_policy_id = self._current_policy_id()
         
         # Initialize the parameters map for this policy if needed
         if current_policy_id not in self.__policy_parameters_map:

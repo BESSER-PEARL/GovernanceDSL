@@ -1,0 +1,23 @@
+-- Indicators for value ranges 
+context VotingPolicy inv ratioValue:
+  self.ratio >= 0.0 and self.ratio <= 1.0
+context Participant inv voteValue:
+  self.voteValue >= 0.0 and self.voteValue <= 2.0
+context Agent inv agentAttributes:
+  self.confidence >= 0.0 and self.confidence <= 1.0 and
+  self.autonomyLevel >= 0.0 and self.autonomyLevel <= 1.0 and
+  self.explainability >= 0.0 and self.explainability <= 1.0 and
+-- ParticipantExclusion predefined roles
+Enum PredefinedRole:
+    PRAuthor 
+    RepoOwner 
+context ParticipantExclusion inv predefinedParticipantExclusion:
+  self.excluded->select(p | p.oclIsKindOf(PredefinedRole))->forAll(role |
+    (role = PredefinedRoleType::PRAuthor implies 
+     self.policy.scope.oclIsKindOf(Patch) and 
+     self.policy.scope.element.oclIsKindOf(PullRequest)) and
+     
+    (role = PredefinedRoleType::RepoOwner implies
+     self.policy.scope.project.oclIsKindOf(Repository))
+  )
+

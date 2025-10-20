@@ -128,8 +128,9 @@ class testPolicyCreation(unittest.TestCase):
             tree = parser.governance()
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
-            with self.assertRaises(UndefinedAttributeException):
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
                 walker.walk(listener, tree)
+            print(f"\nException message: {str(raised_exception.exception)}")
 
     def test_invalid_appeal_inline_missing_blocks(self):
         """Inline AppealRight policy without required blocks should not parse cleanly."""
@@ -149,8 +150,33 @@ class testPolicyCreation(unittest.TestCase):
             tree = parser.governance()
             listener = PolicyCreationListener()
             walker = ParseTreeWalker()
-            with self.assertRaises(EmptySetException):
+            with self.assertRaises(EmptySetException) as raised_exception:
                 walker.walk(listener, tree)
+            print(f"\nException message: {str(raised_exception.exception)}")
+
+    def test_invalid_participant_exclusion_unknown_participant(self):
+        """ParticipantExclusion with an unknown participant should raise UndefinedAttributeException."""
+        with open(self.test_cases_path / "invalid_examples/participant_exclusion_unknown_participant.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            print(f"\nException message: {str(raised_exception.exception)}")
+
+    def test_invalid_participant_exclusion_wrong_scope(self):
+        """ParticipantExclusion with incompatible scope should raise InvalidScopeException."""
+        with open(self.test_cases_path / "invalid_examples/participant_exclusion_wrong_scope.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            print(f"\nException message: {str(raised_exception.exception)}")
 
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""

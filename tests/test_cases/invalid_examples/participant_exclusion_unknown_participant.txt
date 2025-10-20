@@ -1,0 +1,12 @@
+Scopes: 
+    Projects :
+        TestProject
+Participants:
+    Roles : maintainer
+MajorityPolicy badPE {
+    Scope : TestProject
+    DecisionType as BooleanDecision
+    Participant list : maintainer
+    Conditions:
+        ParticipantExclusion : unknownUser
+}

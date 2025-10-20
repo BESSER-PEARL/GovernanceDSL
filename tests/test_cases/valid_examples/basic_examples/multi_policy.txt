@@ -14,4 +14,9 @@ MajorityPolicy majPolicy {
     Scope : myActivity
     DecisionType as BooleanDecision
     Participant list : collaborator
+    Conditions:
+        AppealRight: {
+            Appealers : collaborator,
+            Policy : lcPolicy
+        }
 }

@@ -43,6 +43,7 @@ class PolicyCreationListener(govdslListener):
         self.__policy_parameters_map = {}
         self.__policy_decision_type_map = {}
         self.__communication_channels_map = {}
+        self.__appeal_policy_map = {}
 
         # Maps to track scopes and participants predefined
         self.__scopes_map = {}
@@ -111,8 +112,16 @@ class PolicyCreationListener(govdslListener):
         to_process = [self.policy_tree[pid] for pid in default_policies if pid in self.policy_tree]
         # Then all fallback policies
         to_process.extend([self.policy_tree[pid] for pid in fallback_policies if pid in self.policy_tree])
-        # Then add leaf nodes that aren't default policies
-        not_default_nor_fallback = [node for node in leaves if node.policy_id not in default_policies and node.policy_id not in fallback_policies]
+        # Then any inline appeal policies (those present in policy_tree as nested nodes)
+        appeal_inline_ids = set()
+        for _, pairs in self.__appeal_policy_map.items():
+            for _, target_id in pairs:
+                if target_id in self.policy_tree and self.policy_tree[target_id].is_nested:
+                    appeal_inline_ids.add(target_id)
+        to_process.extend([self.policy_tree[pid] for pid in appeal_inline_ids if pid in self.policy_tree])
+        
+        # Then add leaf nodes that aren't default, fallback or appeal (inline) policies
+        not_default_nor_fallback = [node for node in leaves if node.policy_id not in default_policies and node.policy_id not in fallback_policies and node.policy_id not in appeal_inline_ids]
         to_process.extend(not_default_nor_fallback)
 
         while to_process:
@@ -262,6 +271,26 @@ class PolicyCreationListener(govdslListener):
                         node.policy_object = LeaderDrivenPolicy.from_policy(base_policy, default=default_policy)
                         
                         # Scope will be automatically propagated to inline default policy by the LeaderDrivenPolicy class. 
+                    
+                # Resolve AppealRight targets for this node (if any)
+                refs = self.__appeal_policy_map.get(node.policy_id, [])
+                if refs:
+                    requeue = False
+                    for cond_obj, target_id in refs:
+                        target_node = self.policy_tree.get(target_id)
+                        if not target_node:
+                            raise UndefinedAttributeException("policy", f"AppealRight references an undefined policy '{target_id}'.")
+                        if target_node.policy_id not in processed:
+                            # Ensure target is processed first
+                            to_process.insert(0, target_node)
+                            to_process.append(node)
+                            requeue = True
+                            break
+                        # Target is ready; attach it
+                        cond_obj.policy = target_node.policy_object
+                    if requeue:
+                        # Defer current node until target(s) are built
+                        continue
             
             # Mark as processed
             processed.add(node.policy_id)
@@ -889,25 +918,59 @@ class PolicyCreationListener(govdslListener):
 
     def enterAppealRight(self, ctx:govdslParser.AppealRightContext):
         
-        appealers_obj = set()
-        # Appealers might not be participants of the current policy
+        # Ensure we’re inside a policy
+        if not self.policy_stack:
+            raise RuntimeError("Attempting to access policy stack, but it is empty.")
+        current_policy_id = self.policy_stack[-1].policy_id
+
+        # Exclude the policyReference ID (if present) from appealer IDs
+        ref_id_text = ctx.policyReference().ID().getText() if ctx.policyReference() else None
+        appealers_set = set()
+
         for a in ctx.ID():
-            # Check if the appealer is already registered
+            # Appealers must be declared in the participants block
             appealer_name = a.getText()
-            appealer = None
-            if appealer_name in self.__policy_participants_map:
-                # Get the existing participant object
-                appealer = next(p for p in self.__policy_participants_map if p.name == appealer_name)
-            else:
-                # We create an Individual by default
-                appealer = Individual(name=appealer_name)
-            appealers_obj.add(appealer)
-        
-        # Create the AppealRight object
-        appeal_right_obj = AppealRight(name="AppealRightCondition", appealers=appealers_obj)
-        
-        # Register with current policy
+            # Can it happen that the policyReference ID is captured here? If so, we skip it.
+            if ref_id_text and appealer_name == ref_id_text:
+                continue
+            appealer = self.__participants_map.get(appealer_name)
+            if not appealer:
+                raise UndefinedAttributeException("participant", message="Participant {} not defined.".format(appealer_name))
+            appealers_set.add(appealer)
+
+        # Create the AppealRight (policy resolved later in _construct_policy_objects)
+        appeal_right_obj = AppealRight(name="AppealRightCondition", appealers=appealers_set, policy=None)
         self._register_condition_with_current_policy(appeal_right_obj)
+        
+        # Determine target policy (reference or inline)
+        target_policy_id = None
+        policy_type = None
+
+        if ctx.policyReference():
+            target_policy_id = ref_id_text
+        elif ctx.nestedPolicy():
+            if ctx.nestedPolicy().nestedSinglePolicy():
+                target_policy_id = ctx.nestedPolicy().nestedSinglePolicy().ID().getText()
+                policy_type = ctx.nestedPolicy().nestedSinglePolicy().policyType().getText()
+            elif ctx.nestedPolicy().nestedComposedPolicy():
+                target_policy_id = ctx.nestedPolicy().nestedComposedPolicy().ID().getText()
+                policy_type = "composed"
+
+            # Create a node for this inline (nested) appeal policy (scope inheritance)
+            if target_policy_id and target_policy_id not in self.policy_tree:
+                node = PolicyNode(target_policy_id, policy_type, is_nested=True)
+                self.policy_tree[target_policy_id] = node
+                self.referenced_policies.add(target_policy_id)
+                parent_node = self.policy_stack[-1]
+                parent_node.add_child(node)
+                # Inherit parent scope if already set
+                if current_policy_id in self.__policy_scopes_map:
+                    self.__policy_scopes_map[target_policy_id] = self.__policy_scopes_map[current_policy_id]
+
+        # Record for later resolution
+        if target_policy_id:
+            self.__appeal_policy_map.setdefault(current_policy_id, []).append((appeal_right_obj, target_policy_id))
+
 
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
         

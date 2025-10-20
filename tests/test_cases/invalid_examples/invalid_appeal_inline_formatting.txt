@@ -1,0 +1,12 @@
+Scopes:
+    Projects :
+        testProject
+Participants:
+    Roles : maintainer
+MajorityPolicy majPolicy {
+    Scope: testProject
+    DecisionType as BooleanDecision
+    Participant list : maintainer
+    Conditions:
+        AppealRight : { Appealers : maintainer, Policy : MajorityPolicy badInline { } }
+}

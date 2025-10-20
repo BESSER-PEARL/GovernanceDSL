@@ -6,12 +6,14 @@ from pathlib import Path
 from antlr4 import (
     InputStream, CommonTokenStream, ParseTreeWalker
 )
+from antlr4.error.ErrorStrategy import BailErrorStrategy
+from antlr4.error.Errors import ParseCancellationException
 from grammar.govdslLexer import govdslLexer
 from grammar.govdslParser import govdslParser
 from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
-    InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
+    EmptySetException, InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
     InvalidValueException
 )
 from metamodel.governance import (
@@ -117,6 +119,38 @@ class testPolicyCreation(unittest.TestCase):
                 walker.walk(listener, tree)
             exception_message = str(raised_exception.exception)
             print(f"\nException message: {exception_message}")
+
+    def test_invalid_appeal_bad_reference(self):
+        """AppealRight referencing an undefined policy should raise."""
+        with open(self.test_cases_path / "invalid_examples/invalid_appeal_bad_reference.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(UndefinedAttributeException):
+                walker.walk(listener, tree)
+
+    def test_invalid_appeal_inline_missing_blocks(self):
+        """Inline AppealRight policy without required blocks should not parse cleanly."""
+        with open(self.test_cases_path / "invalid_examples/invalid_appeal_inline_formatting.txt", "r") as file:
+            text = file.read()
+            # We can have two ways of validating this:
+            # 1. Prefer failing at grammar stage
+            # parser = self.setup_parser(text)
+            # # We access a protected member _errHandler to set our custom error strategy
+            # parser._errHandler = BailErrorStrategy()
+            # with self.assertRaises(ParseCancellationException):
+            #     # This will throw if the inline policy is malformed per grammar
+            #     parser.governance()
+
+            # 2. Test the construction path (when not bailing), we expect an EmptySetException
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(EmptySetException):
+                walker.walk(listener, tree)
 
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
@@ -258,10 +292,21 @@ class testPolicyCreation(unittest.TestCase):
             appeal = next(iter(appeal_conditions))
             self.assertEqual(appeal.name, "AppealRightCondition")
 
+            # inline appeal policy
+            self.assertIsNotNone(appeal.policy)
+            self.assertIsInstance(appeal.policy, MajorityPolicy)
+            self.assertEqual(appeal.policy.name, "appealPolicy")
+            # Inline policy must inherit the parent scope
+            self.assertIsNotNone(appeal.policy.scope)
+            self.assertIs(appeal.policy.scope, policy.scope)
+            # DecisionType in inline policy
+            self.assertIsNotNone(appeal.policy.decision_type)
+            self.assertIsInstance(appeal.policy.decision_type, BooleanDecision)
+
             ## Verify appealers set
             self.assertEqual(len(appeal.appealers), 1)
             owner = next((a for a in appeal.appealers if a.name == "owner"), None)
-            self.assertIsInstance(owner, Individual)
+            self.assertIsInstance(owner, Role)
             self.assertEqual(owner.name, "owner")
 
 
@@ -951,7 +996,12 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(participant_2.name, "collaborator")
 
             # Test conditions for policy_2 (none defined)
-            self.assertEqual(len(policy_2.conditions), 0)
+            self.assertEqual(len(policy_2.conditions), 1)
+            cond = next(iter(policy_2.conditions))
+            self.assertIsInstance(cond, AppealRight)
+            # AppealRight policy must reference lcPolicy
+            self.assertIsNotNone(cond.policy)
+            self.assertIs(cond.policy, policy_1)
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

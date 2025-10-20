@@ -44,7 +44,13 @@ MajorityPolicy testPolicy {
         MinDecisionTime : 4 days
         ParticipantExclusion : mike
         MinParticipants : 2
-        AppealRight : owner
+        AppealRight : {
+            Appealers: owner,
+            Policy : MajorityPolicy appealPolicy { 
+                DecisionType as BooleanDecision 
+                Participant list : maintainer
+                } 
+            }
         LabelCondition pre not : Label1
         LabelCondition : Label2
     Parameters:

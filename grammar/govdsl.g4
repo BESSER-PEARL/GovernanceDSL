@@ -5,11 +5,11 @@ governance          : (scopes participants policy+) EOF ;
 policy              : (topLevelSinglePolicy | topLevelComposedPolicy) ;
 
 // Top-level policies (with scope)
-topLevelSinglePolicy    : policyType ID '{' scope decisionType policyParticipants? communicationChannel? conditions? parameters? '}' ;
+topLevelSinglePolicy    : policyType ID '{' scope decisionType policyParticipants communicationChannel? conditions? parameters? '}' ;
 topLevelComposedPolicy  : 'ComposedPolicy' ID '{' scope order? phases '}' ;
 
 // Nested policies (no scope)
-nestedSinglePolicy      : policyType ID '{' decisionType policyParticipants? communicationChannel? conditions? parameters? '}' ;
+nestedSinglePolicy      : policyType ID '{' decisionType policyParticipants communicationChannel? conditions? parameters? '}' ;
 nestedComposedPolicy    : 'ComposedPolicy' ID '{' order? phases '}' ;
 
 policyType          : 'MajorityPolicy' | 'LeaderDrivenPolicy' | 'AbsoluteMajorityPolicy' | 'ConsensusPolicy' | 'LazyConsensusPolicy' | 'VotingPolicy';
@@ -19,7 +19,7 @@ scopes              : 'Scopes' ':' ( projects | activities | tasks)+ ; // Defini
 scope               : 'Scope' ':' ID ; // reference from policy
 projects            : 'Projects' ':' project+ ;
 project             : ID ('from' platform ':' repoID)? ('{' 'Activities' ':' activity+ '}')? ;
-platform            : 'GitHub' ;
+platform            : 'GitHub' | 'GitLab' ;
 repoID              : ID ('/' ID)? ; // owner/repo
 activities          : 'Activities' ':' activity+ ;
 activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
@@ -76,7 +76,7 @@ date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; 
 participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ; // TODO: ID | 'PRAuthor' | 'RepoOwner' 
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
-appealRight         : 'AppealRight' ':' ID (',' ID)* ; 
+appealRight         : 'AppealRight' ':' '{' 'Appealers' ':' ID (',' ID)* ','? 'Policy' ':' (nestedPolicy | policyReference) '}' ;
 passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;

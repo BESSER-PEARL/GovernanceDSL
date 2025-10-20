@@ -418,9 +418,10 @@ class VetoRight(Condition):
         self.__vetoers = vetoers
 
 class AppealRight(Condition):
-    def __init__(self, name: str, appealers: set[Participant]):
+    def __init__(self, name: str, appealers: set[Participant], policy: 'Policy' = None):
         super().__init__(name)
         self.appealers = appealers
+        self.__policy = policy # Avoid setter during init to prevent errors, validated later
 
     @property
     def appealers(self) -> set[Participant]:
@@ -429,6 +430,16 @@ class AppealRight(Condition):
     @appealers.setter
     def appealers(self, appealers: set[Participant]):
         self.__appealers = appealers
+
+    @property
+    def policy(self) -> 'Policy':
+        return self.__policy
+    
+    @policy.setter
+    def policy(self, policy: 'Policy'):
+        if policy is None:
+            raise UndefinedAttributeException("policy", message="Policy must be defined.")
+        self.__policy = policy
 
 # DecisionType
 class DecisionType(Element):
@@ -564,6 +575,13 @@ class SinglePolicy(Policy):
     def channel(self, channel: CommunicationChannel):
         self.__channel = channel
 
+    # Enforce AppealRight has a policy after construction finishes
+    def validate(self):
+        super().validate()
+        for cond in (self.conditions or []):
+            if isinstance(cond, AppealRight) and cond.policy is None:
+                raise UndefinedAttributeException("policy", message="AppealRight must reference a policy.")
+            
 
 class ConsensusPolicy(SinglePolicy):
     def __init__(self, name: str, conditions: set[Condition], participants: set[Participant], 

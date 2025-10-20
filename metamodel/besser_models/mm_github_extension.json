@@ -2,8 +2,8 @@
   "project": {
     "id": "97387715-33ee-40d6-9e56-f3677c7a5c7d",
     "type": "Project",
-    "name": "governance_DSL_MM",
-    "description": "Abstract syntax metamodel of the governance DSL",
+    "name": "github_extension_mm",
+    "description": "Abstract syntax metamodel of the GitHub extension",
     "owner": "ademait",
     "createdAt": "2025-10-06T07:48:14.040Z",
     "currentDiagramType": "ClassDiagram",
@@ -15,8 +15,8 @@
           "version": "3.0.0",
           "type": "ClassDiagram",
           "size": {
-            "width": 1800,
-            "height": 862.2000007629395
+            "width": 1320,
+            "height": 540
           },
           "interactive": {
             "elements": {},
@@ -139,8 +139,8 @@
               "type": "Class",
               "owner": null,
               "bounds": {
-                "x": -460,
-                "y": 320,
+                "x": -450,
+                "y": 180,
                 "width": 270,
                 "height": 70
               },
@@ -155,8 +155,8 @@
               "type": "ClassAttribute",
               "owner": "a3027c2f-f18b-4dd0-bf55-1a09f8128765",
               "bounds": {
-                "x": -459.5,
-                "y": 360.5,
+                "x": -449.5,
+                "y": 220.5,
                 "width": 269,
                 "height": 30
               }
@@ -340,62 +340,6 @@
                 "width": 159,
                 "height": 30
               }
-            },
-            "ecaf5141-7ad0-4137-a0ef-fc3884955c27": {
-              "id": "ecaf5141-7ad0-4137-a0ef-fc3884955c27",
-              "name": "<<from Governance>>CommunicationPlatform",
-              "type": "Class",
-              "owner": null,
-              "bounds": {
-                "x": 60,
-                "y": 290,
-                "width": 380,
-                "height": 70
-              },
-              "attributes": [
-                "96754e43-3558-4fd7-a465-7d7a18b9cf7f"
-              ],
-              "methods": []
-            },
-            "96754e43-3558-4fd7-a465-7d7a18b9cf7f": {
-              "id": "96754e43-3558-4fd7-a465-7d7a18b9cf7f",
-              "name": "+ attribute: str",
-              "type": "ClassAttribute",
-              "owner": "ecaf5141-7ad0-4137-a0ef-fc3884955c27",
-              "bounds": {
-                "x": 60.5,
-                "y": 330.5,
-                "width": 379,
-                "height": 30
-              }
-            },
-            "6185e167-bfc5-4dfa-9db4-330c54b44cf0": {
-              "id": "6185e167-bfc5-4dfa-9db4-330c54b44cf0",
-              "name": "<<github>>MinActivityTime",
-              "type": "Class",
-              "owner": null,
-              "bounds": {
-                "x": 650,
-                "y": 40,
-                "width": 230,
-                "height": 70
-              },
-              "attributes": [
-                "6fcbc349-df83-41b0-b928-50af8fcce952"
-              ],
-              "methods": []
-            },
-            "6fcbc349-df83-41b0-b928-50af8fcce952": {
-              "id": "6fcbc349-df83-41b0-b928-50af8fcce952",
-              "name": "+ offset: timedelta",
-              "type": "ClassAttribute",
-              "owner": "6185e167-bfc5-4dfa-9db4-330c54b44cf0",
-              "bounds": {
-                "x": 650.5,
-                "y": 80.5,
-                "width": 229,
-                "height": 30
-              }
             }
           },
           "relationships": {
@@ -475,15 +419,15 @@
               "type": "ClassInheritance",
               "owner": null,
               "bounds": {
-                "x": -305,
+                "x": -300,
                 "y": 100,
                 "width": 10,
-                "height": 220
+                "height": 80
               },
               "path": [
                 {
                   "x": 5,
-                  "y": 220
+                  "y": 80
                 },
                 {
                   "x": 5,
@@ -570,7 +514,7 @@
                 "direction": "Downleft",
                 "element": "7660173a-4d06-4a36-8209-23017b42cce2",
                 "multiplicity": "0..1",
-                "role": "element"
+                "role": "pr"
               },
               "isManuallyLayouted": false
             },
@@ -713,128 +657,11 @@
                 "role": "labels"
               },
               "isManuallyLayouted": false
-            },
-            "75261cbd-0f28-42d4-b098-23de711dd66c": {
-              "id": "75261cbd-0f28-42d4-b098-23de711dd66c",
-              "name": "",
-              "type": "ClassInheritance",
-              "owner": null,
-              "bounds": {
-                "x": 245,
-                "y": 220,
-                "width": 10,
-                "height": 70
-              },
-              "path": [
-                {
-                  "x": 5,
-                  "y": 0
-                },
-                {
-                  "x": 5,
-                  "y": 70
-                }
-              ],
-              "source": {
-                "direction": "Down",
-                "element": "7660173a-4d06-4a36-8209-23017b42cce2",
-                "multiplicity": "",
-                "role": ""
-              },
-              "target": {
-                "direction": "Up",
-                "element": "ecaf5141-7ad0-4137-a0ef-fc3884955c27",
-                "multiplicity": "",
-                "role": ""
-              },
-              "isManuallyLayouted": false
-            },
-            "bf8cfdbd-ae2d-418d-83bd-3ff5fc52f020": {
-              "id": "bf8cfdbd-ae2d-418d-83bd-3ff5fc52f020",
-              "name": "",
-              "type": "ClassInheritance",
-              "owner": null,
-              "bounds": {
-                "x": 345,
-                "y": -60,
-                "width": 367.5,
-                "height": 100
-              },
-              "path": [
-                {
-                  "x": 362.5,
-                  "y": 100
-                },
-                {
-                  "x": 362.5,
-                  "y": 50
-                },
-                {
-                  "x": 5,
-                  "y": 50
-                },
-                {
-                  "x": 5,
-                  "y": 0
-                }
-              ],
-              "source": {
-                "direction": "Topleft",
-                "element": "6185e167-bfc5-4dfa-9db4-330c54b44cf0",
-                "multiplicity": "",
-                "role": ""
-              },
-              "target": {
-                "direction": "Down",
-                "element": "d7983e05-6c6c-4897-9974-5a825ae2b2a0",
-                "multiplicity": "",
-                "role": ""
-              },
-              "isManuallyLayouted": false
-            },
-            "46e8147b-b9ae-4fd4-8e8e-c0e06ff5bb4f": {
-              "id": "46e8147b-b9ae-4fd4-8e8e-c0e06ff5bb4f",
-              "name": "",
-              "type": "ClassBidirectional",
-              "owner": null,
-              "bounds": {
-                "x": -190,
-                "y": 110,
-                "width": 984.033332824707,
-                "height": 301.1000003814697
-              },
-              "path": [
-                {
-                  "x": 955,
-                  "y": 0
-                },
-                {
-                  "x": 955,
-                  "y": 262.5
-                },
-                {
-                  "x": 0,
-                  "y": 262.5
-                }
-              ],
-              "source": {
-                "direction": "Down",
-                "element": "6185e167-bfc5-4dfa-9db4-330c54b44cf0",
-                "multiplicity": "0..*",
-                "role": ""
-              },
-              "target": {
-                "direction": "Downright",
-                "element": "a3027c2f-f18b-4dd0-bf55-1a09f8128765",
-                "multiplicity": "1..1",
-                "role": "activity_repo"
-              },
-              "isManuallyLayouted": false
             }
           },
           "assessments": {}
         },
-        "lastUpdate": "2025-10-06T09:56:18.475Z"
+        "lastUpdate": "2025-10-06T08:02:09.445Z"
       },
       "ObjectDiagram": {
         "id": "e5664ec8-6828-4611-802d-f1785073e600",
@@ -903,6 +730,6 @@
       "collaborationEnabled": false
     }
   },
-  "exportedAt": "2025-10-06T09:56:32.718Z",
+  "exportedAt": "2025-10-06T08:02:21.112Z",
   "version": "2.0.0"
 }

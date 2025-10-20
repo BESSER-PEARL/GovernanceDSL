@@ -127,7 +127,7 @@ class GovernanceFormBuilder:
                     label="Parent Project (Optional)",
                     choices=[],  # Will be populated dynamically from added projects
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Select a parent project or leave empty for root-level activity"
                 )
             
@@ -163,7 +163,7 @@ class GovernanceFormBuilder:
                     label="Parent Activity (Optional)",
                     choices=[],  # Will be populated dynamically from activities only
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Select a parent activity (tasks can only belong to activities)"
                 )
             
@@ -245,7 +245,7 @@ class GovernanceFormBuilder:
                     label="Gender (Optional)",
                     choices=["", "male", "female", "non-binary", "other"],
                     value="",
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Leave empty if not applicable"
                 )
                 
@@ -253,7 +253,7 @@ class GovernanceFormBuilder:
                     label="Race/Ethnicity (Optional)", 
                     choices=["", "asian", "black", "hispanic", "white", "mixed", "other"],
                     value="",
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Leave empty if not applicable"
                 )
             
@@ -493,7 +493,7 @@ class GovernanceFormBuilder:
                     label="Policy Scope *",
                     choices=[],  # Will be populated dynamically from defined scopes
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Select the scope this policy applies to (required)"
                 )
                 
@@ -502,7 +502,7 @@ class GovernanceFormBuilder:
                     label="Policy Participants *",
                     choices=[],  # Will be populated dynamically from defined participants
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     multiselect=True,
                     info="Select participants from defined roles/individuals (required)"
                 )
@@ -536,7 +536,7 @@ class GovernanceFormBuilder:
                     label="Voting Ratio",
                     minimum=0.0,
                     maximum=1.0,
-                    value=1.0,
+                    value=0.5,
                     step=0.1,
                     visible=True,  # Start visible since MajorityPolicy is default
                     info="Required ratio of positive votes (1.0 = unanimous)"
@@ -548,7 +548,7 @@ class GovernanceFormBuilder:
                     label="Default Policy",
                     choices=[],  # Will be populated with other defined policies
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     visible=False,
                     info="Default policy when leader doesn't participate (Showing only policies with same scope)"
                 )
@@ -558,7 +558,7 @@ class GovernanceFormBuilder:
                     label="Fallback Policy",
                     choices=[],  # Will be populated with other defined policies
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     visible=False,
                     info="Policy to use when consensus cannot be reached (Showing only policies with same scope)"
                 )
@@ -596,9 +596,9 @@ class GovernanceFormBuilder:
                                 choices=[],  # Will be populated from participants
                                 value=None,
                                 multiselect=True,
-                                allow_custom_value=True,
+                                allow_custom_value=False,
                                 visible=False,
-                                info="Participants who can veto this decision"
+                                info="Participants who can veto this decision (does not allow default values yet, such as Author, RepoOwner, etc.)"
                             )
                         
                             # ParticipantExclusion condition
@@ -607,9 +607,9 @@ class GovernanceFormBuilder:
                                 choices=[],  # Will be populated from participants
                                 value=None,
                                 multiselect=True,
-                                allow_custom_value=True,
+                                allow_custom_value=False,
                                 visible=False,
-                                info="Participants excluded from this decision"
+                                info="Participants excluded from this decision (does not allow default values yet, such as Author, RepoOwner, etc.)"
                             )
                         
                         with gr.Row():
@@ -750,7 +750,7 @@ class GovernanceFormBuilder:
                     label="Composed Policy Scope *",
                     choices=[],  # Will be populated dynamically from defined scopes
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     info="Select the scope this composed policy applies to (required)"
                 )
             
@@ -808,7 +808,7 @@ class GovernanceFormBuilder:
                     label="Phase Participants *",
                     choices=[],  # Will be populated dynamically from defined participants
                     value=None,
-                    allow_custom_value=True,
+                    allow_custom_value=False,
                     multiselect=True,
                     info="Select participants for this phase"
                 )
@@ -842,7 +842,7 @@ class GovernanceFormBuilder:
                     label="Phase Voting Ratio",
                     minimum=0.0,
                     maximum=1.0,
-                    value=1.0,
+                    value=0.5,
                     step=0.1,
                     visible=True,  # Start visible since MajorityPolicy is default for phases too
                     info="Required ratio of positive votes (1.0 = unanimous)"
@@ -897,7 +897,7 @@ class GovernanceFormBuilder:
                                 choices=[],  # Will be populated from participants
                                 value=None,
                                 multiselect=True,
-                                allow_custom_value=True,
+                                allow_custom_value=False,
                                 visible=False,
                                 info="Participants with veto power for this phase"
                             )
@@ -909,7 +909,7 @@ class GovernanceFormBuilder:
                                 choices=[],  # Will be populated from participants
                                 value=None,
                                 multiselect=True,
-                                allow_custom_value=True,
+                                allow_custom_value=False,
                                 visible=False,
                                 info="Participants excluded from this phase decision"
                             )

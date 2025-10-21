@@ -49,10 +49,10 @@ class GovernanceFormBuilder:
                             policy_components = self._create_policy_forms()
                             
                 with gr.Column(scale=2):
-                    self._create_preview_panel()
+                    preview_components = self._create_preview_panel()
             
             # Update handlers
-            self._setup_event_handlers(scope_components, participant_components, policy_components, form_state)
+            self._setup_event_handlers(scope_components, participant_components, policy_components, preview_components, form_state)
             
         return ui
     
@@ -1154,9 +1154,12 @@ class GovernanceFormBuilder:
         
         # Action buttons
         with gr.Row():
-            generate_btn = gr.Button("🔄 Refresh Preview", variant="secondary")
-            download_btn = gr.Button("💾 Download DSL", variant="primary")
-            load_example_btn = gr.Button("📋 Load Example", variant="secondary")
+            generate_btn = gr.Button("🔄 Refresh Preview", variant="secondary", visible=False)
+            download_btn = gr.DownloadButton(
+                label="💾 Download Policy",
+                variant="primary"
+            )
+            load_example_btn = gr.Button("📋 Load Example", variant="secondary", visible=False)
         
         return {
             'preview_code': self.preview_code,
@@ -1165,7 +1168,7 @@ class GovernanceFormBuilder:
             'load_example_btn': load_example_btn
         }
     
-    def _setup_event_handlers(self, scope_components, participant_components, policy_components, _form_state):
+    def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
         """Set up event handlers for form interactions"""
         
         def add_profile(name, gender, race, current_profiles):
@@ -2940,36 +2943,68 @@ class GovernanceFormBuilder:
             )
         
         # Set up change handlers for preview updates
-        preview_components = []
+        preview_data_components = []
         # Scope data components (projects, activities, tasks)
-        preview_components.extend([
+        preview_data_components.extend([
             scope_components['projects_data'],
             scope_components['activities_data'],
             scope_components['tasks_data']
         ])
         # Participant components
-        preview_components.extend([
+        preview_data_components.extend([
             participant_components['profiles_data'],
             participant_components['roles_data'],
             participant_components['individuals_data'],
             participant_components['agents_data']
         ])
         # Include both single policies and composed policies data for preview
-        preview_components.append(policy_components['policies_data'])
-        preview_components.append(policy_components['composed_policies_data'])
+        preview_data_components.append(policy_components['policies_data'])
+        preview_data_components.append(policy_components['composed_policies_data'])
         
-        for component in preview_components:
+        for component in preview_data_components:
             if hasattr(component, 'change'):
                 component.change(
                     fn=update_preview,
-                    inputs=preview_components,
-                    outputs=self.preview_code
+                    inputs=preview_data_components,
+                    outputs=preview_components['preview_code']
                 )
         
         # Load example button
         if hasattr(self, '_create_preview_panel'):
             # This will be connected properly when we have the preview panel components
             pass
+        
+        # Download DSL button handler
+        def download_dsl(preview_text):
+            """Download the DSL preview as a text file"""
+            import os
+            from datetime import datetime
+            
+            if not preview_text or preview_text.startswith("# Fill the form"):
+                return None  # Return None if no valid DSL to download
+            
+            # Create file in a persistent temp directory
+            temp_dir = "/tmp/governance_dsl_downloads" if os.name != "nt" else os.path.join(os.environ.get('TEMP', '/tmp'), 'governance_dsl_downloads')
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            # Create filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"governance_policy_{timestamp}.txt"
+            filepath = os.path.join(temp_dir, filename)
+            
+            # Write the DSL content to file
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(preview_text)
+            
+            # Return the file path - DownloadButton will handle the download
+            return filepath
+        
+        # Wire the download button with DownloadButton click handler
+        preview_components['download_btn'].click(
+            fn=download_dsl,
+            inputs=[preview_components['preview_code']],
+            outputs=preview_components['download_btn']
+        )
     
     def _format_float(self, value):
         """Format a number as a FLOAT (with decimal point) for DSL compliance"""

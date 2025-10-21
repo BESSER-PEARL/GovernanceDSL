@@ -20,7 +20,7 @@ scope               : 'Scope' ':' ID ; // reference from policy
 projects            : 'Projects' ':' project+ ;
 project             : ID ('from' platform ':' repoID)? ('{' 'Activities' ':' activity+ '}')? ;
 platform            : 'GitHub' | 'GitLab' ;
-repoID              : ID ('/' ID)? ; // owner/repo
+repoID              : ID ; // owner/repo
 activities          : 'Activities' ':' activity+ ;
 activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
 tasks               : 'Tasks' ':' task+ ;
@@ -101,7 +101,8 @@ phases              : 'Phases' '{' nestedPolicy+ '}' ;
 nestedPolicy        : nestedSinglePolicy | nestedComposedPolicy ;
 
 // Lexer rules
-ID              : [a-zA-Z_][a-zA-Z0-9_-]* ;
+ID              : [a-zA-Z_][a-zA-Z0-9_/-]* ;
+// LABEL           : [a-zA-Z_][a-zA-Z0-9_/:-]* ; // Labels can contain '/', '-', and ':'
 SIGNED_INT      : '-'? [0-9]+ ; // Just to cover the case where the user might use a negative number
 FLOAT           : '-'? [0-9]+ '.' [0-9]+ ;
 WS              : (' ' | '\t' | '\r'? '\n')+ -> skip ;

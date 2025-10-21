@@ -1,16 +1,17 @@
 Scopes: 
-    Project K8sProject from GitHub : kubernetes/kubernetes {
-        activities :
-            TestActivity {
-                tasks :
-                    TestTask : Pull request {
-                        Action : merge
-                    }
-            }
-    }
+    Projects:
+        K8sProject from GitHub : kubernetes/kubernetes {
+            Activities :
+                TestActivity {
+                    Tasks :
+                        TestTask : Pull request {
+                            Action : merge
+                        }
+                }
+        }
 Participants:
     Roles : Reviewers, Approvers
-    Individuals : (Agent) k8s-ci-robot
+    Individuals : Author, (Agent) k8s-ci-robot
 ComposedPolicy pr_merge {
     Scope: TestTask
     Order :
@@ -19,22 +20,24 @@ ComposedPolicy pr_merge {
         CarryOver : true
     Phases {
         MajorityPolicy phase_1 {
+            DecisionType as BooleanDecision
             Participant list : Reviewers
             Conditions:
-                ParticipantExclusion : PRAuthor
-                MinParticipants : 1
+                ParticipantExclusion : Author
                 LabelCondition post : lgtm
             Parameters:
-                ratio 1.0
+                ratio : 0.0
         }
-        AbsoluteMajorityPolicy phase_2 {
+        MajorityPolicy phase_2 {
+            DecisionType as BooleanDecision
             Participant list : Approvers
             Conditions:
                 LabelCondition post: approved
             Parameters:
-                ratio 1.0
+                ratio : 1.0
         }
         LeaderDrivenPolicy phase_3 {
+            DecisionType as BooleanDecision
             Participant list : k8s-ci-robot
             Conditions:
                 LabelCondition pre: lgtm, approved

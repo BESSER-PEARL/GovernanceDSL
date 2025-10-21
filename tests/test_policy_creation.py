@@ -1092,6 +1092,143 @@ class testPolicyCreation(unittest.TestCase):
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
+    def test_kubernetes_pr_merge_composed_policy(self):
+        """Test the creation of a composed policy based on the Kubernetes PR merge governance."""
+        with open(self.test_cases_path / "valid_examples/real_world/kubernetes_pr_merge.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policy = listener.get_policies()[0]
+            
+            # Assertions
+            self.assertIsInstance(policy, ComposedPolicy)
+            self.assertEqual(policy.name, "pr_merge")
+            
+            # Test scope
+            self.assertIsNotNone(policy.scope)
+            scope = policy.scope
+            self.assertIsInstance(scope, Task)
+            self.assertEqual(scope.name, "TestTask")
+            
+            # Test order properties
+            self.assertTrue(policy.sequential, "Policy should be sequential")
+            self.assertTrue(policy.require_all, "Policy should require all phases to pass")
+            self.assertTrue(policy.carry_over, "Policy should carry over results between phases")
+            
+            # Test phases count
+            self.assertEqual(len(policy.phases), 3)
+            
+            # Test phases order
+            self.assertEqual(policy.phases[0].name, "phase_1", "First phase should be phase_1")
+            self.assertEqual(policy.phases[1].name, "phase_2", "Second phase should be phase_2")
+            self.assertEqual(policy.phases[2].name, "phase_3", "Third phase should be phase_3")
+            
+            # Test first phase (MajorityPolicy)
+            phase_1 = policy.phases[0]
+            self.assertIsNotNone(phase_1)
+            self.assertIsInstance(phase_1, MajorityPolicy)
+            self.assertEqual(phase_1.name, "phase_1")
+            
+            # Phase 1 participants
+            self.assertEqual(len(phase_1.participants), 1)
+            phase_1_participant = next(iter(phase_1.participants))
+            self.assertIsInstance(phase_1_participant, Role)
+            self.assertEqual(phase_1_participant.name, "Reviewers")
+            
+            # Phase 1 conditions (ParticipantExclusion and LabelCondition)
+            self.assertEqual(len(phase_1.conditions), 2)
+            
+            # Check ParticipantExclusion condition
+            exclusion_conditions = {c for c in phase_1.conditions if isinstance(c, ParticipantExclusion)}
+            self.assertEqual(len(exclusion_conditions), 1)
+            exclusion = next(iter(exclusion_conditions))
+            excluded_participants = exclusion.excluded
+            self.assertEqual(len(excluded_participants), 1)
+            excluded = next(iter(excluded_participants))
+            self.assertIsInstance(excluded, Individual)
+            self.assertEqual(excluded.name, "Author")
+            
+            # Check LabelCondition in phase 1
+            label_conditions_p1 = {c for c in phase_1.conditions if isinstance(c, LabelCondition)}
+            self.assertEqual(len(label_conditions_p1), 1)
+            label_cond_p1 = next(iter(label_conditions_p1))
+            self.assertEqual(label_cond_p1.evaluation_mode, EvaluationMode.POST)
+            self.assertEqual(label_cond_p1.inclusion, True)
+            self.assertEqual(len(label_cond_p1.labels), 1)
+            label_p1 = next(iter(label_cond_p1.labels))
+            self.assertEqual(label_p1.name, "lgtm")
+            
+            # Phase 1 voting parameters
+            self.assertEqual(phase_1.ratio, 0.0)
+            
+            # Test second phase (MajorityPolicy)
+            phase_2 = policy.phases[1]
+            self.assertIsNotNone(phase_2)
+            self.assertIsInstance(phase_2, MajorityPolicy)
+            self.assertEqual(phase_2.name, "phase_2")
+            
+            # Phase 2 participants
+            self.assertEqual(len(phase_2.participants), 1)
+            phase_2_participant = next(iter(phase_2.participants))
+            self.assertIsInstance(phase_2_participant, Role)
+            self.assertEqual(phase_2_participant.name, "Approvers")
+            
+            # Phase 2 conditions (LabelCondition only)
+            self.assertEqual(len(phase_2.conditions), 1)
+            label_conditions_p2 = {c for c in phase_2.conditions if isinstance(c, LabelCondition)}
+            self.assertEqual(len(label_conditions_p2), 1)
+            label_cond_p2 = next(iter(label_conditions_p2))
+            self.assertEqual(label_cond_p2.evaluation_mode, EvaluationMode.POST)
+            self.assertEqual(label_cond_p2.inclusion, True)
+            self.assertEqual(len(label_cond_p2.labels), 1)
+            label_p2 = next(iter(label_cond_p2.labels))
+            self.assertEqual(label_p2.name, "approved")
+            
+            # Phase 2 voting parameters
+            self.assertEqual(phase_2.ratio, 1.0)
+            
+            # Test third phase (LeaderDrivenPolicy)
+            phase_3 = policy.phases[2]
+            self.assertIsNotNone(phase_3)
+            self.assertIsInstance(phase_3, LeaderDrivenPolicy)
+            self.assertEqual(phase_3.name, "phase_3")
+            
+            # Phase 3 participants
+            self.assertEqual(len(phase_3.participants), 1)
+            phase_3_participant = next(iter(phase_3.participants))
+            self.assertIsInstance(phase_3_participant, Individual)
+            self.assertEqual(phase_3_participant.name, "k8s-ci-robot")
+            
+            # Phase 3 conditions (LabelCondition for inclusion and exclusion)
+            self.assertEqual(len(phase_3.conditions), 2)
+            label_conditions_p3 = [c for c in phase_3.conditions if isinstance(c, LabelCondition)]
+            self.assertEqual(len(label_conditions_p3), 2)
+            
+            # Phase 3 inclusion condition
+            inclusion_conds = [c for c in label_conditions_p3 if c.inclusion]
+            self.assertEqual(len(inclusion_conds), 1)
+            incl_cond = inclusion_conds[0]
+            self.assertEqual(incl_cond.evaluation_mode, EvaluationMode.PRE)
+            self.assertEqual(len(incl_cond.labels), 2)
+            label_names_incl = {label.name for label in incl_cond.labels}
+            self.assertSetEqual(label_names_incl, {"lgtm", "approved"})
+            
+            # Phase 3 exclusion condition
+            exclusion_conds = [c for c in label_conditions_p3 if not c.inclusion]
+            self.assertEqual(len(exclusion_conds), 1)
+            excl_cond = exclusion_conds[0]
+            self.assertEqual(excl_cond.evaluation_mode, EvaluationMode.PRE)
+            self.assertEqual(len(excl_cond.labels), 2)
+            label_names_excl = {label.name for label in excl_cond.labels}
+            self.assertSetEqual(label_names_excl, {"do-not-merge/hold", "needs-rebase"})
+            
+            # Check parser errors
+            self.assertEqual(len(self.error_listener.symbol), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

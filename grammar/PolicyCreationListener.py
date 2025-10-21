@@ -320,13 +320,29 @@ class PolicyCreationListener(govdslListener):
     def _get_current_policy_scope(self):
         """
         Retrieves the Scope object associated with the current policy.
+        If the current policy doesn't have a scope, walks up the parent hierarchy
+        to find an inherited scope (useful for nested policies like phases).
         Returns:
-            The Scope object associated with the current policy.
+            The Scope object associated with the current policy or its ancestors.
         Raises:
             RuntimeError: If not within a policy context
         """
         pid = self._current_policy_id()
-        return self.__policy_scopes_map.get(pid)
+        
+        # Check if current policy has a scope
+        if pid in self.__policy_scopes_map:
+            return self.__policy_scopes_map.get(pid)
+        
+        # Walk up the parent hierarchy to find an inherited scope
+        current_node = self.policy_tree.get(pid)
+        while current_node and current_node.parent:
+            parent_id = current_node.parent.policy_id
+            if parent_id in self.__policy_scopes_map:
+                return self.__policy_scopes_map.get(parent_id)
+            current_node = current_node.parent
+        
+        # No scope found in hierarchy
+        return None
 
     def _resolve_project_from_scope(self, scope):
         # Project scope
@@ -532,13 +548,11 @@ class PolicyCreationListener(govdslListener):
 
         if ctx.platform():
             platform_str = ctx.platform().getText() # This will be used when we define further platforms
-            id_tokens = ctx.repoID().ID()
-            if len(id_tokens) > 1:  # If there are two IDs (owner/repo format)
-                owner = id_tokens[0].getText()
-                repo = id_tokens[1].getText()
+            id_tokens = ctx.repoID().ID().getText()
+            repo_id = id_tokens
+            if '/' in id_tokens:
+                owner, repo = id_tokens.split('/', 1)
                 repo_id = f"{owner}/{repo}"
-            else:  # If there's just one ID it means it is the user or organization
-                repo_id = id_tokens[0].getText()
             project = Repository.from_project(project=project, repo_id=repo_id)
         if ctx.activity():
             activities = set()
@@ -569,7 +583,7 @@ class PolicyCreationListener(govdslListener):
                                 label_count = len(t.taskContent().actionWithLabels().labels().ID())
                                 labels = set()
                                 for i in range(label_count):
-                                    l_id = t.taskContent().actionWithLabels().labels().ID(i).getText()
+                                    l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                                     labels.add(Label(name=l_id))
                             
                             # Create the appropriate GitHub element based on task type
@@ -637,7 +651,7 @@ class PolicyCreationListener(govdslListener):
                             label_count = len(t.taskContent().actionWithLabels().labels().ID())
                             labels = set()
                             for i in range(label_count):
-                                l_id = t.taskContent().actionWithLabels().labels().ID(i).getText()
+                                l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                                 labels.add(Label(name=l_id))
                         
                         # Create the appropriate GitHub element based on task type
@@ -696,7 +710,7 @@ class PolicyCreationListener(govdslListener):
                     label_count = len(t.taskContent().actionWithLabels().labels().ID())
                     labels = set()
                     for i in range(label_count):
-                        l_id = t.taskContent().actionWithLabels().labels().ID(i).getText()
+                        l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                         labels.add(Label(name=l_id))
                 
                 # Create the appropriate GitHub element based on task type
@@ -1009,7 +1023,6 @@ class PolicyCreationListener(govdslListener):
         # Record for later resolution
         if target_policy_id:
             self.__appeal_policy_map.setdefault(current_policy_id, []).append((appeal_right_obj, target_policy_id))
-
 
     def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
         

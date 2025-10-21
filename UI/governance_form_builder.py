@@ -5,6 +5,8 @@ A Gradio-based interface for creating governance policies through forms
 
 import gradio as gr
 from typing import Optional
+import os
+from datetime import datetime
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -2977,8 +2979,6 @@ class GovernanceFormBuilder:
         # Download DSL button handler
         def download_dsl(preview_text):
             """Download the DSL preview as a text file"""
-            import os
-            from datetime import datetime
             
             if not preview_text or preview_text.startswith("# Fill the form"):
                 return None  # Return None if no valid DSL to download

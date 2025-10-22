@@ -566,6 +566,24 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#minTime.
+    def enterMinTime(self, ctx:govdslParser.MinTimeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#minTime.
+    def exitMinTime(self, ctx:govdslParser.MinTimeContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#activityBool.
+    def enterActivityBool(self, ctx:govdslParser.ActivityBoolContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#activityBool.
+    def exitActivityBool(self, ctx:govdslParser.ActivityBoolContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#evaluationMode.
     def enterEvaluationMode(self, ctx:govdslParser.EvaluationModeContext):
         pass

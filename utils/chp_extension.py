@@ -1,6 +1,8 @@
+from datetime import timedelta
 from enum import Enum
 from besser.BUML.metamodel.structural import Element
 from metamodel.governance import Task, StatusEnum, Project, Condition, EvaluationMode
+from utils.exceptions import InvalidTimeConditionException
 
 class ActionEnum(Enum):
     MERGE = 1
@@ -98,7 +100,7 @@ class Patch(Task):
         self.element = element
     
     @property
-    def action(self):
+    def action(self) -> ActionEnum:
         return self.__action
     
     @action.setter
@@ -106,7 +108,7 @@ class Patch(Task):
         self.__action = action
     
     @property
-    def element(self):
+    def element(self) -> CHPElement:
         return self.__element
     
     @element.setter
@@ -126,7 +128,7 @@ class LabelCondition(Condition):
         self.inclusion = inclusion
     
     @property
-    def labels(self):
+    def labels(self) -> set[Label]:
         return self.__labels
     
     @labels.setter
@@ -134,9 +136,34 @@ class LabelCondition(Condition):
         self.__labels = labels
 
     @property
-    def inclusion(self):
+    def inclusion(self) -> bool:
         return self.__inclusion
     
     @inclusion.setter
     def inclusion(self, inclusion: bool):
         self.__inclusion = inclusion
+
+class MinTime(Condition):
+    """Represents the condition of minimum time of (in)activity"""
+    def __init__(self, name: str, evaluation_mode: EvaluationMode, activity: bool, offset: timedelta):
+        super().__init__(name, evaluation_mode)
+        self.activity = activity
+        self.offset = offset
+    
+    @property
+    def activity(self) -> bool:
+        return self.__activity
+    
+    @activity.setter
+    def activity(self, activity: bool):
+        self.__activity = activity
+    
+    @property
+    def offset(self) -> timedelta:
+        return self.__offset
+    
+    @offset.setter
+    def offset(self, offset: timedelta):
+        if offset is None:
+            raise InvalidTimeConditionException(self.name)
+        self.__offset = offset

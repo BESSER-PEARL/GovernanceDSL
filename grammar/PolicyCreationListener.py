@@ -8,8 +8,8 @@ from utils.exceptions import (
     UndefinedAttributeException
 )
 from utils.chp_extension import (
-    ActionEnum, Label, PullRequest, Issue, Patch, Repository,
-    CheckCiCd, LabelCondition
+    ActionEnum, Label, PullRequest, Patch, Repository,
+    CheckCiCd, LabelCondition, MinTime
 )
 from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
@@ -570,12 +570,12 @@ class PolicyCreationListener(govdslListener):
                         
                         task = None
                         
-                        # Handle GitHub extension elements
+                        # Handle CHP extension elements
                         if t.taskType():
                             task_type_str = t.taskType().getText().lower()
                             
-                            # Create the GitHub element (PullRequest or Issue)
-                            gh_element = None
+                            # Create the CHP element (PullRequest or Issue)
+                            chp_element = None
                             labels = None
                             
                             # Process labels if present
@@ -586,11 +586,11 @@ class PolicyCreationListener(govdslListener):
                                     l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                                     labels.add(Label(name=l_id))
                             
-                            # Create the appropriate GitHub element based on task type
+                            # Create the appropriate CHP element based on task type
                             if task_type_str == "pull request":
-                                gh_element = PullRequest(name=task_name, labels=labels)
-                            elif task_type_str == "issue":
-                                gh_element = Issue(name=task_name, labels=labels)
+                                chp_element = PullRequest(name=task_name, labels=labels)
+                            # elif task_type_str == "issue":
+                            #     chp_element = Issue(name=task_name, labels=labels)
                             
                             # Extract action for Patch
                             action = None
@@ -601,11 +601,11 @@ class PolicyCreationListener(govdslListener):
                             else:
                                 raise UndefinedAttributeException("action", "This task must have an action defined.")
                             
-                            # Create the Patch object that references the GitHub element
-                            if gh_element:
-                                task = Patch(name=task_name, status=status, action=action, element=gh_element)
+                            # Create the Patch object that references the CHP element
+                            if chp_element:
+                                task = Patch(name=task_name, status=status, action=action, element=chp_element)
                             else:
-                                # Fallback if no matching GitHub element type
+                                # Fallback if no matching CHP element type
                                 task = Task(name=task_name, status=status)
                         else:
                             # For regular tasks
@@ -638,12 +638,12 @@ class PolicyCreationListener(govdslListener):
                     
                     task = None
                     
-                    # Handle GitHub extension elements
+                    # Handle CHP extension elements
                     if t.taskType():
                         task_type_str = t.taskType().getText().lower()
                         
-                        # Create the GitHub element (PullRequest or Issue)
-                        gh_element = None
+                        # Create the CHP element (PullRequest or Issue)
+                        chp_element = None
                         labels = None
                         
                         # Process labels if present
@@ -654,11 +654,11 @@ class PolicyCreationListener(govdslListener):
                                 l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                                 labels.add(Label(name=l_id))
                         
-                        # Create the appropriate GitHub element based on task type
+                        # Create the appropriate CHP element based on task type
                         if task_type_str == "pull request":
-                            gh_element = PullRequest(name=task_name, labels=labels)
-                        elif task_type_str == "issue":
-                            gh_element = Issue(name=task_name, labels=labels)
+                            chp_element = PullRequest(name=task_name, labels=labels)
+                        # elif task_type_str == "issue":
+                        #     chp_element = Issue(name=task_name, labels=labels)
                         
                         # Extract action for Patch
                         action = None
@@ -669,11 +669,11 @@ class PolicyCreationListener(govdslListener):
                         else:
                             raise UndefinedAttributeException("action", "This task must have an action defined.")
                         
-                        # Create the Patch object that references the GitHub element
-                        if gh_element:
-                            task = Patch(name=task_name, status=status, action=action, element=gh_element)
+                        # Create the Patch object that references the CHP element
+                        if chp_element:
+                            task = Patch(name=task_name, status=status, action=action, element=chp_element)
                         else:
-                            # Fallback if no matching GitHub element type
+                            # Fallback if no matching CHP element type
                             task = Task(name=task_name, status=status)
                     else:
                         # For regular tasks
@@ -697,12 +697,12 @@ class PolicyCreationListener(govdslListener):
             
             task = None
             
-            # Handle GitHub extension elements
+            # Handle CHP extension elements
             if t.taskType():
                 task_type_str = t.taskType().getText().lower()
                 
-                # Create the GitHub element (PullRequest or Issue)
-                gh_element = None
+                # Create the CHP element (PullRequest or Issue)
+                chp_element = None
                 labels = None
                 
                 # Process labels if present
@@ -712,12 +712,12 @@ class PolicyCreationListener(govdslListener):
                     for i in range(label_count):
                         l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
                         labels.add(Label(name=l_id))
-                
-                # Create the appropriate GitHub element based on task type
+
+                # Create the appropriate CHP element based on task type
                 if task_type_str == "pull request":
-                    gh_element = PullRequest(name=task_name, labels=labels)
-                elif task_type_str == "issue":
-                    gh_element = Issue(name=task_name, labels=labels)
+                    chp_element = PullRequest(name=task_name, labels=labels)
+                # elif task_type_str == "issue":
+                #     chp_element = Issue(name=task_name, labels=labels)
                 
                 # Extract action for Patch
                 action = None
@@ -728,11 +728,11 @@ class PolicyCreationListener(govdslListener):
                 else:
                     raise UndefinedAttributeException("action", "This task must have an action defined.")
                 
-                # Create the Patch object that references the GitHub element
-                if gh_element:
-                    task = Patch(name=task_name, status=status, action=action, element=gh_element)
+                # Create the Patch object that references the CHP element
+                if chp_element:
+                    task = Patch(name=task_name, status=status, action=action, element=chp_element)
                 else:
-                    # Fallback if no matching GitHub element type
+                    # Fallback if no matching CHP element type
                     task = Task(name=task_name, status=status)
             else:
                 # For regular tasks
@@ -1040,6 +1040,28 @@ class PolicyCreationListener(govdslListener):
             # Create the CheckCiCd object
             test_condition = CheckCiCd(name="checkCiCdCondition", evaluation_mode=evaluation_mode)
             self._register_condition_with_current_policy(test_condition)
+
+    def enterMinTime(self, ctx:govdslParser.MinTimeContext):
+        # TODO: We might want to check this condition is applied only on MemberLifecycle task
+        offset_amount = int(ctx.offset().SIGNED_INT().getText())
+        time_unit = ctx.offset().timeUnit().getText()
+        offset = deadline_to_timedelta(value=offset_amount, unit=time_unit)
+
+        evaluation_mode = None
+        if ctx.evaluationMode():
+            evaluation_mode = ctx.evaluationMode().getText()
+            match evaluation_mode:
+                case "pre":
+                    evaluation_mode = EvaluationMode.PRE
+                case "post":
+                    evaluation_mode = EvaluationMode.POST
+                case "concurrent":
+                    evaluation_mode = EvaluationMode.CONCURRENT
+
+        act_bool = True if ctx.activityBool().getText() == "Activity" else False
+
+        min_time_condition = MinTime(name="minTimeCondition", evaluation_mode=evaluation_mode, activity=act_bool,  offset=offset)
+        self._register_condition_with_current_policy(min_time_condition)
 
     def enterLabelsCondition(self, ctx:govdslParser.LabelsConditionContext):
 

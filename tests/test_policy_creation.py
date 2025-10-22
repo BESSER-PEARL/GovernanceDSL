@@ -25,7 +25,7 @@ from metamodel.governance import (
 )
 from utils.chp_extension import (
     ActionEnum, PullRequest, Repository, Patch, CheckCiCd,
-    Label, LabelCondition
+    LabelCondition, MinTime
 )
 
 class testPolicyCreation(unittest.TestCase):
@@ -462,7 +462,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(participant.name, "committers")
             
             # Test conditions
-            self.assertEqual(len(policy.conditions), 2)
+            self.assertEqual(len(policy.conditions), 3)
 
             # Find and test Deadline condition
             deadline_conditions = {c for c in policy.conditions if isinstance(c, Deadline)}
@@ -478,6 +478,13 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(check_ci_cd.name, "checkCiCdCondition")
             # Add check for evaluation_mode
             self.assertEqual(check_ci_cd.evaluation_mode, EvaluationMode.PRE)
+
+            # Find and test MinTime condition
+            min_time_conditions = {c for c in policy.conditions if isinstance(c, MinTime)}
+            min_time = next(iter(min_time_conditions))
+            self.assertIsInstance(min_time, MinTime)
+            self.assertEqual(min_time.name, "minTimeCondition") # Default name
+            self.assertEqual(min_time.offset, timedelta(days=90))  # 3 months
 
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.7)

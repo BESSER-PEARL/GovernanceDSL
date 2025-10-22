@@ -66,7 +66,7 @@ partID              : ID hasRole? ;
 hasRole             : 'as' ID ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? appealRight? checkCiCd? labelsCondition* ; // + extension
+conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? appealRight? checkCiCd? minTime? labelsCondition* ; // + extension
 deadline            : 'Deadline' deadlineID? ':' ( offset | date | (offset ',' date) ) ;
 minDecisionTime     : 'MinDecisionTime' ID? ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
@@ -78,6 +78,8 @@ minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
 appealRight         : 'AppealRight' ':' '{' 'Appealers' ':' ID (',' ID)* ','? 'Policy' ':' (nestedPolicy | policyReference) '}' ;
 checkCiCd           : 'CheckCiCd' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+minTime             : 'MinTime' evaluationMode? 'of' activityBool ':' offset ;
+activityBool        : 'Activity' | 'InActivity' ;
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;
 include             : 'include' | 'not';

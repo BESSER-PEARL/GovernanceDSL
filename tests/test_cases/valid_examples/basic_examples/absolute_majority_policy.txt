@@ -10,6 +10,7 @@ AbsoluteMajorityPolicy testPolicy {
     Conditions:
         Deadline : 7 days
         CheckCiCd pre: true
+        MinTime of Activity: 3 months
     Parameters:
         ratio : 0.7
 }

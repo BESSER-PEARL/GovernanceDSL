@@ -13,6 +13,7 @@
     from typing import Optional
     import os
     from datetime import datetime
+    import urllib.parse
 
     class GovernanceFormBuilder:
         def __init__(self):
@@ -1163,17 +1164,21 @@
             # Action buttons
             with gr.Row():
                 generate_btn = gr.Button("🔄 Refresh Preview", variant="secondary", visible=False)
-                download_btn = gr.DownloadButton(
-                    label="💾 Download Policy",
+                download_btn = gr.Button(
+                    value="✅ Prepare Policy for Download",
                     variant="primary"
                 )
                 load_example_btn = gr.Button("📋 Load Example", variant="secondary", visible=False)
+            
+            # Download file component - will output the policy file for download
+            download_file = gr.File(label="Download Policy", visible=True)
             
             return {
                 'preview_code': self.preview_code,
                 'generate_btn': generate_btn,
                 'download_btn': download_btn,
-                'load_example_btn': load_example_btn
+                'load_example_btn': load_example_btn,
+                'download_file': download_file
             }
         
         def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
@@ -2982,34 +2987,48 @@
                 # This will be connected properly when we have the preview panel components
                 pass
             
-            # Download DSL button handler
+            # Download DSL button handler - use gr.File for download
             def download_dsl(preview_text):
-                """Download the DSL preview as a text file"""
+                """Generate a downloadable file"""
                 
                 if not preview_text or preview_text.startswith("# Fill the form"):
-                    return None  # Return None if no valid DSL to download
-                
-                # Create file in a persistent temp directory
-                temp_dir = "/tmp/governance_dsl_downloads" if os.name != "nt" else os.path.join(os.environ.get('TEMP', '/tmp'), 'governance_dsl_downloads')
-                os.makedirs(temp_dir, exist_ok=True)
+                    preview_text = "# Fill the form to generate a governance policy"
                 
                 # Create filename with timestamp
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"governance_policy_{timestamp}.txt"
-                filepath = os.path.join(temp_dir, filename)
+                filename = "governance_policy_" + timestamp + ".txt"
                 
-                # Write the DSL content to file
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(preview_text)
-                
-                # Return the file path - DownloadButton will handle the download
-                return filepath
+                # Write to a temporary file with the proper name
+                try:
+                    import tempfile
+                    import os
+                    
+                    # Get temp directory
+                    temp_dir = tempfile.gettempdir()
+                    if not temp_dir or temp_dir == '/':
+                        temp_dir = '/tmp'
+                    
+                    # Create the file with the desired name
+                    temp_path = os.path.join(temp_dir, filename)
+                    with open(temp_path, 'w') as f:
+                        f.write(preview_text)
+                    
+                    # Return just the file path
+                    return temp_path
+                except Exception as e:
+                    # If file creation fails, try in current directory
+                    try:
+                        with open(filename, 'w') as f:
+                            f.write(preview_text)
+                        return filename
+                    except:
+                        return None
             
-            # Wire the download button with DownloadButton click handler
+            # Wire the "Download Policy" button to download the file
             preview_components['download_btn'].click(
                 fn=download_dsl,
                 inputs=[preview_components['preview_code']],
-                outputs=preview_components['download_btn']
+                outputs=preview_components['download_file']
             )
         
         def _format_float(self, value):
@@ -3888,7 +3907,6 @@
                 display_lines.append(line)
             
             return '\n'.join(display_lines)
-
 
     def main():
         """Main function to run the Gradio interface"""

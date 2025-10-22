@@ -24,14 +24,19 @@ repoID              : ID ; // owner/repo
 activities          : 'Activities' ':' activity+ ;
 activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
 tasks               : 'Tasks' ':' task+ ;
-task                : ID (':' taskType)? ('{' taskContent '}')? ;
-taskType            : 'Issue' | 'Pull request' | 'All' ; //TODO: Update with Patch / PR
-taskContent         : status | action | actionWithLabels ;
-actionWithLabels    : action labels ;
+task                : ID (':')? (patchTask | memberTask )? ;
+patchTask           : patchTaskType ('{' patchTaskContent '}')? ;
+memberTask          : 'MemberLifecycle' ('{' memberTaskContent '}')? ;
+patchTaskType       : 'Issue' | 'Pull request' | 'All' ; //TODO: Update with Patch / PR
+patchTaskContent    : status | patchAction | actionWithLabels ;
+actionWithLabels    : patchAction labels ;
+memberTaskContent   : memberAction ;
+memberAction        : 'Action' ':' memberActionEnum ;
+memberActionEnum    : 'onboard' | 'remove' ;
 status              : 'Status' ':' statusEnum ;
 statusEnum          : 'completed' | 'accepted' | 'partial' ;
-action              : 'Action' ':' actionEnum ;
-actionEnum          : 'merge' | 'review' | 'release' ;
+patchAction         : 'Action' ':' patchActionEnum ;
+patchActionEnum     : 'merge' | 'review' | 'release' ;
 labels              : 'Labels' ':' ID (',' ID)* ;
 
 // Decision type

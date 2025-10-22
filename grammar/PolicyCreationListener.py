@@ -562,51 +562,52 @@ class PolicyCreationListener(govdslListener):
                 if act.task():
                     for t in act.task():
                         task_name = t.ID().getText()
-        
                         # Extract status if present
                         status = None
-                        if t.taskContent() and t.taskContent().status():
-                            status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-                        
-                        task = None
-                        
-                        # Handle CHP extension elements
-                        if t.taskType():
-                            task_type_str = t.taskType().getText().lower()
+
+                        if t.patchTask():
+                            if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                                status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                            task = None
                             
-                            # Create the CHP element (PullRequest or Issue)
-                            chp_element = None
-                            labels = None
-                            
-                            # Process labels if present
-                            if t.taskContent().actionWithLabels():
-                                label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                                labels = set()
-                                for i in range(label_count):
-                                    l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                                    labels.add(Label(name=l_id))
-                            
-                            # Create the appropriate CHP element based on task type
-                            if task_type_str == "pull request":
-                                chp_element = PullRequest(name=task_name, labels=labels)
-                            # elif task_type_str == "issue":
-                            #     chp_element = Issue(name=task_name, labels=labels)
-                            
-                            # Extract action for Patch
-                            action = None
-                            if t.taskContent().action():
-                                action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                            elif t.taskContent().actionWithLabels():
-                                action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                            else:
-                                raise UndefinedAttributeException("action", "This task must have an action defined.")
-                            
-                            # Create the Patch object that references the CHP element
-                            if chp_element:
-                                task = Patch(name=task_name, status=status, action=action, element=chp_element)
-                            else:
-                                # Fallback if no matching CHP element type
-                                task = Task(name=task_name, status=status)
+                            # Handle CHP extension elements
+                            if t.patchTask().patchTaskType():
+                                task_type_str = t.patchTask().patchTaskType().getText().lower()
+                                
+                                # Create the CHP element (PullRequest or Issue)
+                                chp_element = None
+                                labels = None
+                                
+                                # Process labels if present
+                                if t.patchTask().patchTaskContent().actionWithLabels():
+                                    label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                                    labels = set()
+                                    for i in range(label_count):
+                                        l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                        labels.add(Label(name=l_id))
+                                
+                                # Create the appropriate CHP element based on task type
+                                if task_type_str == "pull request":
+                                    chp_element = PullRequest(name=task_name, labels=labels)
+                                # elif task_type_str == "issue":
+                                #     chp_element = Issue(name=task_name, labels=labels)
+                                
+                                # Extract action for Patch
+                                action = None
+                                if t.patchTask().patchTaskContent().patchAction():
+                                    action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                                elif t.patchTask().patchTaskContent().actionWithLabels():
+                                    action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                                else:
+                                    raise UndefinedAttributeException("action", "This task must have an action defined.")
+                                
+                                # Create the Patch object that references the CHP element
+                                if chp_element:
+                                    task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                                else:
+                                    # Fallback if no matching CHP element type
+                                    task = Task(name=task_name, status=status)
                         else:
                             # For regular tasks
                             task = Task(name=task_name, status=status)
@@ -630,51 +631,52 @@ class PolicyCreationListener(govdslListener):
             if act.task():
                 for t in act.task():
                     task_name = t.ID().getText()
-    
                     # Extract status if present
+
                     status = None
-                    if t.taskContent() and t.taskContent().status():
-                        status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-                    
-                    task = None
-                    
-                    # Handle CHP extension elements
-                    if t.taskType():
-                        task_type_str = t.taskType().getText().lower()
+                    if t.patchTask():
+                        if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                            status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                        task = None
                         
-                        # Create the CHP element (PullRequest or Issue)
-                        chp_element = None
-                        labels = None
-                        
-                        # Process labels if present
-                        if t.taskContent().actionWithLabels():
-                            label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                            labels = set()
-                            for i in range(label_count):
-                                l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                                labels.add(Label(name=l_id))
-                        
-                        # Create the appropriate CHP element based on task type
-                        if task_type_str == "pull request":
-                            chp_element = PullRequest(name=task_name, labels=labels)
-                        # elif task_type_str == "issue":
-                        #     chp_element = Issue(name=task_name, labels=labels)
-                        
-                        # Extract action for Patch
-                        action = None
-                        if t.taskContent().action():
-                            action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                        elif t.taskContent().actionWithLabels():
-                            action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                        else:
-                            raise UndefinedAttributeException("action", "This task must have an action defined.")
-                        
-                        # Create the Patch object that references the CHP element
-                        if chp_element:
-                            task = Patch(name=task_name, status=status, action=action, element=chp_element)
-                        else:
-                            # Fallback if no matching CHP element type
-                            task = Task(name=task_name, status=status)
+                        # Handle CHP extension elements
+                        if t.patchTask().patchTaskType():
+                            task_type_str = t.patchTaskType().getText().lower()
+                            
+                            # Create the CHP element (PullRequest or Issue)
+                            chp_element = None
+                            labels = None
+                            
+                            # Process labels if present
+                            if t.patchTask().patchTaskContent().actionWithLabels():
+                                label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                                labels = set()
+                                for i in range(label_count):
+                                    l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                    labels.add(Label(name=l_id))
+                            
+                            # Create the appropriate CHP element based on task type
+                            if task_type_str == "pull request":
+                                chp_element = PullRequest(name=task_name, labels=labels)
+                            # elif task_type_str == "issue":
+                            #     chp_element = Issue(name=task_name, labels=labels)
+                            
+                            # Extract action for Patch
+                            action = None
+                            if t.patchTask().patchTaskContent().patchAction():
+                                action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                            elif t.patchTask().patchTaskContent().actionWithLabels():
+                                action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                            else:
+                                raise UndefinedAttributeException("action", "This task must have an action defined.")
+                            
+                            # Create the Patch object that references the CHP element
+                            if chp_element:
+                                task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                            else:
+                                # Fallback if no matching CHP element type
+                                task = Task(name=task_name, status=status)
                     else:
                         # For regular tasks
                         task = Task(name=task_name, status=status)
@@ -689,51 +691,52 @@ class PolicyCreationListener(govdslListener):
     def enterTasks(self, ctx:govdslParser.TasksContext):
         for t in ctx.task():
             task_name = t.ID().getText()
-
             # Extract status if present
             status = None
-            if t.taskContent() and t.taskContent().status():
-                status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-            
-            task = None
-            
-            # Handle CHP extension elements
-            if t.taskType():
-                task_type_str = t.taskType().getText().lower()
-                
-                # Create the CHP element (PullRequest or Issue)
-                chp_element = None
-                labels = None
-                
-                # Process labels if present
-                if t.taskContent().actionWithLabels():
-                    label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                    labels = set()
-                    for i in range(label_count):
-                        l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                        labels.add(Label(name=l_id))
 
-                # Create the appropriate CHP element based on task type
-                if task_type_str == "pull request":
-                    chp_element = PullRequest(name=task_name, labels=labels)
-                # elif task_type_str == "issue":
-                #     chp_element = Issue(name=task_name, labels=labels)
+            if t.patchTask():
+                if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                    status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                task = None
                 
-                # Extract action for Patch
-                action = None
-                if t.taskContent().action():
-                    action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                elif t.taskContent().actionWithLabels():
-                    action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                else:
-                    raise UndefinedAttributeException("action", "This task must have an action defined.")
-                
-                # Create the Patch object that references the CHP element
-                if chp_element:
-                    task = Patch(name=task_name, status=status, action=action, element=chp_element)
-                else:
-                    # Fallback if no matching CHP element type
-                    task = Task(name=task_name, status=status)
+                # Handle CHP extension elements
+                if t.patchTask().patchTaskType():
+                    task_type_str = t.patchTask().patchTaskType().getText().lower()
+
+                    # Create the CHP element (PullRequest or Issue)
+                    chp_element = None
+                    labels = None
+                    
+                    # Process labels if present
+                    if t.patchTask().patchTaskContent().actionWithLabels():
+                        label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                        labels = set()
+                        for i in range(label_count):
+                            l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                            labels.add(Label(name=l_id))
+
+                    # Create the appropriate CHP element based on task type
+                    if task_type_str == "pull request":
+                        chp_element = PullRequest(name=task_name, labels=labels)
+                    # elif task_type_str == "issue":
+                    #     chp_element = Issue(name=task_name, labels=labels)
+                    
+                    # Extract action for Patch
+                    action = None
+                    if t.patchTask().patchTaskContent().patchAction():
+                        action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                    elif t.patchTask().patchTaskContent().actionWithLabels():
+                        action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                    else:
+                        raise UndefinedAttributeException("action", "This task must have an action defined.")
+                    
+                    # Create the Patch object that references the CHP element
+                    if chp_element:
+                        task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                    else:
+                        # Fallback if no matching CHP element type
+                        task = Task(name=task_name, status=status)
             else:
                 # For regular tasks
                 task = Task(name=task_name, status=status)

@@ -4,40 +4,231 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Governance DSL Form Builder</title>
-    <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/@gradio/lite"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-        }
-        #app {
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
+    <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/@gradio/lite@0.8.0"></script>
 </head>
 <body>
     <gradio-lite>
-        <gradio-app>
-        import gradio as gr
-        import sys
-        import os
+    import gradio as gr
 
-        # Add parent directory to path for imports
-        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    def create_interface():
+        """Create the main Gradio interface"""
+        with gr.Blocks(
+            title="Governance Policy Builder",
+            theme=gr.themes.Soft()
+        ) as ui:
+            
+            gr.Markdown("# 🏛️ Governance Policy Builder")
+            gr.Markdown("Define governance rules for your software project using an intuitive form interface.")
+            
+            # State storage
+            projects_state = gr.State([])
+            roles_state = gr.State([])
+            policies_state = gr.State([])
+            
+            with gr.Row():
+                with gr.Column(scale=3):
+                    with gr.Tabs():
+                        # SCOPES TAB
+                        with gr.Tab("🎯 Scopes", id="scopes"):
+                            gr.Markdown("## Define Project Scopes")
+                            
+                            with gr.Accordion("Projects", open=True):
+                                gr.Markdown("### Define Projects")
+                                
+                                with gr.Row():
+                                    project_name = gr.Textbox(
+                                        label="Project Name",
+                                        placeholder="e.g., MyProject",
+                                        info="Unique name for this project"
+                                    )
+                                    project_platform = gr.Dropdown(
+                                        label="Platform",
+                                        choices=["", "GitHub", "GitLab"],
+                                        value=""
+                                    )
+                                
+                                with gr.Row():
+                                    add_proj_btn = gr.Button("➕ Add Project")
+                                    clear_proj_btn = gr.Button("🗑️ Clear All")
+                                
+                                projects_display = gr.Textbox(
+                                    label="Added Projects",
+                                    lines=4,
+                                    interactive=False,
+                                    placeholder="No projects added yet."
+                                )
+                        
+                        # PARTICIPANTS TAB
+                        with gr.Tab("👥 Participants", id="participants"):
+                            gr.Markdown("## Define Participants")
+                            
+                            with gr.Accordion("Roles", open=True):
+                                gr.Markdown("### Define Roles")
+                                
+                                with gr.Row():
+                                    role_name = gr.Textbox(
+                                        label="Role Name",
+                                        placeholder="e.g., maintainer, reviewer",
+                                        info="Unique name for this role"
+                                    )
+                                    role_vote = gr.Number(
+                                        label="Vote Value",
+                                        value=1.0,
+                                        step=0.1,
+                                        info="Weight of this role's vote"
+                                    )
+                                
+                                with gr.Row():
+                                    add_role_btn = gr.Button("➕ Add Role")
+                                    clear_role_btn = gr.Button("🗑️ Clear All")
+                                
+                                roles_display = gr.Textbox(
+                                    label="Added Roles",
+                                    lines=4,
+                                    interactive=False,
+                                    placeholder="No roles added yet."
+                                )
+                        
+                        # POLICIES TAB
+                        with gr.Tab("📋 Policies", id="policies"):
+                            gr.Markdown("## Define Governance Policies")
+                            
+                            with gr.Accordion("Add New Policy", open=True):
+                                gr.Markdown("### Create a New Policy")
+                                
+                                with gr.Row():
+                                    policy_name = gr.Textbox(
+                                        label="Policy Name",
+                                        placeholder="e.g., pr_merge_policy",
+                                        info="A unique name for this policy"
+                                    )
+                                    policy_type = gr.Dropdown(
+                                        label="Policy Type",
+                                        choices=[
+                                            "MajorityPolicy",
+                                            "AbsoluteMajorityPolicy",
+                                            "ConsensusPolicy",
+                                            "LazyConsensusPolicy",
+                                            "LeaderDrivenPolicy"
+                                        ],
+                                        value="MajorityPolicy"
+                                    )
+                                
+                                with gr.Row():
+                                    voting_ratio = gr.Slider(
+                                        label="Voting Ratio",
+                                        minimum=0.0,
+                                        maximum=1.0,
+                                        value=0.5,
+                                        step=0.1,
+                                        info="Required ratio of positive votes"
+                                    )
+                                
+                                with gr.Row():
+                                    add_pol_btn = gr.Button("➕ Add Policy")
+                                    clear_pol_btn = gr.Button("🗑️ Clear All")
+                                
+                                policies_display = gr.Textbox(
+                                    label="Added Policies",
+                                    lines=6,
+                                    interactive=False,
+                                    placeholder="No policies added yet."
+                                )
+                
+                # PREVIEW PANEL
+                with gr.Column(scale=2):
+                    gr.Markdown("## 📋 Preview")
+                    
+                    preview_output = gr.Textbox(
+                        label="Generated Policy Code",
+                        lines=10,
+                        interactive=False,
+                        placeholder="Your generated policy will appear here...",
+                        info="DSL representation of your policies"
+                    )
+            
+            # EVENT HANDLERS
+            def add_project(name, platform, projects_list):
+                if not name or name.strip() == "":
+                    return "Project name is required!", projects_list
+                if any(p['name'] == name for p in projects_list):
+                    return f"Project '{name}' already exists!", projects_list
+                
+                projects_list.append({'name': name, 'platform': platform or 'None'})
+                display = "\n".join([f"• {p['name']} ({p['platform']})" for p in projects_list])
+                return display, projects_list
+            
+            def clear_projects(projects_list):
+                return "", []
+            
+            def add_role(name, vote_value, roles_list):
+                if not name or name.strip() == "":
+                    return "Role name is required!", roles_list
+                if any(r['name'] == name for r in roles_list):
+                    return f"Role '{name}' already exists!", roles_list
+                
+                roles_list.append({'name': name, 'vote': vote_value})
+                display = "\n".join([f"• {r['name']} (vote: {r['vote']})" for r in roles_list])
+                return display, roles_list
+            
+            def clear_roles(roles_list):
+                return "", []
+            
+            def add_policy(name, ptype, ratio, policies_list):
+                if not name or name.strip() == "":
+                    return "Policy name is required!", policies_list
+                if any(p['name'] == name for p in policies_list):
+                    return f"Policy '{name}' already exists!", policies_list
+                
+                policies_list.append({'name': name, 'type': ptype, 'ratio': ratio})
+                display = "\n".join([f"• {p['name']}: {p['type']} (ratio: {p['ratio']})" for p in policies_list])
+                return display, policies_list
+            
+            def clear_policies(policies_list):
+                return "", []
+            
+            # Register click handlers
+            add_proj_btn.click(
+                add_project,
+                inputs=[project_name, project_platform, projects_state],
+                outputs=[projects_display, projects_state]
+            )
+            
+            clear_proj_btn.click(
+                clear_projects,
+                inputs=[projects_state],
+                outputs=[projects_display, projects_state]
+            )
+            
+            add_role_btn.click(
+                add_role,
+                inputs=[role_name, role_vote, roles_state],
+                outputs=[roles_display, roles_state]
+            )
+            
+            clear_role_btn.click(
+                clear_roles,
+                inputs=[roles_state],
+                outputs=[roles_display, roles_state]
+            )
+            
+            add_pol_btn.click(
+                add_policy,
+                inputs=[policy_name, policy_type, voting_ratio, policies_state],
+                outputs=[policies_display, policies_state]
+            )
+            
+            clear_pol_btn.click(
+                clear_policies,
+                inputs=[policies_state],
+                outputs=[policies_display, policies_state]
+            )
+        
+        return ui
 
-        from UI.governance_form_builder import GovernanceFormBuilder
-
-        # Create the interface
-        builder = GovernanceFormBuilder()
-        interface = builder.create_interface()
-
-        # Launch (Gradio Lite handles this automatically)
-        if __name__ == "__main__":
-            interface.launch()
-        </gradio-app>
+    # Create interface and launch
+    interface = create_interface()
+    interface.launch()
     </gradio-lite>
 </body>
 </html>

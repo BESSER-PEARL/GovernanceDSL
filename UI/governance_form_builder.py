@@ -1157,17 +1157,21 @@ class GovernanceFormBuilder:
         # Action buttons
         with gr.Row():
             generate_btn = gr.Button("🔄 Refresh Preview", variant="secondary", visible=False)
-            download_btn = gr.DownloadButton(
-                label="💾 Download Policy",
+            download_btn = gr.Button(
+                value="💾 Download Policy",
                 variant="primary"
             )
             load_example_btn = gr.Button("📋 Load Example", variant="secondary", visible=False)
+        
+        # Download link - hidden by default, will show when user clicks "Download Policy"
+        download_link = gr.HTML(value="", visible=False)
         
         return {
             'preview_code': self.preview_code,
             'generate_btn': generate_btn,
             'download_btn': download_btn,
-            'load_example_btn': load_example_btn
+            'load_example_btn': load_example_btn,
+            'download_link': download_link
         }
     
     def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
@@ -2976,34 +2980,45 @@ class GovernanceFormBuilder:
             # This will be connected properly when we have the preview panel components
             pass
         
-        # Download DSL button handler
+        # Download DSL button handler (browser-native download for Gradio Lite / online hosting)
         def download_dsl(preview_text):
-            """Download the DSL preview as a text file"""
+            """Generate a data URI for direct browser download (no backend required)"""
             
             if not preview_text or preview_text.startswith("# Fill the form"):
-                return None  # Return None if no valid DSL to download
-            
-            # Create file in a persistent temp directory
-            temp_dir = "/tmp/governance_dsl_downloads" if os.name != "nt" else os.path.join(os.environ.get('TEMP', '/tmp'), 'governance_dsl_downloads')
-            os.makedirs(temp_dir, exist_ok=True)
+                preview_text = "# Fill the form to generate a governance policy"
             
             # Create filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"governance_policy_{timestamp}.txt"
-            filepath = os.path.join(temp_dir, filename)
             
-            # Write the DSL content to file
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(preview_text)
+            # Create a data URL for the text content
+            import urllib.parse
+            encoded_text = urllib.parse.quote(preview_text)
+            data_uri = f"data:text/plain;charset=utf-8,{encoded_text}"
             
-            # Return the file path - DownloadButton will handle the download
-            return filepath
+            # Return an HTML link styled as a button that triggers download
+            html_content = f'''
+            <a href="{data_uri}" download="{filename}"
+               style="display: inline-block; padding: 12px 24px; 
+                      background: #10b981; color: white; 
+                      border-radius: 6px; text-decoration: none;
+                      font-weight: bold; cursor: pointer; 
+                      border: none; font-size: 1em; 
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                      transition: background 0.2s;"
+               onmouseover="this.style.background='#059669';"
+               onmouseout="this.style.background='#10b981';">
+                ✅ Download Now
+            </a>
+            <p style="color: #666; font-size: 0.85em; margin-top: 8px;">Click to download your governance policy</p>
+            '''
+            return gr.update(value=html_content, visible=True)
         
-        # Wire the download button with DownloadButton click handler
+        # Wire the "Download Policy" button to show the download link
         preview_components['download_btn'].click(
             fn=download_dsl,
             inputs=[preview_components['preview_code']],
-            outputs=preview_components['download_btn']
+            outputs=preview_components['download_link']
         )
     
     def _format_float(self, value):

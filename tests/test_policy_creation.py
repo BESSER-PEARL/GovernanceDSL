@@ -24,8 +24,8 @@ from metamodel.governance import (
     Activity, BooleanDecision, StringList, ElementList
 )
 from utils.chp_extension import (
-    ActionEnum, PullRequest, Repository, Patch, CheckCiCd,
-    LabelCondition, MinTime
+    PatchAction, MemberAction, PullRequest, Repository, Patch, CheckCiCd,
+    LabelCondition, MinTime, MemberLifecycle
 )
 
 class testPolicyCreation(unittest.TestCase):
@@ -208,7 +208,7 @@ class testPolicyCreation(unittest.TestCase):
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
             self.assertEqual(scope.name, "myTask")
-            self.assertEqual(scope.action, ActionEnum.MERGE)
+            self.assertEqual(scope.action, PatchAction.MERGE)
             activity_scope = scope.activity
             self.assertIsInstance(activity_scope, Activity)
             self.assertEqual(activity_scope.name, "myActivity")
@@ -722,7 +722,7 @@ class testPolicyCreation(unittest.TestCase):
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
             self.assertEqual(scope.name, "testTask") 
-            self.assertEqual(scope.action, ActionEnum.MERGE)
+            self.assertEqual(scope.action, PatchAction.MERGE)
             # Test the relationship with activity
             activity_scope = scope.activity
             self.assertIsNotNone(activity_scope)
@@ -756,7 +756,7 @@ class testPolicyCreation(unittest.TestCase):
             task_scope = phase_1.scope
             self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "testTask")
-            self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            self.assertEqual(task_scope.action, PatchAction.MERGE)
             # Test the relationship with activity
             activity_scope = task_scope.activity
             self.assertIsNotNone(activity_scope)
@@ -815,7 +815,7 @@ class testPolicyCreation(unittest.TestCase):
             task_scope = phase_2.scope
             self.assertIsInstance(task_scope, Patch)
             self.assertEqual(task_scope.name, "testTask")
-            self.assertEqual(task_scope.action, ActionEnum.MERGE)
+            self.assertEqual(task_scope.action, PatchAction.MERGE)
             # Test the relationship with activity
             activity_scope = task_scope.activity
             self.assertIsNotNone(activity_scope)
@@ -876,9 +876,10 @@ class testPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "testProject")
-            self.assertEqual(scope.repo_id, "owner/repo")
+            self.assertIsInstance(scope, MemberLifecycle)
+            self.assertEqual(scope.name, "mTask")
+            self.assertEqual(scope.action, MemberAction.ONBOARD)
+
             
             # Test participants
             self.assertEqual(len(policy.participants), 1)
@@ -914,9 +915,9 @@ class testPolicyCreation(unittest.TestCase):
             # Test fallback policy scope
             self.assertIsNotNone(fallback_policy.scope)
             scope = fallback_policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "testProject")
-            self.assertEqual(scope.repo_id, "owner/repo")
+            self.assertIsInstance(scope, MemberLifecycle)
+            self.assertEqual(scope.name, "mTask")
+            self.assertEqual(scope.action, MemberAction.ONBOARD)
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
@@ -940,10 +941,10 @@ class testPolicyCreation(unittest.TestCase):
             # Test scope
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
-            self.assertIsInstance(scope, Repository)
-            self.assertEqual(scope.name, "testProject")
-            self.assertEqual(scope.repo_id, "owner/repo")
-            
+            self.assertIsInstance(scope, MemberLifecycle)
+            self.assertEqual(scope.name, "mTask")
+            self.assertIsNone(scope.action)
+
             # Test participants
             self.assertEqual(len(policy.participants), 1)
             
@@ -1063,7 +1064,7 @@ class testPolicyCreation(unittest.TestCase):
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
             self.assertEqual(scope.name, "testTask")
-            self.assertEqual(scope.action, ActionEnum.MERGE)
+            self.assertEqual(scope.action, PatchAction.MERGE)
             activity_scope = scope.activity
             self.assertIsInstance(activity_scope, Activity)
             self.assertEqual(activity_scope.name, "testActivity")

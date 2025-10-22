@@ -4,7 +4,7 @@ from besser.BUML.metamodel.structural import Element
 from metamodel.governance import Task, StatusEnum, Project, Condition, EvaluationMode
 from utils.exceptions import InvalidTimeConditionException
 
-class ActionEnum(Enum):
+class PatchAction(Enum):
     MERGE = 1
     REVIEW = 2
     ALL = 3
@@ -94,17 +94,17 @@ class MemberLifecycle(Task):
 
 class Patch(Task):
     """Represents an action (patch) that can be performed on a CHP element"""
-    def __init__(self, name: str, status: StatusEnum, action: ActionEnum, element: CHPElement = None):
+    def __init__(self, name: str, status: StatusEnum, action: PatchAction, element: CHPElement = None):
         super().__init__(name, status)
         self.action = action
         self.element = element
     
     @property
-    def action(self) -> ActionEnum:
+    def action(self) -> PatchAction:
         return self.__action
     
     @action.setter
-    def action(self, action: ActionEnum):
+    def action(self, action: PatchAction):
         self.__action = action
     
     @property

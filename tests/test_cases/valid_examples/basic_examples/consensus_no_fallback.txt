@@ -1,10 +1,10 @@
 Scopes: 
-    Projects :
-        testProject from GitHub : owner/repo
+    Tasks:
+        mTask : MemberLifecycle 
 Participants:
     Roles : maintainer
 ConsensusPolicy testPolicy {
-    Scope: testProject
+    Scope: mTask
     DecisionType as BooleanDecision
     Participant list : maintainer
 }

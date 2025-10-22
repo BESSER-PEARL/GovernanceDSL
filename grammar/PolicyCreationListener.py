@@ -8,11 +8,11 @@ from utils.exceptions import (
     UndefinedAttributeException
 )
 from utils.chp_extension import (
-    ActionEnum, Label, PullRequest, Patch, Repository,
-    CheckCiCd, LabelCondition, MinTime
+    PatchAction, MemberAction, Label, PullRequest, Repository,
+    CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
 from utils.attribute_converters import (
-    str_to_status_enum, str_to_action_enum, deadline_to_timedelta
+    str_to_status_enum, str_to_action_enum, deadline_to_timedelta, str_to_member_action_enum
 )
 from metamodel.governance import (
     AppealRight, CommunicationChannel, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
@@ -608,6 +608,13 @@ class PolicyCreationListener(govdslListener):
                                 else:
                                     # Fallback if no matching CHP element type
                                     task = Task(name=task_name, status=status)
+                        elif t.memberTask():
+                            # MemberLifecycle task
+                            action = None
+                            if t.memberTask().memberTaskContent():
+                                action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                                action = str_to_member_action_enum(action)
+                            task = MemberLifecycle(name=task_name, status=status, action=action)
                         else:
                             # For regular tasks
                             task = Task(name=task_name, status=status)
@@ -677,6 +684,13 @@ class PolicyCreationListener(govdslListener):
                             else:
                                 # Fallback if no matching CHP element type
                                 task = Task(name=task_name, status=status)
+                    elif t.memberTask():
+                        # MemberLifecycle task
+                        action = None
+                        if t.memberTask().memberTaskContent():
+                            action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                            action = str_to_member_action_enum(action)
+                        task = MemberLifecycle(name=task_name, status=status, action=action)
                     else:
                         # For regular tasks
                         task = Task(name=task_name, status=status)
@@ -737,6 +751,13 @@ class PolicyCreationListener(govdslListener):
                     else:
                         # Fallback if no matching CHP element type
                         task = Task(name=task_name, status=status)
+            elif t.memberTask():
+                # MemberLifecycle task
+                action = None
+                if t.memberTask().memberTaskContent():
+                    action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                    action = str_to_member_action_enum(action)
+                task = MemberLifecycle(name=task_name, status=status, action=action)
             else:
                 # For regular tasks
                 task = Task(name=task_name, status=status)

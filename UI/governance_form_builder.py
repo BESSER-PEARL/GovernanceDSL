@@ -2,11 +2,11 @@
 Governance DSL Form Builder
 A Gradio-based interface for creating governance policies through forms
 """
-
 import gradio as gr
 from typing import Optional
 import os
 from datetime import datetime
+import urllib.parse
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -497,8 +497,7 @@ class GovernanceFormBuilder:
                         "ConsensusPolicy",
                         "LazyConsensusPolicy",
                         "LeaderDrivenPolicy",
-                        "VotingPolicy",
-                        "ComposedPolicy"
+                        "VotingPolicy"
                     ],
                     value="MajorityPolicy",
                     info="Type of decision-making process"
@@ -1158,20 +1157,20 @@ class GovernanceFormBuilder:
         with gr.Row():
             generate_btn = gr.Button("🔄 Refresh Preview", variant="secondary", visible=False)
             download_btn = gr.Button(
-                value="💾 Download Policy",
+                value="✅ Prepare Policy for Download",
                 variant="primary"
             )
             load_example_btn = gr.Button("📋 Load Example", variant="secondary", visible=False)
         
-        # Download link - hidden by default, will show when user clicks "Download Policy"
-        download_link = gr.HTML(value="", visible=False)
+        # Download file component - will output the policy file for download
+        download_file = gr.File(label="Download Policy", visible=True)
         
         return {
             'preview_code': self.preview_code,
             'generate_btn': generate_btn,
             'download_btn': download_btn,
             'load_example_btn': load_example_btn,
-            'download_link': download_link
+            'download_file': download_file
         }
     
     def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
@@ -1641,12 +1640,12 @@ class GovernanceFormBuilder:
             ]
         
         def add_policy(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
-                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
-                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
-                      min_decision_offset_value, min_decision_offset_unit, min_decision_date,
-              label_condition_type, label_condition_operator, label_condition_labels, 
-              communication_channel,
-                      added_conditions_list, current_policies):
+                    default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                    min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                    min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+            label_condition_type, label_condition_operator, label_condition_labels, 
+            communication_channel,
+                    added_conditions_list, current_policies):
             """Add a new policy to the list"""
             # Validate policy name (mandatory)
             if not name.strip():
@@ -1716,10 +1715,10 @@ class GovernanceFormBuilder:
             return [], "No policies added yet"
 
         def add_condition(condition_type, veto_participants, excluded_participants, min_participants,
-                         deadline_offset_value, deadline_offset_unit, deadline_date,
-                         min_decision_offset_value, min_decision_offset_unit, min_decision_date,
-                         label_condition_type, label_condition_operator, label_condition_labels,
-                         current_conditions_text):
+                        deadline_offset_value, deadline_offset_unit, deadline_date,
+                        min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+                        label_condition_type, label_condition_operator, label_condition_labels,
+                        current_conditions_text):
             """Add a condition to the current policy"""
             
             # Parse existing conditions from the display text (ignore error messages and success messages)
@@ -1865,10 +1864,10 @@ class GovernanceFormBuilder:
             return ""
         
         def add_phase_condition(phase_condition_type, phase_veto_participants, phase_excluded_participants, 
-                               phase_min_participants, phase_deadline_offset_value, phase_deadline_offset_unit, 
-                               phase_deadline_date, phase_min_decision_offset_value, phase_min_decision_offset_unit, 
-                               phase_min_decision_date, phase_label_condition_type, phase_label_condition_operator, 
-                               phase_label_condition_labels, current_phase_conditions_text):
+                            phase_min_participants, phase_deadline_offset_value, phase_deadline_offset_unit, 
+                            phase_deadline_date, phase_min_decision_offset_value, phase_min_decision_offset_unit, 
+                            phase_min_decision_date, phase_label_condition_type, phase_label_condition_operator, 
+                            phase_label_condition_labels, current_phase_conditions_text):
             """Add a condition to the current phase"""
             
             # Parse existing conditions from the display text (ignore error messages and success messages)
@@ -2037,8 +2036,8 @@ class GovernanceFormBuilder:
         
         # Composed Policy Functions
         def add_phase(phase_name, phase_type, phase_participants, phase_decision_type, phase_decision_options, 
-                      phase_voting_ratio, phase_default_decision, phase_fallback_policy, phase_communication_channel, 
-                      current_phases_text, added_phase_conditions_text):
+                    phase_voting_ratio, phase_default_decision, phase_fallback_policy, phase_communication_channel, 
+                    current_phases_text, added_phase_conditions_text):
             """Add a phase to the current composed policy"""
             # Parse existing phases from the display text (ignore error messages and success messages)
             existing_phases = []
@@ -2237,12 +2236,12 @@ class GovernanceFormBuilder:
                 )
 
         def add_policy_and_clear_form(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
-                                      default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
-                                      min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
-                                      min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
-                                      label_condition_type, label_condition_operator, label_condition_labels, 
-                                      communication_channel,
-                                      added_conditions_list, current_policies):
+                                    default_decision, fallback_policy, condition_type, veto_participants, excluded_participants,
+                                    min_participants, deadline_offset_value, deadline_offset_unit, deadline_date,
+                                    min_decision_offset_value, min_decision_offset_unit, min_decision_date, 
+                                    label_condition_type, label_condition_operator, label_condition_labels, 
+                                    communication_channel,
+                                    added_conditions_list, current_policies):
             """Add policy and clear form fields only on success"""
             # First try to add the policy
             policies_result, display_result = add_policy(
@@ -2980,45 +2979,48 @@ class GovernanceFormBuilder:
             # This will be connected properly when we have the preview panel components
             pass
         
-        # Download DSL button handler (browser-native download for Gradio Lite / online hosting)
+        # Download DSL button handler - use gr.File for download
         def download_dsl(preview_text):
-            """Generate a data URI for direct browser download (no backend required)"""
+            """Generate a downloadable file"""
             
             if not preview_text or preview_text.startswith("# Fill the form"):
                 preview_text = "# Fill the form to generate a governance policy"
             
             # Create filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"governance_policy_{timestamp}.txt"
+            filename = "governance_policy_" + timestamp + ".txt"
             
-            # Create a data URL for the text content
-            import urllib.parse
-            encoded_text = urllib.parse.quote(preview_text)
-            data_uri = f"data:text/plain;charset=utf-8,{encoded_text}"
-            
-            # Return an HTML link styled as a button that triggers download
-            html_content = f'''
-            <a href="{data_uri}" download="{filename}"
-               style="display: inline-block; padding: 12px 24px; 
-                      background: #10b981; color: white; 
-                      border-radius: 6px; text-decoration: none;
-                      font-weight: bold; cursor: pointer; 
-                      border: none; font-size: 1em; 
-                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                      transition: background 0.2s;"
-               onmouseover="this.style.background='#059669';"
-               onmouseout="this.style.background='#10b981';">
-                ✅ Download Now
-            </a>
-            <p style="color: #666; font-size: 0.85em; margin-top: 8px;">Click to download your governance policy</p>
-            '''
-            return gr.update(value=html_content, visible=True)
+            # Write to a temporary file with the proper name
+            try:
+                import tempfile
+                import os
+                
+                # Get temp directory
+                temp_dir = tempfile.gettempdir()
+                if not temp_dir or temp_dir == '/':
+                    temp_dir = '/tmp'
+                
+                # Create the file with the desired name
+                temp_path = os.path.join(temp_dir, filename)
+                with open(temp_path, 'w') as f:
+                    f.write(preview_text)
+                
+                # Return just the file path
+                return temp_path
+            except Exception as e:
+                # If file creation fails, try in current directory
+                try:
+                    with open(filename, 'w') as f:
+                        f.write(preview_text)
+                    return filename
+                except:
+                    return None
         
-        # Wire the "Download Policy" button to show the download link
+        # Wire the "Download Policy" button to download the file
         preview_components['download_btn'].click(
             fn=download_dsl,
             inputs=[preview_components['preview_code']],
-            outputs=preview_components['download_link']
+            outputs=preview_components['download_file']
         )
     
     def _format_float(self, value):
@@ -3037,7 +3039,7 @@ class GovernanceFormBuilder:
         """Generate DSL code from form inputs"""
         # Extract form values (in the order they appear in the interface)
         (projects_data, activities_data, tasks_data, profiles_data, roles_data, individuals_data, agents_data,
-         policies_data, composed_policies_data) = form_values
+        policies_data, composed_policies_data) = form_values
         
         dsl_parts = []
         
@@ -3204,10 +3206,10 @@ class GovernanceFormBuilder:
             for agent in agents:
                 line_parts = [f"        (Agent) {agent['name']}"]
                 has_attributes = (agent.get('vote_value') is not None or 
-                                 agent.get('confidence') is not None or 
-                                 agent.get('autonomy_level') is not None or 
-                                 agent.get('explainability') is not None or 
-                                 agent.get('role'))
+                                agent.get('confidence') is not None or 
+                                agent.get('autonomy_level') is not None or 
+                                agent.get('explainability') is not None or 
+                                agent.get('role'))
                 if has_attributes:
                     line_parts[0] += " {"
                     attributes = []
@@ -3715,7 +3717,7 @@ class GovernanceFormBuilder:
             display_lines.append(line)
         
         return '\n'.join(display_lines)
-   
+
     def _format_roles_display(self, roles):
         """Format roles for display in the text area"""
         if not roles:
@@ -3730,7 +3732,7 @@ class GovernanceFormBuilder:
             display_lines.append(line)
         
         return '\n'.join(display_lines)
-   
+
     def _format_projects_display(self, projects):
         """Format projects for display in the text area"""
         if not projects:
@@ -3897,7 +3899,6 @@ class GovernanceFormBuilder:
             display_lines.append(line)
         
         return '\n'.join(display_lines)
-
 
 def main():
     """Main function to run the Gradio interface"""

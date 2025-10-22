@@ -15,3 +15,7 @@ build
 *.interp
 .vscode/settings.json
 grammar/prints_listener_regex.txt
+
+# local folders
+.pytest_cache/
+.vscode/

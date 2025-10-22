@@ -1,6 +1,6 @@
 from datetime import timedelta
 from metamodel.governance import StatusEnum
-from utils.gh_extension import ActionEnum
+from utils.chp_extension import ActionEnum
 
 def str_to_status_enum(status_str: str) -> StatusEnum:
     """Convert a string to a StatusEnum value."""

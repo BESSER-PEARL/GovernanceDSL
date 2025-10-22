@@ -10,8 +10,10 @@ The repository structure is divided in five folders:
     - [`metamodel.json`](metamodel/governance.py): The JSON representation that can be used to open the metamodel in the editor.
     - [`metamodel.png`](metamodel/metamodel.png): A PNG image of the metamodel.
     - [`metamodel.py`](metamodel/governance.py): The implementation of the classes of the metamodel as Python classes.
-* `UI/`: This folder contains a Gradio-based form builder for creating governance policies interactively:
-    - See [`UI/README.md`](UI/README.md) for detailed information
+    - [ocl_constraints.ocl](metamodel/ocl_constraints.ocl): Set of OCL constraints applied to the metamodel.
+* `UI/`: This folder contains a Gradio-based form editor for creating governance policies interactively:
+    - See [`UI/README.md`](UI/README.md) for detailed information.
+    - The form-based editor is available [here](https://besser-pearl.github.io/GovernanceDSL/).
 * `tests/`: This folder contains the tests. There are three subfolders inside the `test_cases/` for the examples:
     - `invalid_examples/`: Here we define with our DSL different invalid policies (e.g., the required number of votes is negative).
     - `NL_examples`: Here we define the examples in natural language, which can come from existing repositories (`NL_examples/real-world/` folder) or created from us (`NL_examples/artifical/`).

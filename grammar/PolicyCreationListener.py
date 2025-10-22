@@ -7,9 +7,9 @@ from utils.policy_tree import PolicyNode
 from utils.exceptions import (
     UndefinedAttributeException
 )
-from utils.gh_extension import (
+from utils.chp_extension import (
     ActionEnum, Label, PullRequest, Issue, Patch, Repository,
-    PassedTests, LabelCondition
+    CheckCiCd, LabelCondition
 )
 from utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta
@@ -1024,7 +1024,7 @@ class PolicyCreationListener(govdslListener):
         if target_policy_id:
             self.__appeal_policy_map.setdefault(current_policy_id, []).append((appeal_right_obj, target_policy_id))
 
-    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    def enterCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
         
         if ctx.booleanValue().getText().lower() == "true":
             evaluation_mode = None
@@ -1037,8 +1037,8 @@ class PolicyCreationListener(govdslListener):
                         evaluation_mode = EvaluationMode.POST
                     case "concurrent":
                         evaluation_mode = EvaluationMode.CONCURRENT
-            # Create the PassedTests object
-            test_condition = PassedTests(name="passedTestsCondition", evaluation_mode=evaluation_mode)
+            # Create the CheckCiCd object
+            test_condition = CheckCiCd(name="checkCiCdCondition", evaluation_mode=evaluation_mode)
             self._register_condition_with_current_policy(test_condition)
 
     def enterLabelsCondition(self, ctx:govdslParser.LabelsConditionContext):

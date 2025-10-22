@@ -23,8 +23,8 @@ from metamodel.governance import (
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
 )
-from utils.gh_extension import (
-    ActionEnum, PullRequest, Repository, Patch, PassedTests,
+from utils.chp_extension import (
+    ActionEnum, PullRequest, Repository, Patch, CheckCiCd,
     Label, LabelCondition
 )
 
@@ -471,13 +471,13 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(deadline.name, "deadline") # Default name
             self.assertEqual(deadline.offset, timedelta(days=7))
 
-            # Find and test PassedTests condition
-            passed_tests_conditions = {c for c in policy.conditions if isinstance(c, PassedTests)}
-            passed_tests = next(iter(passed_tests_conditions))
-            self.assertIsInstance(passed_tests, PassedTests)
-            self.assertEqual(passed_tests.name, "passedTestsCondition")
+            # Find and test CheckCiCd condition
+            check_ci_cd_conditions = {c for c in policy.conditions if isinstance(c, CheckCiCd)}
+            check_ci_cd = next(iter(check_ci_cd_conditions))
+            self.assertIsInstance(check_ci_cd, CheckCiCd)
+            self.assertEqual(check_ci_cd.name, "checkCiCdCondition")
             # Add check for evaluation_mode
-            self.assertEqual(passed_tests.evaluation_mode, EvaluationMode.PRE)
+            self.assertEqual(check_ci_cd.evaluation_mode, EvaluationMode.PRE)
 
             # Test voting parameters
             self.assertEqual(policy.ratio, 0.7)

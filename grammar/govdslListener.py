@@ -269,6 +269,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#communicationChannel.
+    def enterCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#communicationChannel.
+    def exitCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#participants.
     def enterParticipants(self, ctx:govdslParser.ParticipantsContext):
         pass
@@ -284,6 +293,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#roles.
     def exitRoles(self, ctx:govdslParser.RolesContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#role.
+    def enterRole(self, ctx:govdslParser.RoleContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#role.
+    def exitRole(self, ctx:govdslParser.RoleContext):
         pass
 
 
@@ -530,12 +548,21 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#passedTests.
-    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    # Enter a parse tree produced by govdslParser#appealRight.
+    def enterAppealRight(self, ctx:govdslParser.AppealRightContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#passedTests.
-    def exitPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    # Exit a parse tree produced by govdslParser#appealRight.
+    def exitAppealRight(self, ctx:govdslParser.AppealRightContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#checkCiCd.
+    def enterCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#checkCiCd.
+    def exitCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
         pass
 
 
@@ -608,6 +635,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#fallback.
     def exitFallback(self, ctx:govdslParser.FallbackContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#policyReference.
+    def enterPolicyReference(self, ctx:govdslParser.PolicyReferenceContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#policyReference.
+    def exitPolicyReference(self, ctx:govdslParser.PolicyReferenceContext):
         pass
 
 

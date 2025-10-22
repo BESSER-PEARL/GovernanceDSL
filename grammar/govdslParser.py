@@ -307,7 +307,7 @@ class govdslParser ( Parser ):
                      "'Conditions'", "'Deadline'", "'MinDecisionTime'", 
                      "'days'", "'weeks'", "'months'", "'years'", "'/'", 
                      "'ParticipantExclusion'", "'MinParticipants'", "'VetoRight'", 
-                     "'AppealRight'", "'Appealers'", "'Policy'", "'PassedTests'", 
+                     "'AppealRight'", "'Appealers'", "'Policy'", "'CheckCiCd'", 
                      "'pre'", "'post'", "'concurrent'", "'LabelCondition'", 
                      "'include'", "'not'", "'Parameters'", "'ratio'", "'default'", 
                      "'fallback'", "'Order'", "'Execution'", "'sequential'", 
@@ -399,7 +399,7 @@ class govdslParser ( Parser ):
     RULE_minParticipant = 58
     RULE_vetoRight = 59
     RULE_appealRight = 60
-    RULE_passedTests = 61
+    RULE_checkCiCd = 61
     RULE_evaluationMode = 62
     RULE_labelsCondition = 63
     RULE_include = 64
@@ -431,7 +431,7 @@ class govdslParser ( Parser ):
                    "profiles", "profile", "gender", "race", "policyParticipants", 
                    "partID", "hasRole", "conditions", "deadline", "minDecisionTime", 
                    "offset", "deadlineID", "timeUnit", "date", "participantExclusion", 
-                   "minParticipant", "vetoRight", "appealRight", "passedTests", 
+                   "minParticipant", "vetoRight", "appealRight", "checkCiCd", 
                    "evaluationMode", "labelsCondition", "include", "parameters", 
                    "votParams", "ratio", "default", "fallback", "policyReference", 
                    "order", "orderType", "orderTypeValue", "orderMode", 
@@ -3694,8 +3694,8 @@ class govdslParser ( Parser ):
             return self.getTypedRuleContext(govdslParser.AppealRightContext,0)
 
 
-        def passedTests(self):
-            return self.getTypedRuleContext(govdslParser.PassedTestsContext,0)
+        def checkCiCd(self):
+            return self.getTypedRuleContext(govdslParser.CheckCiCdContext,0)
 
 
         def labelsCondition(self, i:int=None):
@@ -3783,7 +3783,7 @@ class govdslParser ( Parser ):
             _la = self._input.LA(1)
             if _la==66:
                 self.state = 569
-                self.passedTests()
+                self.checkCiCd()
 
 
             self.state = 575
@@ -4428,7 +4428,7 @@ class govdslParser ( Parser ):
         return localctx
 
 
-    class PassedTestsContext(ParserRuleContext):
+    class CheckCiCdContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -4444,23 +4444,23 @@ class govdslParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return govdslParser.RULE_passedTests
+            return govdslParser.RULE_checkCiCd
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterPassedTests" ):
-                listener.enterPassedTests(self)
+            if hasattr( listener, "enterCheckCiCd" ):
+                listener.enterCheckCiCd(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitPassedTests" ):
-                listener.exitPassedTests(self)
+            if hasattr( listener, "exitCheckCiCd" ):
+                listener.exitCheckCiCd(self)
 
 
 
 
-    def passedTests(self):
+    def checkCiCd(self):
 
-        localctx = govdslParser.PassedTestsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 122, self.RULE_passedTests)
+        localctx = govdslParser.CheckCiCdContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 122, self.RULE_checkCiCd)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)

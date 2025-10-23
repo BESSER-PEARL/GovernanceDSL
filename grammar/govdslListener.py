@@ -476,6 +476,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#language.
+    def enterLanguage(self, ctx:govdslParser.LanguageContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#language.
+    def exitLanguage(self, ctx:govdslParser.LanguageContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#policyParticipants.
     def enterPolicyParticipants(self, ctx:govdslParser.PolicyParticipantsContext):
         pass

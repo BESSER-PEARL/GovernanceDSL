@@ -259,6 +259,14 @@ class GovernanceFormBuilder:
                     allow_custom_value=False,
                     info="Leave empty if not applicable"
                 )
+                
+                profile_language = gr.Dropdown(
+                    label="Language (Optional)",
+                    choices=["", "english", "spanish", "french", "german", "chinese", "japanese", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
             
             with gr.Row():
                 add_profile_btn = gr.Button("➕ Add Profile", variant="secondary")
@@ -269,7 +277,7 @@ class GovernanceFormBuilder:
                 label="Added Profiles",
                 lines=4,
                 interactive=False,
-                placeholder="No profiles added yet. Remember: profiles must have at least gender OR race defined.",
+                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, or language).",
                 info="Profiles you've added will appear here"
             )
             
@@ -443,6 +451,7 @@ class GovernanceFormBuilder:
             'profile_name': profile_name,
             'profile_gender': profile_gender,
             'profile_race': profile_race,
+            'profile_language': profile_language,
             'add_profile_btn': add_profile_btn,
             'clear_profiles_btn': clear_profiles_btn,
             'profiles_display': profiles_display,
@@ -1357,30 +1366,31 @@ class GovernanceFormBuilder:
             
             return True, ""
         
-        def add_profile(name, gender, race, current_profiles):
+        def add_profile(name, gender, race, language, current_profiles):
             """Add a new profile to the list"""
             if not name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
-                return current_profiles, error_message, "", "", "", None
+                return current_profiles, error_message, "", "", "", "", None
             
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name already exists\n\n{display_text}" if current_profiles else "❌ Error: Profile name already exists"
-                return current_profiles, error_message, "", "", "", None
+                return current_profiles, error_message, "", "", "", "", None
             
             # Validate that at least one attribute is provided
-            if not gender and not race:
+            if not gender and not race and not language:
                 display_text = self._format_profiles_display(current_profiles)
-                error_message = f"❌ Error: Profiles must have either a race or gender value\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have either a race or gender value"
-                return current_profiles, error_message, "", "", "", None
+                error_message = f"❌ Error: Profiles must have at least one attribute (gender, race, or language)\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have at least one attribute (gender, race, or language)"
+                return current_profiles, error_message, "", "", "", "", None
             
             # Create new profile
             new_profile = {
                 'name': name.strip(),
                 'gender': gender if gender else None,
-                'race': race if race else None
+                'race': race if race else None,
+                'language': language if language else None
             }
             
             updated_profiles = current_profiles + [new_profile]
@@ -1389,7 +1399,7 @@ class GovernanceFormBuilder:
             display_text = self._format_profiles_display(updated_profiles)
             success_message = f"✅ Profile '{new_profile['name']}' added successfully!\n\n{display_text}"
             
-            return updated_profiles, success_message, "", "", "", None  # Clear individual profile selection
+            return updated_profiles, success_message, "", "", "", "", None  # Clear individual profile selection
         
         def clear_profiles():
             """Clear all profiles"""
@@ -2743,6 +2753,7 @@ class GovernanceFormBuilder:
                 participant_components['profile_name'],
                 participant_components['profile_gender'],
                 participant_components['profile_race'],
+                participant_components['profile_language'],
                 participant_components['profiles_data']
             ],
             outputs=[
@@ -2751,6 +2762,7 @@ class GovernanceFormBuilder:
                 participant_components['profile_name'],        # Clear name field
                 participant_components['profile_gender'],      # Clear gender field
                 participant_components['profile_race'],        # Clear race field
+                participant_components['profile_language'],    # Clear language field
                 participant_components['individual_profile']   # Update individual profile dropdown
             ]
         )
@@ -3533,6 +3545,8 @@ class GovernanceFormBuilder:
                     participants_section.append(f"            gender : {profile['gender']}")
                 if profile.get('race'):
                     participants_section.append(f"            race : {profile['race']}")
+                if profile.get('language'):
+                    participants_section.append(f"            language : {profile['language']}")
                 participants_section.append("        }")
         
         # Add Roles section
@@ -4086,6 +4100,8 @@ class GovernanceFormBuilder:
                 attributes.append(f"👤 gender: {profile['gender']}")
             if profile.get('race'):
                 attributes.append(f"🌍 race: {profile['race']}")
+            if profile.get('language'):
+                attributes.append(f"🌐 language: {profile['language']}")
             
             if attributes:
                 line += f" → {', '.join(attributes)}"

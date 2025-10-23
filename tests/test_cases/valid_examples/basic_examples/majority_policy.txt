@@ -18,6 +18,7 @@ Participants:
         joeProfile {
             gender : male
             race : hispanic
+            language : english
         }
     Roles : maintainer { vote value : 1.5}, reviewer, owner 
     Individuals : 

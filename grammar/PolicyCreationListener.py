@@ -830,13 +830,17 @@ class PolicyCreationListener(govdslListener):
 
         gender = None
         race = None
+        language = None
         if ctx.gender():
             gender = ctx.gender().ID().getText()
         if ctx.race():
             race = ctx.race().ID().getText()
+        if ctx.language():
+            language = ctx.language().ID().getText()
         profile = Profile(name=ctx.ID().getText(),
                             gender=gender,
-                            race=race)
+                            race=race,
+                            language=language)
         self.__profiles_map[profile.name] = profile
 
     def enterAgent(self, ctx:govdslParser.AgentContext):

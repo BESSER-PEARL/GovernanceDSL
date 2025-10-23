@@ -7,12 +7,12 @@ from utils.policy_tree import PolicyNode
 from utils.exceptions import (
     UndefinedAttributeException
 )
-from utils.gh_extension import (
-    ActionEnum, Label, PullRequest, Issue, Patch, Repository,
-    PassedTests, LabelCondition
+from utils.chp_extension import (
+    PatchAction, MemberAction, Label, PullRequest, Repository,
+    CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
 from utils.attribute_converters import (
-    str_to_status_enum, str_to_action_enum, deadline_to_timedelta
+    str_to_status_enum, str_to_action_enum, deadline_to_timedelta, str_to_member_action_enum
 )
 from metamodel.governance import (
     AppealRight, CommunicationChannel, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
@@ -562,51 +562,59 @@ class PolicyCreationListener(govdslListener):
                 if act.task():
                     for t in act.task():
                         task_name = t.ID().getText()
-        
                         # Extract status if present
                         status = None
-                        if t.taskContent() and t.taskContent().status():
-                            status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-                        
-                        task = None
-                        
-                        # Handle GitHub extension elements
-                        if t.taskType():
-                            task_type_str = t.taskType().getText().lower()
+
+                        if t.patchTask():
+                            if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                                status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                            task = None
                             
-                            # Create the GitHub element (PullRequest or Issue)
-                            gh_element = None
-                            labels = None
-                            
-                            # Process labels if present
-                            if t.taskContent().actionWithLabels():
-                                label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                                labels = set()
-                                for i in range(label_count):
-                                    l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                                    labels.add(Label(name=l_id))
-                            
-                            # Create the appropriate GitHub element based on task type
-                            if task_type_str == "pull request":
-                                gh_element = PullRequest(name=task_name, labels=labels)
-                            elif task_type_str == "issue":
-                                gh_element = Issue(name=task_name, labels=labels)
-                            
-                            # Extract action for Patch
+                            # Handle CHP extension elements
+                            if t.patchTask().patchTaskType():
+                                task_type_str = t.patchTask().patchTaskType().getText().lower()
+                                
+                                # Create the CHP element (PullRequest or Issue)
+                                chp_element = None
+                                labels = None
+                                
+                                # Process labels if present
+                                if t.patchTask().patchTaskContent().actionWithLabels():
+                                    label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                                    labels = set()
+                                    for i in range(label_count):
+                                        l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                        labels.add(Label(name=l_id))
+                                
+                                # Create the appropriate CHP element based on task type
+                                if task_type_str == "pull request":
+                                    chp_element = PullRequest(name=task_name, labels=labels)
+                                # elif task_type_str == "issue":
+                                #     chp_element = Issue(name=task_name, labels=labels)
+                                
+                                # Extract action for Patch
+                                action = None
+                                if t.patchTask().patchTaskContent().patchAction():
+                                    action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                                elif t.patchTask().patchTaskContent().actionWithLabels():
+                                    action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                                else:
+                                    raise UndefinedAttributeException("action", "This task must have an action defined.")
+                                
+                                # Create the Patch object that references the CHP element
+                                if chp_element:
+                                    task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                                else:
+                                    # Fallback if no matching CHP element type
+                                    task = Task(name=task_name, status=status)
+                        elif t.memberTask():
+                            # MemberLifecycle task
                             action = None
-                            if t.taskContent().action():
-                                action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                            elif t.taskContent().actionWithLabels():
-                                action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                            else:
-                                raise UndefinedAttributeException("action", "This task must have an action defined.")
-                            
-                            # Create the Patch object that references the GitHub element
-                            if gh_element:
-                                task = Patch(name=task_name, status=status, action=action, element=gh_element)
-                            else:
-                                # Fallback if no matching GitHub element type
-                                task = Task(name=task_name, status=status)
+                            if t.memberTask().memberTaskContent():
+                                action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                                action = str_to_member_action_enum(action)
+                            task = MemberLifecycle(name=task_name, status=status, action=action)
                         else:
                             # For regular tasks
                             task = Task(name=task_name, status=status)
@@ -630,51 +638,59 @@ class PolicyCreationListener(govdslListener):
             if act.task():
                 for t in act.task():
                     task_name = t.ID().getText()
-    
                     # Extract status if present
+
                     status = None
-                    if t.taskContent() and t.taskContent().status():
-                        status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-                    
-                    task = None
-                    
-                    # Handle GitHub extension elements
-                    if t.taskType():
-                        task_type_str = t.taskType().getText().lower()
+                    if t.patchTask():
+                        if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                            status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                        task = None
                         
-                        # Create the GitHub element (PullRequest or Issue)
-                        gh_element = None
-                        labels = None
-                        
-                        # Process labels if present
-                        if t.taskContent().actionWithLabels():
-                            label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                            labels = set()
-                            for i in range(label_count):
-                                l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                                labels.add(Label(name=l_id))
-                        
-                        # Create the appropriate GitHub element based on task type
-                        if task_type_str == "pull request":
-                            gh_element = PullRequest(name=task_name, labels=labels)
-                        elif task_type_str == "issue":
-                            gh_element = Issue(name=task_name, labels=labels)
-                        
-                        # Extract action for Patch
+                        # Handle CHP extension elements
+                        if t.patchTask().patchTaskType():
+                            task_type_str = t.patchTaskType().getText().lower()
+                            
+                            # Create the CHP element (PullRequest or Issue)
+                            chp_element = None
+                            labels = None
+                            
+                            # Process labels if present
+                            if t.patchTask().patchTaskContent().actionWithLabels():
+                                label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                                labels = set()
+                                for i in range(label_count):
+                                    l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                    labels.add(Label(name=l_id))
+                            
+                            # Create the appropriate CHP element based on task type
+                            if task_type_str == "pull request":
+                                chp_element = PullRequest(name=task_name, labels=labels)
+                            # elif task_type_str == "issue":
+                            #     chp_element = Issue(name=task_name, labels=labels)
+                            
+                            # Extract action for Patch
+                            action = None
+                            if t.patchTask().patchTaskContent().patchAction():
+                                action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                            elif t.patchTask().patchTaskContent().actionWithLabels():
+                                action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                            else:
+                                raise UndefinedAttributeException("action", "This task must have an action defined.")
+                            
+                            # Create the Patch object that references the CHP element
+                            if chp_element:
+                                task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                            else:
+                                # Fallback if no matching CHP element type
+                                task = Task(name=task_name, status=status)
+                    elif t.memberTask():
+                        # MemberLifecycle task
                         action = None
-                        if t.taskContent().action():
-                            action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                        elif t.taskContent().actionWithLabels():
-                            action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                        else:
-                            raise UndefinedAttributeException("action", "This task must have an action defined.")
-                        
-                        # Create the Patch object that references the GitHub element
-                        if gh_element:
-                            task = Patch(name=task_name, status=status, action=action, element=gh_element)
-                        else:
-                            # Fallback if no matching GitHub element type
-                            task = Task(name=task_name, status=status)
+                        if t.memberTask().memberTaskContent():
+                            action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                            action = str_to_member_action_enum(action)
+                        task = MemberLifecycle(name=task_name, status=status, action=action)
                     else:
                         # For regular tasks
                         task = Task(name=task_name, status=status)
@@ -689,51 +705,59 @@ class PolicyCreationListener(govdslListener):
     def enterTasks(self, ctx:govdslParser.TasksContext):
         for t in ctx.task():
             task_name = t.ID().getText()
-
             # Extract status if present
             status = None
-            if t.taskContent() and t.taskContent().status():
-                status = str_to_status_enum(t.taskContent().status().statusEnum().getText())
-            
-            task = None
-            
-            # Handle GitHub extension elements
-            if t.taskType():
-                task_type_str = t.taskType().getText().lower()
+
+            if t.patchTask():
+                if t.patchTask().patchTaskContent() and t.patchTask().patchTaskContent().status():
+                    status = str_to_status_enum(t.patchTask().patchTaskContent().status().statusEnum().getText())
+
+                task = None
                 
-                # Create the GitHub element (PullRequest or Issue)
-                gh_element = None
-                labels = None
-                
-                # Process labels if present
-                if t.taskContent().actionWithLabels():
-                    label_count = len(t.taskContent().actionWithLabels().labels().ID())
-                    labels = set()
-                    for i in range(label_count):
-                        l_id = t.taskContent().actionWithLabels().labels().LABEL(i).getText()
-                        labels.add(Label(name=l_id))
-                
-                # Create the appropriate GitHub element based on task type
-                if task_type_str == "pull request":
-                    gh_element = PullRequest(name=task_name, labels=labels)
-                elif task_type_str == "issue":
-                    gh_element = Issue(name=task_name, labels=labels)
-                
-                # Extract action for Patch
+                # Handle CHP extension elements
+                if t.patchTask().patchTaskType():
+                    task_type_str = t.patchTask().patchTaskType().getText().lower()
+
+                    # Create the CHP element (PullRequest or Issue)
+                    chp_element = None
+                    labels = None
+                    
+                    # Process labels if present
+                    if t.patchTask().patchTaskContent().actionWithLabels():
+                        label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
+                        labels = set()
+                        for i in range(label_count):
+                            l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                            labels.add(Label(name=l_id))
+
+                    # Create the appropriate CHP element based on task type
+                    if task_type_str == "pull request":
+                        chp_element = PullRequest(name=task_name, labels=labels)
+                    # elif task_type_str == "issue":
+                    #     chp_element = Issue(name=task_name, labels=labels)
+                    
+                    # Extract action for Patch
+                    action = None
+                    if t.patchTask().patchTaskContent().patchAction():
+                        action = str_to_action_enum(t.patchTask().patchTaskContent().patchAction().patchActionEnum().getText())
+                    elif t.patchTask().patchTaskContent().actionWithLabels():
+                        action = str_to_action_enum(t.patchTask().patchTaskContent().actionWithLabels().patchAction().patchActionEnum().getText())
+                    else:
+                        raise UndefinedAttributeException("action", "This task must have an action defined.")
+                    
+                    # Create the Patch object that references the CHP element
+                    if chp_element:
+                        task = Patch(name=task_name, status=status, action=action, element=chp_element)
+                    else:
+                        # Fallback if no matching CHP element type
+                        task = Task(name=task_name, status=status)
+            elif t.memberTask():
+                # MemberLifecycle task
                 action = None
-                if t.taskContent().action():
-                    action = str_to_action_enum(t.taskContent().action().actionEnum().getText())
-                elif t.taskContent().actionWithLabels():
-                    action = str_to_action_enum(t.taskContent().actionWithLabels().action().actionEnum().getText())
-                else:
-                    raise UndefinedAttributeException("action", "This task must have an action defined.")
-                
-                # Create the Patch object that references the GitHub element
-                if gh_element:
-                    task = Patch(name=task_name, status=status, action=action, element=gh_element)
-                else:
-                    # Fallback if no matching GitHub element type
-                    task = Task(name=task_name, status=status)
+                if t.memberTask().memberTaskContent():
+                    action = t.memberTask().memberTaskContent().memberAction().memberActionEnum().getText()
+                    action = str_to_member_action_enum(action)
+                task = MemberLifecycle(name=task_name, status=status, action=action)
             else:
                 # For regular tasks
                 task = Task(name=task_name, status=status)
@@ -806,13 +830,17 @@ class PolicyCreationListener(govdslListener):
 
         gender = None
         race = None
+        language = None
         if ctx.gender():
             gender = ctx.gender().ID().getText()
         if ctx.race():
             race = ctx.race().ID().getText()
+        if ctx.language():
+            language = ctx.language().ID().getText()
         profile = Profile(name=ctx.ID().getText(),
                             gender=gender,
-                            race=race)
+                            race=race,
+                            language=language)
         self.__profiles_map[profile.name] = profile
 
     def enterAgent(self, ctx:govdslParser.AgentContext):
@@ -1024,7 +1052,7 @@ class PolicyCreationListener(govdslListener):
         if target_policy_id:
             self.__appeal_policy_map.setdefault(current_policy_id, []).append((appeal_right_obj, target_policy_id))
 
-    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    def enterCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
         
         if ctx.booleanValue().getText().lower() == "true":
             evaluation_mode = None
@@ -1037,9 +1065,31 @@ class PolicyCreationListener(govdslListener):
                         evaluation_mode = EvaluationMode.POST
                     case "concurrent":
                         evaluation_mode = EvaluationMode.CONCURRENT
-            # Create the PassedTests object
-            test_condition = PassedTests(name="passedTestsCondition", evaluation_mode=evaluation_mode)
+            # Create the CheckCiCd object
+            test_condition = CheckCiCd(name="checkCiCdCondition", evaluation_mode=evaluation_mode)
             self._register_condition_with_current_policy(test_condition)
+
+    def enterMinTime(self, ctx:govdslParser.MinTimeContext):
+        # TODO: We might want to check this condition is applied only on MemberLifecycle task
+        offset_amount = int(ctx.offset().SIGNED_INT().getText())
+        time_unit = ctx.offset().timeUnit().getText()
+        offset = deadline_to_timedelta(value=offset_amount, unit=time_unit)
+
+        evaluation_mode = None
+        if ctx.evaluationMode():
+            evaluation_mode = ctx.evaluationMode().getText()
+            match evaluation_mode:
+                case "pre":
+                    evaluation_mode = EvaluationMode.PRE
+                case "post":
+                    evaluation_mode = EvaluationMode.POST
+                case "concurrent":
+                    evaluation_mode = EvaluationMode.CONCURRENT
+
+        act_bool = True if ctx.activityBool().getText() == "Activity" else False
+
+        min_time_condition = MinTime(name="minTimeCondition", evaluation_mode=evaluation_mode, activity=act_bool,  offset=offset)
+        self._register_condition_with_current_policy(min_time_condition)
 
     def enterLabelsCondition(self, ctx:govdslParser.LabelsConditionContext):
 

@@ -24,14 +24,19 @@ repoID              : ID ; // owner/repo
 activities          : 'Activities' ':' activity+ ;
 activity            : ID ('{' 'Tasks' ':' task+ '}')? ;
 tasks               : 'Tasks' ':' task+ ;
-task                : ID (':' taskType)? ('{' taskContent '}')? ;
-taskType            : 'Issue' | 'Pull request' | 'All' ; //TODO: Update with Patch / PR
-taskContent         : status | action | actionWithLabels ;
-actionWithLabels    : action labels ;
+task                : ID (':')? (patchTask | memberTask )? ;
+patchTask           : patchTaskType ('{' patchTaskContent '}')? ;
+memberTask          : 'MemberLifecycle' ('{' memberTaskContent '}')? ;
+patchTaskType       : 'Issue' | 'Pull request' | 'All' ; //TODO: Update with Patch / PR
+patchTaskContent    : status | patchAction | actionWithLabels ;
+actionWithLabels    : patchAction labels ;
+memberTaskContent   : memberAction ;
+memberAction        : 'Action' ':' memberActionEnum ;
+memberActionEnum    : 'onboard' | 'remove' ;
 status              : 'Status' ':' statusEnum ;
 statusEnum          : 'completed' | 'accepted' | 'partial' ;
-action              : 'Action' ':' actionEnum ;
-actionEnum          : 'merge' | 'review' | 'release' ;
+patchAction         : 'Action' ':' patchActionEnum ;
+patchActionEnum     : 'merge' | 'review' | 'release' ;
 labels              : 'Labels' ':' ID (',' ID)* ;
 
 // Decision type
@@ -58,15 +63,16 @@ confidence          : 'confidence' ':' FLOAT ;
 autonomyLevel       : 'autonomy level' ':' FLOAT ;
 explainability      : 'explainability' ':' FLOAT ;
 profiles            : 'Profiles' ':' profile ((',')? profile)* ;
-profile             : ID '{' (gender (',')? race? | race (',')? gender?) '}';
+profile             : ID '{' (gender (',')? race? (',')? language? | race (',')? gender? (',')? language? | language (',')? gender? (',')? race?) '}';
 gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule
 race                : 'race' ':' ID ;
+language            : 'language' ':' ID ;
 policyParticipants  : 'Participant list' ':' partID (',' partID)* ;
 partID              : ID hasRole? ;
 hasRole             : 'as' ID ;
 
 // Conditions group
-conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? appealRight? passedTests? labelsCondition* ; // + extension
+conditions          : 'Conditions' ':'  deadline? minDecisionTime? participantExclusion? minParticipant? vetoRight? appealRight? checkCiCd? minTime? labelsCondition* ; // + extension
 deadline            : 'Deadline' deadlineID? ':' ( offset | date | (offset ',' date) ) ;
 minDecisionTime     : 'MinDecisionTime' ID? ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
@@ -77,7 +83,9 @@ participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ; // TODO: ID | 'P
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;
 vetoRight           : 'VetoRight' ':' ID (',' ID)* ; 
 appealRight         : 'AppealRight' ':' '{' 'Appealers' ':' ID (',' ID)* ','? 'Policy' ':' (nestedPolicy | policyReference) '}' ;
-passedTests         : 'PassedTests' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+checkCiCd           : 'CheckCiCd' evaluationMode? ':' booleanValue ; // Does not make sense to declare this condition if booleanValue is false
+minTime             : 'MinTime' evaluationMode? 'of' activityBool ':' offset ;
+activityBool        : 'Activity' | 'InActivity' ;
 evaluationMode      : ( 'pre' | 'post' | 'concurrent' ) ;
 labelsCondition     : 'LabelCondition' evaluationMode? include?':' ID (',' ID)* ;
 include             : 'include' | 'not';

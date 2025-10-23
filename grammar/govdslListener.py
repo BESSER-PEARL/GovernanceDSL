@@ -161,21 +161,39 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#taskType.
-    def enterTaskType(self, ctx:govdslParser.TaskTypeContext):
+    # Enter a parse tree produced by govdslParser#patchTask.
+    def enterPatchTask(self, ctx:govdslParser.PatchTaskContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#taskType.
-    def exitTaskType(self, ctx:govdslParser.TaskTypeContext):
+    # Exit a parse tree produced by govdslParser#patchTask.
+    def exitPatchTask(self, ctx:govdslParser.PatchTaskContext):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#taskContent.
-    def enterTaskContent(self, ctx:govdslParser.TaskContentContext):
+    # Enter a parse tree produced by govdslParser#memberTask.
+    def enterMemberTask(self, ctx:govdslParser.MemberTaskContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#taskContent.
-    def exitTaskContent(self, ctx:govdslParser.TaskContentContext):
+    # Exit a parse tree produced by govdslParser#memberTask.
+    def exitMemberTask(self, ctx:govdslParser.MemberTaskContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#patchTaskType.
+    def enterPatchTaskType(self, ctx:govdslParser.PatchTaskTypeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#patchTaskType.
+    def exitPatchTaskType(self, ctx:govdslParser.PatchTaskTypeContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#patchTaskContent.
+    def enterPatchTaskContent(self, ctx:govdslParser.PatchTaskContentContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#patchTaskContent.
+    def exitPatchTaskContent(self, ctx:govdslParser.PatchTaskContentContext):
         pass
 
 
@@ -185,6 +203,33 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#actionWithLabels.
     def exitActionWithLabels(self, ctx:govdslParser.ActionWithLabelsContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#memberTaskContent.
+    def enterMemberTaskContent(self, ctx:govdslParser.MemberTaskContentContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#memberTaskContent.
+    def exitMemberTaskContent(self, ctx:govdslParser.MemberTaskContentContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#memberAction.
+    def enterMemberAction(self, ctx:govdslParser.MemberActionContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#memberAction.
+    def exitMemberAction(self, ctx:govdslParser.MemberActionContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#memberActionEnum.
+    def enterMemberActionEnum(self, ctx:govdslParser.MemberActionEnumContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#memberActionEnum.
+    def exitMemberActionEnum(self, ctx:govdslParser.MemberActionEnumContext):
         pass
 
 
@@ -206,21 +251,21 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#action.
-    def enterAction(self, ctx:govdslParser.ActionContext):
+    # Enter a parse tree produced by govdslParser#patchAction.
+    def enterPatchAction(self, ctx:govdslParser.PatchActionContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#action.
-    def exitAction(self, ctx:govdslParser.ActionContext):
+    # Exit a parse tree produced by govdslParser#patchAction.
+    def exitPatchAction(self, ctx:govdslParser.PatchActionContext):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#actionEnum.
-    def enterActionEnum(self, ctx:govdslParser.ActionEnumContext):
+    # Enter a parse tree produced by govdslParser#patchActionEnum.
+    def enterPatchActionEnum(self, ctx:govdslParser.PatchActionEnumContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#actionEnum.
-    def exitActionEnum(self, ctx:govdslParser.ActionEnumContext):
+    # Exit a parse tree produced by govdslParser#patchActionEnum.
+    def exitPatchActionEnum(self, ctx:govdslParser.PatchActionEnumContext):
         pass
 
 
@@ -269,6 +314,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#communicationChannel.
+    def enterCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#communicationChannel.
+    def exitCommunicationChannel(self, ctx:govdslParser.CommunicationChannelContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#participants.
     def enterParticipants(self, ctx:govdslParser.ParticipantsContext):
         pass
@@ -284,6 +338,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#roles.
     def exitRoles(self, ctx:govdslParser.RolesContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#role.
+    def enterRole(self, ctx:govdslParser.RoleContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#role.
+    def exitRole(self, ctx:govdslParser.RoleContext):
         pass
 
 
@@ -413,6 +476,15 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#language.
+    def enterLanguage(self, ctx:govdslParser.LanguageContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#language.
+    def exitLanguage(self, ctx:govdslParser.LanguageContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#policyParticipants.
     def enterPolicyParticipants(self, ctx:govdslParser.PolicyParticipantsContext):
         pass
@@ -530,12 +602,39 @@ class govdslListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by govdslParser#passedTests.
-    def enterPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    # Enter a parse tree produced by govdslParser#appealRight.
+    def enterAppealRight(self, ctx:govdslParser.AppealRightContext):
         pass
 
-    # Exit a parse tree produced by govdslParser#passedTests.
-    def exitPassedTests(self, ctx:govdslParser.PassedTestsContext):
+    # Exit a parse tree produced by govdslParser#appealRight.
+    def exitAppealRight(self, ctx:govdslParser.AppealRightContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#checkCiCd.
+    def enterCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#checkCiCd.
+    def exitCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#minTime.
+    def enterMinTime(self, ctx:govdslParser.MinTimeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#minTime.
+    def exitMinTime(self, ctx:govdslParser.MinTimeContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#activityBool.
+    def enterActivityBool(self, ctx:govdslParser.ActivityBoolContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#activityBool.
+    def exitActivityBool(self, ctx:govdslParser.ActivityBoolContext):
         pass
 
 
@@ -608,6 +707,15 @@ class govdslListener(ParseTreeListener):
 
     # Exit a parse tree produced by govdslParser#fallback.
     def exitFallback(self, ctx:govdslParser.FallbackContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#policyReference.
+    def enterPolicyReference(self, ctx:govdslParser.PolicyReferenceContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#policyReference.
+    def exitPolicyReference(self, ctx:govdslParser.PolicyReferenceContext):
         pass
 
 

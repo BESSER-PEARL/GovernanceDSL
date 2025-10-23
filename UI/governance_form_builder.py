@@ -172,16 +172,17 @@ class GovernanceFormBuilder:
             with gr.Row():
                 task_type = gr.Dropdown(
                     label="Type (Optional)",
-                    choices=["", "Pull request"],
+                    choices=["", "Pull request", "MemberLifecycle"],
                     value="",
-                    info="Type of task (following govdsl.g4 grammar)"
+                    info="Type of task"
                 )
                 
                 task_action = gr.Dropdown(
                     label="Action (Optional)",
-                    choices=["", "merge", "review", "release"],
+                    choices=[""],
                     value="",
-                    info="Specific action this task performs (following govdsl.g4 grammar)"
+                    info="Specific action this task performs",
+                    visible=False
                 )
             
             with gr.Row():
@@ -258,6 +259,14 @@ class GovernanceFormBuilder:
                     allow_custom_value=False,
                     info="Leave empty if not applicable"
                 )
+                
+                profile_language = gr.Dropdown(
+                    label="Language (Optional)",
+                    choices=["", "english", "spanish", "french", "german", "chinese", "japanese", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
             
             with gr.Row():
                 add_profile_btn = gr.Button("➕ Add Profile", variant="secondary")
@@ -268,7 +277,7 @@ class GovernanceFormBuilder:
                 label="Added Profiles",
                 lines=4,
                 interactive=False,
-                placeholder="No profiles added yet. Remember: profiles must have at least gender OR race defined.",
+                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, or language).",
                 info="Profiles you've added will appear here"
             )
             
@@ -442,6 +451,7 @@ class GovernanceFormBuilder:
             'profile_name': profile_name,
             'profile_gender': profile_gender,
             'profile_race': profile_race,
+            'profile_language': profile_language,
             'add_profile_btn': add_profile_btn,
             'clear_profiles_btn': clear_profiles_btn,
             'profiles_display': profiles_display,
@@ -538,13 +548,26 @@ class GovernanceFormBuilder:
                     value="BooleanDecision"
                 )
                 
-                # Options for StringList and ElementList
+                # Options for StringList
                 decision_options = gr.Textbox(
                     label="Decision Options",
-                    placeholder="e.g., joe, george (for ElementList/StringList)",
+                    placeholder="e.g., option1, option2, option3 (for StringList)",
                     visible=False,
-                    info="Comma-separated options for StringList/ElementList decisions"
+                    info="Comma-separated custom options for StringList decisions"
                 )
+                
+                # Options for ElementList (Individual names)
+                decision_options_element_list = gr.Dropdown(
+                    label="Decision Options",
+                    choices=[],
+                    value=None,
+                    allow_custom_value=False,
+                    multiselect=True,
+                    visible=False,
+                    interactive=True,
+                    info="Select individual(s) for ElementList decisions"
+                )
+                
                 
                 # Parameters (for voting policies)
                 voting_ratio = gr.Slider(
@@ -598,6 +621,8 @@ class GovernanceFormBuilder:
                                     "ParticipantExclusion",
                                     "MinParticipants",
                                     "VetoRight",
+                                    "CheckCiCd",
+                                    "MinTime",
                                     "LabelCondition"
                                 ],
                                 value="",
@@ -686,15 +711,33 @@ class GovernanceFormBuilder:
                                 info="Specific minimum decision date (optional, can be used with or without offset)"
                             )
                         
+                        # CheckCiCd condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                check_ci_cd_evaluation_mode = gr.Dropdown(
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
+                                    visible=False,
+                                    info="When to evaluate CI/CD checks (pre/post/concurrent)"
+                                )
+                                
+                                check_ci_cd_value = gr.Checkbox(
+                                    label="Check",
+                                    value=True,
+                                    visible=False,
+                                    info="Whether CI/CD checks must pass (true/false)"
+                                )
+                        
                         with gr.Row():
                             with gr.Row():
                                 # LabelCondition fields
                                 label_condition_type = gr.Dropdown(
-                                    label="Label Condition Type",
-                                    choices=["pre", "post"],
-                                    value="pre",
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
                                     visible=False,
-                                    info="When to check labels (pre/post decision)"
+                                    info="When to check labels (pre/post/concurrent)"
                                 )
                                 
                                 label_condition_operator = gr.Dropdown(
@@ -711,6 +754,41 @@ class GovernanceFormBuilder:
                                 visible=False,
                                 info="Comma-separated list of labels"
                             )
+                        
+                        # MinTime condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                min_time_evaluation_mode = gr.Dropdown(
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
+                                    visible=False,
+                                    info="When to evaluate MinTime (pre/post/concurrent, optional)"
+                                )
+                                
+                                min_time_activity = gr.Dropdown(
+                                    label="Activity Type",
+                                    choices=["Activity", "InActivity"],
+                                    value="Activity",
+                                    visible=False,
+                                    info="Check for activity or inactivity"
+                                )
+                            
+                            with gr.Row():
+                                min_time_offset_value = gr.Number(
+                                    label="MinTime Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Time offset number (≥1, e.g., 7 for '7 days')"
+                                )
+                                
+                                min_time_offset_unit = gr.Dropdown(
+                                    label="MinTime Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the MinTime offset"
+                                )
                         
                         # Condition management buttons
                         with gr.Row():
@@ -844,12 +922,24 @@ class GovernanceFormBuilder:
                 )
             
             with gr.Row():
-                # Options for StringList and ElementList
+                # Options for StringList
                 phase_decision_options = gr.Textbox(
                     label="Phase Decision Options",
-                    placeholder="e.g., joe, george (for ElementList/StringList)",
+                    placeholder="e.g., option1, option2, option3 (for StringList)",
                     visible=False,
-                    info="Comma-separated options for StringList/ElementList decisions"
+                    info="Comma-separated custom options for StringList decisions"
+                )
+                
+                # Options for ElementList (Individual names)
+                phase_decision_options_element_list = gr.Dropdown(
+                    label="Phase Decision Options",
+                    choices=[],
+                    value=None,
+                    allow_custom_value=False,
+                    multiselect=True,
+                    visible=False,
+                    interactive=True,
+                    info="Select individual(s) for ElementList decisions"
                 )
                 
                 # Parameters (for voting policies)
@@ -900,6 +990,8 @@ class GovernanceFormBuilder:
                                     "ParticipantExclusion",
                                     "MinParticipants",
                                     "VetoRight",
+                                    "CheckCiCd",
+                                    "MinTime",
                                     "LabelCondition"
                                 ],
                                 value="",
@@ -988,15 +1080,33 @@ class GovernanceFormBuilder:
                                 info="Specific minimum decision date (optional, can be used with or without offset)"
                             )
                 
+                        # CheckCiCd condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                phase_check_ci_cd_evaluation_mode = gr.Dropdown(
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
+                                    visible=False,
+                                    info="When to evaluate CI/CD checks (pre/post/concurrent)"
+                                )
+                                
+                                phase_check_ci_cd_value = gr.Checkbox(
+                                    label="Check",
+                                    value=True,
+                                    visible=False,
+                                    info="Whether CI/CD checks must pass (true/false)"
+                                )
+                
                         # LabelCondition fields
                         with gr.Row():
                             with gr.Row():
                                 phase_label_condition_type = gr.Dropdown(
-                                    label="Label Condition Type",
-                                    choices=["pre", "post"],
-                                    value="pre",
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
                                     visible=False,
-                                    info="When to check labels (pre/post decision)"
+                                    info="When to check labels (pre/post/concurrent)"
                                 )
                                 
                                 phase_label_condition_operator = gr.Dropdown(
@@ -1013,6 +1123,41 @@ class GovernanceFormBuilder:
                                 visible=False,
                                 info="Comma-separated list of labels"
                             )
+                        
+                        # Phase MinTime condition fields
+                        with gr.Row():
+                            with gr.Row():
+                                phase_min_time_evaluation_mode = gr.Dropdown(
+                                    label="Evaluation Mode",
+                                    choices=["", "pre", "post", "concurrent"],
+                                    value="",
+                                    visible=False,
+                                    info="When to evaluate MinTime (pre/post/concurrent, optional)"
+                                )
+                                
+                                phase_min_time_activity = gr.Dropdown(
+                                    label="Activity Type",
+                                    choices=["Activity", "InActivity"],
+                                    value="Activity",
+                                    visible=False,
+                                    info="Check for activity or inactivity"
+                                )
+                            
+                            with gr.Row():
+                                phase_min_time_offset_value = gr.Number(
+                                    label="MinTime Offset Value",
+                                    value=None,
+                                    visible=False,
+                                    info="Time offset number (≥1, e.g., 7 for '7 days')"
+                                )
+                                
+                                phase_min_time_offset_unit = gr.Dropdown(
+                                    label="MinTime Offset Unit",
+                                    choices=["days", "weeks", "months", "years"],
+                                    value="days",
+                                    visible=False,
+                                    info="Time unit for the MinTime offset"
+                                )
                 
                         # Phase condition management buttons
                         with gr.Row():
@@ -1074,6 +1219,7 @@ class GovernanceFormBuilder:
             'communication_channel': communication_channel,
             'decision_type': decision_type,
             'decision_options': decision_options,
+            'decision_options_element_list': decision_options_element_list,
             'voting_ratio': voting_ratio,
             'default_decision': default_decision,
             'fallback_policy': fallback_policy,
@@ -1087,9 +1233,15 @@ class GovernanceFormBuilder:
             'min_decision_offset_value': min_decision_offset_value,
             'min_decision_offset_unit': min_decision_offset_unit,
             'min_decision_date': min_decision_date,
+            'check_ci_cd_evaluation_mode': check_ci_cd_evaluation_mode,
+            'check_ci_cd_value': check_ci_cd_value,
             'label_condition_type': label_condition_type,
             'label_condition_operator': label_condition_operator,
             'label_condition_labels': label_condition_labels,
+            'min_time_evaluation_mode': min_time_evaluation_mode,
+            'min_time_activity': min_time_activity,
+            'min_time_offset_value': min_time_offset_value,
+            'min_time_offset_unit': min_time_offset_unit,
             'add_condition_btn': add_condition_btn,
             'clear_conditions_btn': clear_conditions_btn,
             'added_conditions_list': added_conditions_list,
@@ -1110,6 +1262,7 @@ class GovernanceFormBuilder:
             'phase_communication_channel': phase_communication_channel,
             'phase_decision_type': phase_decision_type,
             'phase_decision_options': phase_decision_options,
+            'phase_decision_options_element_list': phase_decision_options_element_list,
             'phase_voting_ratio': phase_voting_ratio,
             'phase_default_decision': phase_default_decision,
             'phase_fallback_policy': phase_fallback_policy,
@@ -1124,9 +1277,15 @@ class GovernanceFormBuilder:
             'phase_min_decision_offset_value': phase_min_decision_offset_value,
             'phase_min_decision_offset_unit': phase_min_decision_offset_unit,
             'phase_min_decision_date': phase_min_decision_date,
+            'phase_check_ci_cd_evaluation_mode': phase_check_ci_cd_evaluation_mode,
+            'phase_check_ci_cd_value': phase_check_ci_cd_value,
             'phase_label_condition_type': phase_label_condition_type,
             'phase_label_condition_operator': phase_label_condition_operator,
             'phase_label_condition_labels': phase_label_condition_labels,
+            'phase_min_time_evaluation_mode': phase_min_time_evaluation_mode,
+            'phase_min_time_activity': phase_min_time_activity,
+            'phase_min_time_offset_value': phase_min_time_offset_value,
+            'phase_min_time_offset_unit': phase_min_time_offset_unit,
             'add_phase_condition_btn': add_phase_condition_btn,
             'clear_phase_conditions_btn': clear_phase_conditions_btn,
             'added_phase_conditions_list': added_phase_conditions_list,
@@ -1176,30 +1335,62 @@ class GovernanceFormBuilder:
     def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
         """Set up event handlers for form interactions"""
         
-        def add_profile(name, gender, race, current_profiles):
+        # Helper function to validate date format (DD/MM/YYYY)
+        def validate_date_format(date_string):
+            """Validate date string is in DD/MM/YYYY format. Returns (is_valid, error_message)"""
+            if not date_string or not date_string.strip():
+                return True, ""  # Date is optional
+            
+            import re
+            date_string = date_string.strip()
+            # Check format DD/MM/YYYY
+            pattern = r'^(\d{1,2})/(\d{1,2})/(\d{4})$'
+            match = re.match(pattern, date_string)
+            
+            if not match:
+                return False, "Date must be in DD/MM/YYYY format (e.g., 25/12/2024)"
+            
+            day, month, year = map(int, match.groups())
+            
+            # Validate day
+            if day < 1 or day > 31:
+                return False, "Day must be between 1 and 31"
+            
+            # Validate month
+            if month < 1 or month > 12:
+                return False, "Month must be between 1 and 12"
+            
+            # Validate year (reasonable range)
+            if year < 1900 or year > 2100:
+                return False, "Year must be between 1900 and 2100"
+            
+            return True, ""
+        
+        def add_profile(name, gender, race, language, current_profiles):
             """Add a new profile to the list"""
             if not name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
-                return current_profiles, error_message, "", "", "", None
+                return current_profiles, error_message, "", "", "", "", None
             
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name already exists\n\n{display_text}" if current_profiles else "❌ Error: Profile name already exists"
-                return current_profiles, error_message, "", "", "", None
+                return current_profiles, error_message, "", "", "", "", None
             
             # Validate that at least one attribute is provided
-            if not gender and not race:
+            if not gender and not race and not language:
                 display_text = self._format_profiles_display(current_profiles)
-                error_message = f"❌ Error: Profiles must have either a race or gender value\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have either a race or gender value"
-                return current_profiles, error_message, "", "", "", None
+                error_message = f"❌ Error: Profiles must have at least one attribute (gender, race, or language)\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have at least one attribute (gender, race, or language)"
+                return current_profiles, error_message, "", "", "", "", None
             
             # Create new profile
             new_profile = {
                 'name': name.strip(),
                 'gender': gender if gender else None,
-                'race': race if race else None
+                'race': race if race else None,
+                'language': language if language else None
             }
             
             updated_profiles = current_profiles + [new_profile]
@@ -1208,7 +1399,7 @@ class GovernanceFormBuilder:
             display_text = self._format_profiles_display(updated_profiles)
             success_message = f"✅ Profile '{new_profile['name']}' added successfully!\n\n{display_text}"
             
-            return updated_profiles, success_message, "", "", "", None  # Clear individual profile selection
+            return updated_profiles, success_message, "", "", "", "", None  # Clear individual profile selection
         
         def clear_profiles():
             """Clear all profiles"""
@@ -1531,6 +1722,18 @@ class GovernanceFormBuilder:
             """Clear all tasks"""
             return [], "No tasks added yet. Create tasks to define specific governance actions."
         
+        def update_task_action_dropdown(task_type):
+            """Update task action dropdown based on task type"""
+            if task_type == "Pull request":
+                action_choices = ["", "merge", "review"]
+                return gr.Dropdown(choices=action_choices, value="", visible=True)
+            elif task_type == "MemberLifecycle":
+                action_choices = ["", "onboard", "remove"]
+                return gr.Dropdown(choices=action_choices, value="", visible=True)
+            else:
+                # Empty type - hide action dropdown
+                return gr.Dropdown(choices=[""], value="", visible=False)
+        
         def update_task_parent_dropdown(current_activities):
             """Update task parent dropdown when activities change (tasks can only have activities as parents)"""
             parent_choices = [a['name'] for a in current_activities]
@@ -1612,8 +1815,12 @@ class GovernanceFormBuilder:
         
         def update_decision_options_visibility(decision_type):
             """Update visibility of decision options based on decision type"""
-            show_options = decision_type in ["StringList", "ElementList"]
-            return gr.Textbox(visible=show_options)
+            show_string_list = decision_type == "StringList"
+            show_element_list = decision_type == "ElementList"
+            return (
+                gr.update(visible=show_string_list),
+                gr.update(visible=show_element_list)
+            )
         
         def update_condition_visibility(condition_type):
             """Update visibility of condition fields based on condition type"""
@@ -1622,7 +1829,9 @@ class GovernanceFormBuilder:
             show_min_participants = condition_type == "MinParticipants"
             show_deadline = condition_type == "Deadline"
             show_min_decision = condition_type == "MinDecisionTime"
+            show_check_ci_cd = condition_type == "CheckCiCd"
             show_label = condition_type == "LabelCondition"
+            show_min_time = condition_type == "MinTime"
             
             return [
                 gr.Dropdown(visible=show_veto),       # veto_participants
@@ -1634,9 +1843,15 @@ class GovernanceFormBuilder:
                 gr.Number(visible=show_min_decision), # min_decision_offset_value
                 gr.Dropdown(visible=show_min_decision), # min_decision_offset_unit
                 gr.Textbox(visible=show_min_decision), # min_decision_date
+                gr.Dropdown(visible=show_check_ci_cd),     # check_ci_cd_evaluation_mode
+                gr.Checkbox(visible=show_check_ci_cd),     # check_ci_cd_value
                 gr.Dropdown(visible=show_label),     # label_condition_type
                 gr.Dropdown(visible=show_label),     # label_condition_operator
-                gr.Textbox(visible=show_label)       # label_condition_labels
+                gr.Textbox(visible=show_label),      # label_condition_labels
+                gr.Dropdown(visible=show_min_time),  # min_time_evaluation_mode
+                gr.Dropdown(visible=show_min_time),  # min_time_activity
+                gr.Number(visible=show_min_time),    # min_time_offset_value
+                gr.Dropdown(visible=show_min_time)   # min_time_offset_unit
             ]
         
         def add_policy(name, policy_type, scope, participants, decision_type, decision_options, voting_ratio, 
@@ -1671,6 +1886,16 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Policy name '{name.strip()}' already exists\n\n{display_text}"
                 return current_policies, error_message
             
+            # Handle decision_options: convert list to string for ElementList, keep string for StringList
+            final_decision_options = None
+            if decision_type in ["StringList", "ElementList"] and decision_options:
+                if decision_type == "ElementList" and isinstance(decision_options, list):
+                    # Convert list from multiselect dropdown to comma-separated string
+                    final_decision_options = ",".join(decision_options) if decision_options else None
+                else:
+                    # StringList: use as-is (already a string from textbox)
+                    final_decision_options = decision_options
+            
             # Create new policy
             new_policy = {
                 'name': name.strip(),
@@ -1678,7 +1903,7 @@ class GovernanceFormBuilder:
                 'scope': scope if scope else None,
                 'participants': participants if participants else None,
                 'decision_type': decision_type,
-                'decision_options': decision_options if decision_type in ["StringList", "ElementList"] and decision_options else None,
+                'decision_options': final_decision_options,
                 'voting_ratio': voting_ratio if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] else None,
                 'default_decision': default_decision if policy_type == "LeaderDrivenPolicy" else None,
                 'fallback_policy': fallback_policy if policy_type in ["ConsensusPolicy", "LazyConsensusPolicy"] else None,
@@ -1717,7 +1942,9 @@ class GovernanceFormBuilder:
         def add_condition(condition_type, veto_participants, excluded_participants, min_participants,
                         deadline_offset_value, deadline_offset_unit, deadline_date,
                         min_decision_offset_value, min_decision_offset_unit, min_decision_date,
+                        check_ci_cd_evaluation_mode, check_ci_cd_value,
                         label_condition_type, label_condition_operator, label_condition_labels,
+                        min_time_evaluation_mode, min_time_activity, min_time_offset_value, min_time_offset_unit,
                         current_conditions_text):
             """Add a condition to the current policy"""
             
@@ -1752,9 +1979,15 @@ class GovernanceFormBuilder:
                     None,  # min_decision_offset_value
                     "days",  # min_decision_offset_unit
                     "",  # min_decision_date
-                    "pre",  # label_condition_type
+                    "",  # check_ci_cd_evaluation_mode
+                    True,  # check_ci_cd_value
+                    "",  # label_condition_type
                     "",  # label_condition_operator
-                    ""  # label_condition_labels
+                    "",  # label_condition_labels
+                    "",  # min_time_evaluation_mode
+                    "Activity",  # min_time_activity
+                    None,  # min_time_offset_value
+                    "days"  # min_time_offset_unit
                 )
             
             if not condition_type:
@@ -1773,6 +2006,10 @@ class GovernanceFormBuilder:
                     existing_types.append('MinParticipants')
                 elif condition.startswith('VetoRight'):
                     existing_types.append('VetoRight')
+                elif condition.startswith('MinTime'):
+                    existing_types.append('MinTime')
+                elif condition.startswith('CheckCiCd'):
+                    existing_types.append('CheckCiCd')
                 # LabelCondition can have multiple entries, so we don't track it
             
             if condition_type != "LabelCondition" and condition_type in existing_types:
@@ -1807,6 +2044,9 @@ class GovernanceFormBuilder:
                         return return_error("Deadline offset value must be ≥1")
                     parts.append(f"{deadline_offset_value} {deadline_offset_unit}")
                 if deadline_date and deadline_date.strip():
+                    is_valid, error_msg = validate_date_format(deadline_date)
+                    if not is_valid:
+                        return return_error(f"Deadline date error: {error_msg}")
                     parts.append(deadline_date.strip())
                 if not parts:
                     return return_error("Please specify deadline offset or date")
@@ -1819,10 +2059,31 @@ class GovernanceFormBuilder:
                         return return_error("Minimum decision time offset value must be ≥1")
                     parts.append(f"{min_decision_offset_value} {min_decision_offset_unit}")
                 if min_decision_date and min_decision_date.strip():
+                    is_valid, error_msg = validate_date_format(min_decision_date)
+                    if not is_valid:
+                        return return_error(f"Minimum decision time date error: {error_msg}")
                     parts.append(min_decision_date.strip())
                 if not parts:
                     return return_error("Please specify minimum decision time offset or date")
                 condition_str = f"MinDecisionTime: {', '.join(parts)}"
+                
+            elif condition_type == "CheckCiCd":
+                # CheckCiCd: evaluation_mode (optional) and boolean value (true/false)
+                evaluation_part = f"{check_ci_cd_evaluation_mode} " if check_ci_cd_evaluation_mode and check_ci_cd_evaluation_mode.strip() else ""
+                check_value = "true" if check_ci_cd_value else "false"
+                condition_str = f"CheckCiCd {evaluation_part}: {check_value}"
+                
+            elif condition_type == "MinTime":
+                # MinTime: evaluation_mode (optional), activity (required), offset value and unit (required)
+                if not min_time_activity or not min_time_activity.strip():
+                    return return_error("Please specify activity type (Activity/InActivity)")
+                if not min_time_offset_value or min_time_offset_value < 1:
+                    return return_error("Please specify MinTime offset value (≥1)")
+                if not min_time_offset_unit:
+                    return return_error("Please specify MinTime offset unit")
+                # Build with optional evaluation mode
+                evaluation_part = f"{min_time_evaluation_mode} " if min_time_evaluation_mode and min_time_evaluation_mode.strip() else ""
+                condition_str = f"MinTime {evaluation_part}of {min_time_activity}: {min_time_offset_value} {min_time_offset_unit}".rstrip()
                 
             elif condition_type == "LabelCondition":
                 if not label_condition_labels:
@@ -1831,9 +2092,10 @@ class GovernanceFormBuilder:
                 if not labels:
                     return return_error("Please specify valid labels")
                 
-                type_part = label_condition_type if label_condition_type else "pre"
-                operator_part = f" {label_condition_operator}" if label_condition_operator else ""
-                condition_str = f"LabelCondition {type_part}{operator_part}: {', '.join(labels)}"
+                # Build the condition string with optional evaluation mode
+                evaluation_part = f"{label_condition_type} " if label_condition_type and label_condition_type.strip() else ""
+                operator_part = f"{label_condition_operator} " if label_condition_operator else ""
+                condition_str = f"LabelCondition {evaluation_part}{operator_part}: {', '.join(labels)}".rstrip()
             
             if condition_str:
                 # Add to existing conditions and format success message
@@ -1852,9 +2114,15 @@ class GovernanceFormBuilder:
                     None,  # min_decision_offset_value
                     "days",  # min_decision_offset_unit
                     "",  # min_decision_date
-                    "pre",  # label_condition_type
+                    "",  # check_ci_cd_evaluation_mode
+                    True,  # check_ci_cd_value
+                    "",  # label_condition_type
                     "",  # label_condition_operator
-                    ""  # label_condition_labels
+                    "",  # label_condition_labels
+                    "",  # min_time_evaluation_mode
+                    "Activity",  # min_time_activity
+                    None,  # min_time_offset_value
+                    "days"  # min_time_offset_unit
                 )
             
             return return_error("Unable to add condition")
@@ -1866,8 +2134,10 @@ class GovernanceFormBuilder:
         def add_phase_condition(phase_condition_type, phase_veto_participants, phase_excluded_participants, 
                             phase_min_participants, phase_deadline_offset_value, phase_deadline_offset_unit, 
                             phase_deadline_date, phase_min_decision_offset_value, phase_min_decision_offset_unit, 
-                            phase_min_decision_date, phase_label_condition_type, phase_label_condition_operator, 
-                            phase_label_condition_labels, current_phase_conditions_text):
+                            phase_min_decision_date, phase_check_ci_cd_evaluation_mode, phase_check_ci_cd_value,
+                            phase_label_condition_type, phase_label_condition_operator, 
+                            phase_label_condition_labels, phase_min_time_evaluation_mode, phase_min_time_activity,
+                            phase_min_time_offset_value, phase_min_time_offset_unit, current_phase_conditions_text):
             """Add a condition to the current phase"""
             
             # Parse existing conditions from the display text (ignore error messages and success messages)
@@ -1901,9 +2171,15 @@ class GovernanceFormBuilder:
                     None,  # phase_min_decision_offset_value
                     "days",  # phase_min_decision_offset_unit
                     "",  # phase_min_decision_date
-                    "pre",  # phase_label_condition_type
+                    "",  # phase_check_ci_cd_evaluation_mode
+                    True,  # phase_check_ci_cd_value
+                    "",  # phase_label_condition_type
                     "",  # phase_label_condition_operator
-                    ""  # phase_label_condition_labels
+                    "",  # phase_label_condition_labels
+                    "",  # phase_min_time_evaluation_mode
+                    "Activity",  # phase_min_time_activity
+                    None,  # phase_min_time_offset_value
+                    "days"  # phase_min_time_offset_unit
                 )
             
             if not phase_condition_type:
@@ -1922,6 +2198,10 @@ class GovernanceFormBuilder:
                     existing_types.append('MinParticipants')
                 elif condition.startswith('VetoRight'):
                     existing_types.append('VetoRight')
+                elif condition.startswith('MinTime'):
+                    existing_types.append('MinTime')
+                elif condition.startswith('CheckCiCd'):
+                    existing_types.append('CheckCiCd')
                 # LabelCondition can have multiple entries, so we don't track it
             
             if phase_condition_type != "LabelCondition" and phase_condition_type in existing_types:
@@ -1954,6 +2234,9 @@ class GovernanceFormBuilder:
                         return return_error("Deadline offset value must be ≥1")
                     parts.append(f"{phase_deadline_offset_value} {phase_deadline_offset_unit}")
                 if phase_deadline_date and phase_deadline_date.strip():
+                    is_valid, error_msg = validate_date_format(phase_deadline_date)
+                    if not is_valid:
+                        return return_error(f"Deadline date error: {error_msg}")
                     parts.append(phase_deadline_date.strip())
                 if not parts:
                     return return_error("Please specify deadline offset or date")
@@ -1966,10 +2249,31 @@ class GovernanceFormBuilder:
                         return return_error("Minimum decision time offset value must be ≥1")
                     parts.append(f"{phase_min_decision_offset_value} {phase_min_decision_offset_unit}")
                 if phase_min_decision_date and phase_min_decision_date.strip():
+                    is_valid, error_msg = validate_date_format(phase_min_decision_date)
+                    if not is_valid:
+                        return return_error(f"Minimum decision time date error: {error_msg}")
                     parts.append(phase_min_decision_date.strip())
                 if not parts:
                     return return_error("Please specify minimum decision time offset or date")
                 condition_str = f"MinDecisionTime: {', '.join(parts)}"
+                
+            elif phase_condition_type == "CheckCiCd":
+                # CheckCiCd: evaluation_mode (optional) and boolean value (true/false)
+                evaluation_part = f"{phase_check_ci_cd_evaluation_mode} " if phase_check_ci_cd_evaluation_mode and phase_check_ci_cd_evaluation_mode.strip() else ""
+                check_value = "true" if phase_check_ci_cd_value else "false"
+                condition_str = f"CheckCiCd {evaluation_part}: {check_value}"
+                
+            elif phase_condition_type == "MinTime":
+                # MinTime: evaluation_mode (optional), activity (required), offset value and unit (required)
+                if not phase_min_time_activity or not phase_min_time_activity.strip():
+                    return return_error("Please specify activity type (Activity/InActivity)")
+                if not phase_min_time_offset_value or phase_min_time_offset_value < 1:
+                    return return_error("Please specify MinTime offset value (≥1)")
+                if not phase_min_time_offset_unit:
+                    return return_error("Please specify MinTime offset unit")
+                # Build with optional evaluation mode
+                evaluation_part = f"{phase_min_time_evaluation_mode} " if phase_min_time_evaluation_mode and phase_min_time_evaluation_mode.strip() else ""
+                condition_str = f"MinTime {evaluation_part}of {phase_min_time_activity}: {phase_min_time_offset_value} {phase_min_time_offset_unit}".rstrip()
                 
             elif phase_condition_type == "LabelCondition":
                 if not phase_label_condition_labels:
@@ -1978,9 +2282,10 @@ class GovernanceFormBuilder:
                 if not labels:
                     return return_error("Please specify valid labels")
                 
-                type_part = phase_label_condition_type if phase_label_condition_type else "pre"
-                operator_part = f" {phase_label_condition_operator}" if phase_label_condition_operator else""
-                condition_str = f"LabelCondition {type_part}{operator_part}: {', '.join(labels)}"
+                # Build the condition string with optional evaluation mode
+                evaluation_part = f"{phase_label_condition_type} " if phase_label_condition_type and phase_label_condition_type.strip() else ""
+                operator_part = f"{phase_label_condition_operator} " if phase_label_condition_operator else ""
+                condition_str = f"LabelCondition {evaluation_part}{operator_part}: {', '.join(labels)}".rstrip()
             
             if condition_str:
                 # Add to existing conditions and format success message
@@ -1999,9 +2304,15 @@ class GovernanceFormBuilder:
                     None,  # phase_min_decision_offset_value
                     "days",  # phase_min_decision_offset_unit
                     "",  # phase_min_decision_date
-                    "pre",  # phase_label_condition_type
+                    "",  # phase_check_ci_cd_evaluation_mode
+                    True,  # phase_check_ci_cd_value
+                    "",  # phase_label_condition_type
                     "",  # phase_label_condition_operator
-                    ""  # phase_label_condition_labels
+                    "",  # phase_label_condition_labels
+                    "",  # phase_min_time_evaluation_mode
+                    "Activity",  # phase_min_time_activity
+                    None,  # phase_min_time_offset_value
+                    "days"  # phase_min_time_offset_unit
                 )
             
             return return_error("Unable to add condition")
@@ -2017,7 +2328,9 @@ class GovernanceFormBuilder:
             show_min_participants = phase_condition_type == "MinParticipants"
             show_deadline = phase_condition_type == "Deadline"
             show_min_decision = phase_condition_type == "MinDecisionTime"
+            show_check_ci_cd = phase_condition_type == "CheckCiCd"
             show_label = phase_condition_type == "LabelCondition"
+            show_min_time = phase_condition_type == "MinTime"
             
             return [
                 gr.Dropdown(visible=show_veto),       # phase_veto_participants
@@ -2029,9 +2342,15 @@ class GovernanceFormBuilder:
                 gr.Number(visible=show_min_decision), # phase_min_decision_offset_value
                 gr.Dropdown(visible=show_min_decision), # phase_min_decision_offset_unit
                 gr.Textbox(visible=show_min_decision), # phase_min_decision_date
+                gr.Dropdown(visible=show_check_ci_cd),     # phase_check_ci_cd_evaluation_mode
+                gr.Checkbox(visible=show_check_ci_cd),     # phase_check_ci_cd_value
                 gr.Dropdown(visible=show_label),     # phase_label_condition_type
                 gr.Dropdown(visible=show_label),     # phase_label_condition_operator
-                gr.Textbox(visible=show_label)       # phase_label_condition_labels
+                gr.Textbox(visible=show_label),      # phase_label_condition_labels
+                gr.Dropdown(visible=show_min_time),  # phase_min_time_evaluation_mode
+                gr.Dropdown(visible=show_min_time),  # phase_min_time_activity
+                gr.Number(visible=show_min_time),    # phase_min_time_offset_value
+                gr.Dropdown(visible=show_min_time)   # phase_min_time_offset_unit
             ]
         
         # Composed Policy Functions
@@ -2107,9 +2426,15 @@ class GovernanceFormBuilder:
                 details.append(f"fallback: {phase_fallback_policy}")
 
             # Show decision options if specified and not BooleanDecision
-            if phase_decision_options and phase_decision_options.strip() and phase_decision_type != "BooleanDecision":
-                options_clean = phase_decision_options.strip()
-                details.append(f"options: {options_clean}")
+            if phase_decision_options and phase_decision_type != "BooleanDecision":
+                # Handle both string (StringList) and list (ElementList) inputs
+                if isinstance(phase_decision_options, list):
+                    options_clean = ",".join(phase_decision_options) if phase_decision_options else ""
+                else:
+                    options_clean = phase_decision_options.strip() if isinstance(phase_decision_options, str) else str(phase_decision_options)
+                
+                if options_clean:  # Only add if not empty after processing
+                    details.append(f"options: {options_clean}")
 
             # Optional communication channel detail
             if phase_communication_channel and phase_communication_channel.strip():
@@ -2415,6 +2740,12 @@ class GovernanceFormBuilder:
             outputs=[scope_components['task_parent']]
         )
         
+        # Update task action dropdown when task type changes
+        scope_components['task_type'].change(
+            fn=update_task_action_dropdown,
+            inputs=[scope_components['task_type']],
+            outputs=[scope_components['task_action']]
+        )
         # Profile management handlers
         participant_components['add_profile_btn'].click(
             fn=add_profile,
@@ -2422,6 +2753,7 @@ class GovernanceFormBuilder:
                 participant_components['profile_name'],
                 participant_components['profile_gender'],
                 participant_components['profile_race'],
+                participant_components['profile_language'],
                 participant_components['profiles_data']
             ],
             outputs=[
@@ -2430,6 +2762,7 @@ class GovernanceFormBuilder:
                 participant_components['profile_name'],        # Clear name field
                 participant_components['profile_gender'],      # Clear gender field
                 participant_components['profile_race'],        # Clear race field
+                participant_components['profile_language'],    # Clear language field
                 participant_components['individual_profile']   # Update individual profile dropdown
             ]
         )
@@ -2564,6 +2897,21 @@ class GovernanceFormBuilder:
             outputs=[participant_components['agent_role']]
         )
         
+        # Update ElementList dropdowns when individuals change (for both single and phase policies)
+        def update_element_list_dropdowns(individuals_data):
+            """Update ElementList dropdowns when individuals change"""
+            individual_names = [i['name'] for i in individuals_data] if individuals_data else []
+            return (
+                gr.Dropdown(choices=individual_names, value=None, interactive=True),  # decision_options_element_list
+                gr.Dropdown(choices=individual_names, value=None, interactive=True)   # phase_decision_options_element_list
+            )
+        
+        participant_components['individuals_data'].change(
+            fn=update_element_list_dropdowns,
+            inputs=[participant_components['individuals_data']],
+            outputs=[policy_components['decision_options_element_list'], policy_components['phase_decision_options_element_list']]
+        )
+        
         # Update policy scope dropdown when scope definitions change
         for scope_component in [scope_components['projects_data'], scope_components['activities_data'], scope_components['tasks_data']]:
             scope_component.change(
@@ -2610,7 +2958,7 @@ class GovernanceFormBuilder:
         policy_components['decision_type'].change(
             fn=update_decision_options_visibility,
             inputs=[policy_components['decision_type']],
-            outputs=[policy_components['decision_options']]
+            outputs=[policy_components['decision_options'], policy_components['decision_options_element_list']]
         )
         
         # Update condition field visibility when condition type changes
@@ -2627,9 +2975,15 @@ class GovernanceFormBuilder:
                 policy_components['min_decision_offset_value'],
                 policy_components['min_decision_offset_unit'],
                 policy_components['min_decision_date'],
+                policy_components['check_ci_cd_evaluation_mode'],
+                policy_components['check_ci_cd_value'],
                 policy_components['label_condition_type'],
                 policy_components['label_condition_operator'],
-                policy_components['label_condition_labels']
+                policy_components['label_condition_labels'],
+                policy_components['min_time_evaluation_mode'],
+                policy_components['min_time_activity'],
+                policy_components['min_time_offset_value'],
+                policy_components['min_time_offset_unit']
             ]
         )
         
@@ -2715,9 +3069,15 @@ class GovernanceFormBuilder:
                 policy_components['min_decision_offset_value'],
                 policy_components['min_decision_offset_unit'],
                 policy_components['min_decision_date'],
+                policy_components['check_ci_cd_evaluation_mode'],
+                policy_components['check_ci_cd_value'],
                 policy_components['label_condition_type'],
                 policy_components['label_condition_operator'],
                 policy_components['label_condition_labels'],
+                policy_components['min_time_evaluation_mode'],
+                policy_components['min_time_activity'],
+                policy_components['min_time_offset_value'],
+                policy_components['min_time_offset_unit'],
                 policy_components['added_conditions_list']
             ],
             outputs=[
@@ -2732,9 +3092,15 @@ class GovernanceFormBuilder:
                 policy_components['min_decision_offset_value'], # reset number
                 policy_components['min_decision_offset_unit'],  # reset dropdown
                 policy_components['min_decision_date'],         # reset textbox
+                policy_components['check_ci_cd_evaluation_mode'], # reset dropdown
+                policy_components['check_ci_cd_value'],         # reset checkbox
                 policy_components['label_condition_type'],      # reset dropdown
                 policy_components['label_condition_operator'],  # reset textbox
-                policy_components['label_condition_labels']     # reset textbox
+                policy_components['label_condition_labels'],    # reset textbox
+                policy_components['min_time_evaluation_mode'],  # reset dropdown
+                policy_components['min_time_activity'],         # reset dropdown
+                policy_components['min_time_offset_value'],     # reset number
+                policy_components['min_time_offset_unit']       # reset dropdown
             ]
         )
         
@@ -2759,9 +3125,15 @@ class GovernanceFormBuilder:
                 policy_components['phase_min_decision_offset_value'],
                 policy_components['phase_min_decision_offset_unit'],
                 policy_components['phase_min_decision_date'],
+                policy_components['phase_check_ci_cd_evaluation_mode'],
+                policy_components['phase_check_ci_cd_value'],
                 policy_components['phase_label_condition_type'],
                 policy_components['phase_label_condition_operator'],
-                policy_components['phase_label_condition_labels']
+                policy_components['phase_label_condition_labels'],
+                policy_components['phase_min_time_evaluation_mode'],
+                policy_components['phase_min_time_activity'],
+                policy_components['phase_min_time_offset_value'],
+                policy_components['phase_min_time_offset_unit']
             ]
         )
         
@@ -2778,9 +3150,15 @@ class GovernanceFormBuilder:
                 policy_components['phase_min_decision_offset_value'],
                 policy_components['phase_min_decision_offset_unit'],
                 policy_components['phase_min_decision_date'],
+                policy_components['phase_check_ci_cd_evaluation_mode'],
+                policy_components['phase_check_ci_cd_value'],
                 policy_components['phase_label_condition_type'],
                 policy_components['phase_label_condition_operator'],
                 policy_components['phase_label_condition_labels'],
+                policy_components['phase_min_time_evaluation_mode'],
+                policy_components['phase_min_time_activity'],
+                policy_components['phase_min_time_offset_value'],
+                policy_components['phase_min_time_offset_unit'],
                 policy_components['added_phase_conditions_list']
             ],
             outputs=[
@@ -2795,9 +3173,15 @@ class GovernanceFormBuilder:
                 policy_components['phase_min_decision_offset_value'], # reset number
                 policy_components['phase_min_decision_offset_unit'],  # reset dropdown
                 policy_components['phase_min_decision_date'],         # reset textbox
+                policy_components['phase_check_ci_cd_evaluation_mode'], # reset dropdown
+                policy_components['phase_check_ci_cd_value'],         # reset checkbox
                 policy_components['phase_label_condition_type'],      # reset dropdown
                 policy_components['phase_label_condition_operator'],  # reset textbox
-                policy_components['phase_label_condition_labels']     # reset textbox
+                policy_components['phase_label_condition_labels'],    # reset textbox
+                policy_components['phase_min_time_evaluation_mode'],  # reset dropdown
+                policy_components['phase_min_time_activity'],         # reset dropdown
+                policy_components['phase_min_time_offset_value'],     # reset number
+                policy_components['phase_min_time_offset_unit']       # reset dropdown
             ]
         )
         
@@ -2932,7 +3316,7 @@ class GovernanceFormBuilder:
         policy_components['phase_decision_type'].change(
             fn=update_decision_options_visibility,
             inputs=[policy_components['phase_decision_type']],
-            outputs=[policy_components['phase_decision_options']]
+            outputs=[policy_components['phase_decision_options'], policy_components['phase_decision_options_element_list']]
         )
         
         # Update composed policy scope dropdown when scope definitions change
@@ -3161,6 +3545,8 @@ class GovernanceFormBuilder:
                     participants_section.append(f"            gender : {profile['gender']}")
                 if profile.get('race'):
                     participants_section.append(f"            race : {profile['race']}")
+                if profile.get('language'):
+                    participants_section.append(f"            language : {profile['language']}")
                 participants_section.append("        }")
         
         # Add Roles section
@@ -3359,8 +3745,10 @@ class GovernanceFormBuilder:
                 # Parameters (must come after conditions)
                 parameters = []
                 if policy_type in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
-                    formatted_ratio = self._format_float(policy['voting_ratio'])
-                    parameters.append(f"        ratio: {formatted_ratio}")
+                    # Skip ratio if it's the default value of 0.5
+                    if policy['voting_ratio'] != 0.5:
+                        formatted_ratio = self._format_float(policy['voting_ratio'])
+                        parameters.append(f"        ratio: {formatted_ratio}")
                 
                 # Add default decision for LeaderDrivenPolicy
                 if policy_type == "LeaderDrivenPolicy" and policy.get('default_decision'):
@@ -3509,8 +3897,10 @@ class GovernanceFormBuilder:
                             # Add parameters section if any parameters exist
                             parameters = []
                             if ratio:
-                                formatted_ratio = self._format_float(ratio)
-                                parameters.append(f"                ratio: {formatted_ratio}")
+                                # Skip ratio if it's the default value of 0.5
+                                if ratio != 0.5:
+                                    formatted_ratio = self._format_float(ratio)
+                                    parameters.append(f"                ratio: {formatted_ratio}")
                             if default_decision:
                                 parameters.append(f"                default: {default_decision}")
                             if fallback_policy:
@@ -3710,6 +4100,8 @@ class GovernanceFormBuilder:
                 attributes.append(f"👤 gender: {profile['gender']}")
             if profile.get('race'):
                 attributes.append(f"🌍 race: {profile['race']}")
+            if profile.get('language'):
+                attributes.append(f"🌐 language: {profile['language']}")
             
             if attributes:
                 line += f" → {', '.join(attributes)}"
@@ -3855,7 +4247,9 @@ class GovernanceFormBuilder:
             
             # Add type-specific parameters
             if policy['type'] in ["MajorityPolicy", "AbsoluteMajorityPolicy", "VotingPolicy"] and policy.get('voting_ratio'):
-                details.append(f"📊 ratio: {policy['voting_ratio']}")
+                # Skip displaying ratio if it's the default value of 0.5
+                if policy['voting_ratio'] != 0.5:
+                    details.append(f"📊 ratio: {policy['voting_ratio']}")
             if policy['type'] == "LeaderDrivenPolicy" and policy.get('default_decision'):
                 details.append(f"⚡ default: {policy['default_decision']}")
             if policy['type'] == "ConsensusPolicy" and policy.get('fallback_policy'):

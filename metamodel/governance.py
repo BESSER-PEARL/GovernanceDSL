@@ -145,10 +145,11 @@ class Participant(Element):
         return hash(self.name)
     
 class Profile(Element):
-    def __init__(self, name: str, gender: str, race: str):
+    def __init__(self, name: str, gender: str, race: str, language: str):
         self.name = name
         self.gender = gender
         self.race = race
+        self.language = language
 
     @property
     def name(self) -> str:
@@ -173,6 +174,14 @@ class Profile(Element):
     @race.setter
     def race(self, race: str):
         self.__race = race
+    
+    @property
+    def language(self) -> str:
+        return self.__language
+    
+    @language.setter
+    def language(self, language: str):
+        self.__language = language
 
 class Individual(Participant):
     def __init__(self, name: str, vote_value: float = 1.0):

@@ -2,11 +2,11 @@
 context VotingPolicy inv ratioValue:
   self.ratio >= 0.0 and self.ratio <= 1.0
 context Participant inv voteValue:
-  self.voteValue >= 0.0 and self.voteValue <= 2.0
+  self.vote_value >= 0.0 and self.vote_value <= 2.0
 context Agent inv agentAttributes:
   self.confidence >= 0.0 and self.confidence <= 1.0 and
-  self.autonomyLevel >= 0.0 and self.autonomyLevel <= 1.0 and
-  self.explainability >= 0.0 and self.explainability <= 1.0 and
+  self.autonomy_level >= 0.0 and self.autonomy_level <= 1.0 and
+  self.explainability >= 0.0 and self.explainability <= 1.0
 -- ParticipantExclusion predefined roles
 Enum PredefinedRole:
     PRAuthor 

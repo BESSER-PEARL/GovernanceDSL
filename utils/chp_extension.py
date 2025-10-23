@@ -1,10 +1,17 @@
+from datetime import timedelta
 from enum import Enum
 from besser.BUML.metamodel.structural import Element
 from metamodel.governance import Task, StatusEnum, Project, Condition, EvaluationMode
+from utils.exceptions import InvalidTimeConditionException
 
-class ActionEnum(Enum):
+class PatchAction(Enum):
     MERGE = 1
     REVIEW = 2
+    ALL = 3
+
+class MemberAction(Enum):
+    ONBOARD = 1
+    REMOVE = 2
     ALL = 3
 
 class Label(Element):
@@ -19,8 +26,8 @@ class Label(Element):
     def name(self, name: str):
         self.__name = name
 
-class GitHubElement(Element):
-    """Base class for GitHub elements like PullRequest and Issue"""
+class CHPElement(Element):
+    """Base class for code-hosting platform elements like PullRequest and Issue"""
     def __init__(self, name: str, labels: set[Label] = None):
         self.name = name
         self.labels = labels
@@ -41,18 +48,18 @@ class GitHubElement(Element):
     def labels(self, labels: set[Label]):
         self.__labels = labels
 
-class PullRequest(GitHubElement):
-    """Represents a Pull Request in GitHub"""
+class PullRequest(CHPElement):
+    """Represents a Pull Request in code-hosting platforms"""
     def __init__(self, name: str, labels: set[Label] = None):
         super().__init__(name, labels)
 
-class Issue(GitHubElement):
-    """Represents an Issue in GitHub"""
+class Issue(CHPElement):
+    """Represents an Issue in code-hosting platforms"""
     def __init__(self, name: str, labels: set[Label] = None):
         super().__init__(name, labels)
 
 class Repository(Project):
-    """Represents a GitHub Repository"""
+    """Represents a code-hosting platform Repository"""
     def __init__(self, name: str, status: StatusEnum, repo_id: str):
         super().__init__(name, status)
         self.repo_id = repo_id
@@ -71,43 +78,57 @@ class Repository(Project):
     def repo_id(self, repo_id: str):
         self.__repo_id = repo_id
 
+class MemberLifecycle(Task):
+    """Represents the lifecycle of a member in a code-hosting platform"""
+    def __init__(self, name: str, status: StatusEnum, action: MemberAction):
+        super().__init__(name, status)
+        self.action = action
+    
+    @property
+    def action(self) -> MemberAction:
+        return self.__action
+
+    @action.setter
+    def action(self, action: MemberAction):
+        self.__action = action
+
 class Patch(Task):
-    """Represents an action (patch) that can be performed on a GitHub element"""
-    def __init__(self, name: str, status: StatusEnum, action: ActionEnum, element: GitHubElement = None):
+    """Represents an action (patch) that can be performed on a CHP element"""
+    def __init__(self, name: str, status: StatusEnum, action: PatchAction, element: CHPElement = None):
         super().__init__(name, status)
         self.action = action
         self.element = element
     
     @property
-    def action(self):
+    def action(self) -> PatchAction:
         return self.__action
     
     @action.setter
-    def action(self, action: ActionEnum):
+    def action(self, action: PatchAction):
         self.__action = action
     
     @property
-    def element(self):
+    def element(self) -> CHPElement:
         return self.__element
     
     @element.setter
-    def element(self, element: GitHubElement):
+    def element(self, element: CHPElement):
         self.__element = element
 
-class PassedTests(Condition):
-    """Represents the condition of passed tests for a GitHub element"""
+class CheckCiCd(Condition):
+    """Represents the condition of check CI/CD for a CHP element"""
     def __init__(self, name: str, evaluation_mode: EvaluationMode):
         super().__init__(name, evaluation_mode)
 
 class LabelCondition(Condition):
-    """Represents a condition based on labels for a GitHub element"""
+    """Represents a condition based on labels for a CHP element"""
     def __init__(self, name: str, evaluation_mode: EvaluationMode, labels: set[Label], inclusion: bool = True):
         super().__init__(name, evaluation_mode)
         self.labels = labels
         self.inclusion = inclusion
     
     @property
-    def labels(self):
+    def labels(self) -> set[Label]:
         return self.__labels
     
     @labels.setter
@@ -115,9 +136,34 @@ class LabelCondition(Condition):
         self.__labels = labels
 
     @property
-    def inclusion(self):
+    def inclusion(self) -> bool:
         return self.__inclusion
     
     @inclusion.setter
     def inclusion(self, inclusion: bool):
         self.__inclusion = inclusion
+
+class MinTime(Condition):
+    """Represents the condition of minimum time of (in)activity"""
+    def __init__(self, name: str, evaluation_mode: EvaluationMode, activity: bool, offset: timedelta):
+        super().__init__(name, evaluation_mode)
+        self.activity = activity
+        self.offset = offset
+    
+    @property
+    def activity(self) -> bool:
+        return self.__activity
+    
+    @activity.setter
+    def activity(self, activity: bool):
+        self.__activity = activity
+    
+    @property
+    def offset(self) -> timedelta:
+        return self.__offset
+    
+    @offset.setter
+    def offset(self, offset: timedelta):
+        if offset is None:
+            raise InvalidTimeConditionException(self.name)
+        self.__offset = offset

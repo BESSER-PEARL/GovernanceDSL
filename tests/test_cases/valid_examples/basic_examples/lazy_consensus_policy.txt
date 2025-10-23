@@ -1,10 +1,17 @@
 Scopes: 
     Projects :
-        testProject from GitHub : owner/repo
+        testProject from GitHub : owner/repo {
+            Activities: myAct {
+                Tasks : 
+                    mTask : MemberLifecycle {
+                        Action : onboard
+                    }
+            }
+        }
 Participants:
     Roles : maintainer
 LazyConsensusPolicy testPolicy {
-    Scope: testProject
+    Scope: mTask
     DecisionType as BooleanDecision
     Participant list : maintainer
     Parameters :

@@ -27,7 +27,7 @@ This will start a local Gradio server at `http://localhost:7860`
 
 The form builder is also available online (hosted on GitHub Pages using [Gradio Lite](https://www.gradio.app/4.44.1/guides/gradio-lite)):
 
-**[Governance DSL Form Builder - Online](https://besser-pearl.github.io/governanceDSL/)**
+**[Governance DSL Form Builder - Online](https://besser-pearl.github.io/GovernanceDSL/)**
 
 The online version runs entirely in your browser using WebAssembly (Pyodide), with no backend server required.
 

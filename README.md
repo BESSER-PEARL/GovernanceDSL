@@ -6,11 +6,13 @@ This repository contains the definition of a domain-specific language (DSL) for 
 
 The repository structure is divided in five folders:
 * `grammar/`: This folder contains the definition of the grammar, or concrete syntax, of our DSL. We used [ANTLR](https://www.antlr.org/) to define our concrete syntax, see [`govdsl.g4`](grammar/govdsl.g4) for the implementation.
-* `metamodel/`: This folder contains the metamodel of the abstract syntax of our DSL. Since the metamodel has been created using the [BESSER Web Modeling Editor](https://editor.besser-pearl.org/) we provide several files:
-    - [`metamodel.json`](metamodel/governance.py): The JSON representation that can be used to open the metamodel in the editor.
-    - [`metamodel.png`](metamodel/metamodel.png): A PNG image of the metamodel.
-    - [`metamodel.py`](metamodel/governance.py): The implementation of the classes of the metamodel as Python classes.
-    - [ocl_constraints.ocl](metamodel/ocl_constraints.ocl): Set of OCL constraints applied to the metamodel.
+* `metamodel/`: This folder contains the metamodel of the abstract syntax of our DSL:
+    - [`metamodel.py`](metamodel/governance.py): The implementation of the abstract syntax metamodel as Python classes.
+    - [ocl_constraints.ocl](metamodel/ocl_constraints.ocl): Set of OCL constraints applied to the metamodel (OCL constraints are also included in the BESSER diagrams).
+    - Since the metamodel has been created using the [BESSER Web Modeling Editor](https://editor.besser-pearl.org/) we provide several files under `metamodel/besser_models/` folder:
+        - `.json` files: The JSON representation that can be used to open the metamodel in the editor.
+        - `.svg` and `.png` files: The SVG and PNG representation for visual purposes.
+        - `.drawio.png` files: We also provide the metamodel embedded in a PNG file that can be opened in the [draw.io](https://app.diagrams.net/?src=about) editor.
 * `UI/`: This folder contains a Gradio-based form editor for creating governance policies interactively:
     - See [`UI/README.md`](UI/README.md) for detailed information.
     - The form-based editor is available [here](https://besser-pearl.github.io/GovernanceDSL/).

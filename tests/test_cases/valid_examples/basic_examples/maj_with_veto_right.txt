@@ -12,6 +12,7 @@ Participants:
         george,
         mike {
             profile : mikeProfile
+            role : maintainer, projectOwner
         }
 MajorityPolicy testPolicy {
     Scope: myTask

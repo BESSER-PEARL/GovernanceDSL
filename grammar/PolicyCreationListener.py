@@ -5,7 +5,7 @@ from besser.BUML.metamodel.structural import (
 ) # TODO: Check if necessary (for attr type validation)
 from utils.policy_tree import PolicyNode
 from utils.exceptions import (
-    UndefinedAttributeException
+    UndefinedAttributeException, DuplicateAttributeException
 )
 from utils.chp_extension import (
     PatchAction, MemberAction, Label, PullRequest, Repository,
@@ -827,17 +827,36 @@ class PolicyCreationListener(govdslListener):
         self.__participants_map[name] = individual
 
     def enterProfile(self, ctx:govdslParser.ProfileContext):
-
         gender = None
         race = None
         language = None
-        if ctx.gender():
-            gender = ctx.gender().ID().getText()
-        if ctx.race():
-            race = ctx.race().ID().getText()
-        if ctx.language():
-            language = ctx.language().ID().getText()
-        profile = Profile(name=ctx.ID().getText(),
+        seen_attrs = set()
+        profile_name = ctx.ID().getText()
+        
+        # Iterate through all profile attributes
+        for attr in ctx.profileAttr():
+            if attr.gender():
+                if 'gender' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "gender")
+                seen_attrs.add('gender')
+                gender = attr.gender().ID().getText()
+            elif attr.race():
+                if 'race' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "race")
+                seen_attrs.add('race')
+                race = attr.race().ID().getText()
+            elif attr.language():
+                if 'language' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "language")
+                seen_attrs.add('language')
+                language = attr.language().ID().getText()
+        
+        # Validate that at least one attribute is provided
+        if not (gender or race or language):
+            raise UndefinedAttributeException("profile", 
+                message=f"Profile '{profile_name}' must have at least one attribute (gender, race, or language)")
+        
+        profile = Profile(name=profile_name,
                             gender=gender,
                             race=race,
                             language=language)

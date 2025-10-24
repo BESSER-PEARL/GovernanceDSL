@@ -14,7 +14,7 @@ from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
     EmptySetException, InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
-    InvalidValueException
+    InvalidValueException, DuplicateAttributeException
 )
 from metamodel.governance import (
     AppealRight, ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
@@ -177,6 +177,24 @@ class testPolicyCreation(unittest.TestCase):
             with self.assertRaises(UndefinedAttributeException) as raised_exception:
                 walker.walk(listener, tree)
             print(f"\nException message: {str(raised_exception.exception)}")
+
+    def test_duplicate_profile_attribute(self):
+        """Test profile with duplicate attribute should raise DuplicateAttributeException."""
+        with open(self.test_cases_path / "invalid_examples/duplicate_profile_attribute.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(DuplicateAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+            
+            # Verify the exception contains the right information
+            self.assertIn("duplicateProfile", exception_message)
+            self.assertIn("gender", exception_message)
 
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""

@@ -1,14 +1,13 @@
-import warnings
-from datetime import timedelta, datetime
-from besser.BUML.metamodel.structural import (
-    StringType, IntegerType, FloatType, TimeDeltaType
-) # TODO: Check if necessary (for attr type validation)
+from datetime import datetime
+# from besser.BUML.metamodel.structural import (
+#     StringType, IntegerType, FloatType, TimeDeltaType
+# ) # TODO: Check if necessary (for attr type validation)
 from utils.policy_tree import PolicyNode
 from utils.exceptions import (
     UndefinedAttributeException, DuplicateAttributeException
 )
 from utils.chp_extension import (
-    PatchAction, MemberAction, Label, PullRequest, Repository,
+    Label, PullRequest, Repository,
     CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
 from utils.attribute_converters import (
@@ -817,12 +816,17 @@ class PolicyCreationListener(govdslListener):
             individual.profile = profile
         
         if ctx.withRole():
-            role_name = ctx.withRole().ID().getText()
-            role = self.__participants_map.get(role_name)
-            if not role:
-                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
-            # individual.role = role # Should the relationship be bidirectional?
-            role.individuals.add(individual)
+            role_names = [role.getText() for role in ctx.withRole().ID()]
+            roles = set()
+            for role_name in role_names:
+                role = self.__participants_map.get(role_name)
+                if not role:
+                    raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+                if not isinstance(role, Role):
+                    raise UndefinedAttributeException("role", message=f"{role_name} is not a Role.")
+                roles.add(role)
+                role.individuals.add(individual)
+            individual.roles = roles
             
         self.__participants_map[name] = individual
 
@@ -875,12 +879,17 @@ class PolicyCreationListener(govdslListener):
         if ctx.explainability():
             agent.explainability = float(ctx.explainability().FLOAT().getText())
         if ctx.withRole():
-            role_name = ctx.withRole().ID().getText()
-            role = self.__participants_map.get(role_name)
-            if not role:
-                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
-            # agent.role = role # Should the relationship be bidirectional?
-            role.individuals.add(agent)
+            role_names = [role.getText() for role in ctx.withRole().ID()]
+            roles = set()
+            for role_name in role_names:
+                role = self.__participants_map.get(role_name)
+                if not role:
+                    raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+                if not isinstance(role, Role):
+                    raise UndefinedAttributeException("role", message=f"{role_name} is not a Role.")
+                roles.add(role)
+                role.individuals.add(agent)
+            agent.roles = roles
             
         self.__participants_map[name] = agent
 

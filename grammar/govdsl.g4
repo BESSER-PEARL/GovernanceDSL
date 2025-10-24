@@ -57,7 +57,7 @@ individualEntry     : individual | agent ;
 individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}')? ; 
 voteValue           : 'vote value' ':' FLOAT ;
 withProfile         : 'profile' ':' ID ;
-withRole            : 'role' ':' ID ;
+withRole            : 'role' ':' ID (',' ID)* ;
 agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? autonomyLevel? (',')? explainability? (',')? withRole? '}')? ;
 confidence          : 'confidence' ':' FLOAT ;
 autonomyLevel       : 'autonomy level' ':' FLOAT ;

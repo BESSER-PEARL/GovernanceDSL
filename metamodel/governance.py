@@ -132,7 +132,7 @@ class Participant(Element):
     
     @vote_value.setter
     def vote_value(self, vote_value: float):
-        if vote_value < 0 or vote_value > 2:
+        if vote_value < 0:
             raise InvalidValueException("vote_value", vote_value)
         self.__vote_value = vote_value
 

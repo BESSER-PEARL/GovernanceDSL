@@ -54,7 +54,7 @@ class InvalidValueException(Exception):
         self.value = value
         self.min_value = min_value
         if attribute_name == "vote_value":
-            max_value = 2
+            max_value = "unbounded"
         else:
             self.max_value = max_value
         self.message = f"{attribute_name} must be between {min_value} and {max_value}, but got {value}."
@@ -86,3 +86,15 @@ class InvalidScopeException(Exception):
 
     def __str__(self):
         return f'Scope: {self.scope} (parent: {self.scope_parent}) -> {self.message}'
+
+class DuplicateAttributeException(Exception):
+    """Exception raised when a duplicate attribute is found in a definition (e.g., profile, individual)."""
+    def __init__(self, context_type: str, context_name: str, attribute_name: str):
+        self.context_type = context_type
+        self.context_name = context_name
+        self.attribute_name = attribute_name
+        self.message = f"Duplicate '{attribute_name}' attribute found."
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"Element {self.context_type}, name '{self.context_name}' -> {self.message}"

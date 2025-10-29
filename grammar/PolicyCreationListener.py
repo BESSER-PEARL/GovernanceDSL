@@ -1,14 +1,13 @@
-import warnings
-from datetime import timedelta, datetime
-from besser.BUML.metamodel.structural import (
-    StringType, IntegerType, FloatType, TimeDeltaType
-) # TODO: Check if necessary (for attr type validation)
+from datetime import datetime
+# from besser.BUML.metamodel.structural import (
+#     StringType, IntegerType, FloatType, TimeDeltaType
+# ) # TODO: Check if necessary (for attr type validation)
 from utils.policy_tree import PolicyNode
 from utils.exceptions import (
-    UndefinedAttributeException
+    UndefinedAttributeException, DuplicateAttributeException
 )
 from utils.chp_extension import (
-    PatchAction, MemberAction, Label, PullRequest, Repository,
+    Label, PullRequest, Repository,
     CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
 from utils.attribute_converters import (
@@ -817,27 +816,51 @@ class PolicyCreationListener(govdslListener):
             individual.profile = profile
         
         if ctx.withRole():
-            role_name = ctx.withRole().ID().getText()
-            role = self.__participants_map.get(role_name)
-            if not role:
-                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
-            # individual.role = role # Should the relationship be bidirectional?
-            role.individuals.add(individual)
+            role_names = [role.getText() for role in ctx.withRole().ID()]
+            roles = set()
+            for role_name in role_names:
+                role = self.__participants_map.get(role_name)
+                if not role:
+                    raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+                if not isinstance(role, Role):
+                    raise UndefinedAttributeException("role", message=f"{role_name} is not a Role.")
+                roles.add(role)
+                role.individuals.add(individual)
+            individual.roles = roles
             
         self.__participants_map[name] = individual
 
     def enterProfile(self, ctx:govdslParser.ProfileContext):
-
         gender = None
         race = None
         language = None
-        if ctx.gender():
-            gender = ctx.gender().ID().getText()
-        if ctx.race():
-            race = ctx.race().ID().getText()
-        if ctx.language():
-            language = ctx.language().ID().getText()
-        profile = Profile(name=ctx.ID().getText(),
+        seen_attrs = set()
+        profile_name = ctx.ID().getText()
+        
+        # Iterate through all profile attributes
+        for attr in ctx.profileAttr():
+            if attr.gender():
+                if 'gender' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "gender")
+                seen_attrs.add('gender')
+                gender = attr.gender().ID().getText()
+            elif attr.race():
+                if 'race' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "race")
+                seen_attrs.add('race')
+                race = attr.race().ID().getText()
+            elif attr.language():
+                if 'language' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "language")
+                seen_attrs.add('language')
+                language = attr.language().ID().getText()
+        
+        # Validate that at least one attribute is provided
+        if not (gender or race or language):
+            raise UndefinedAttributeException("profile", 
+                message=f"Profile '{profile_name}' must have at least one attribute (gender, race, or language)")
+        
+        profile = Profile(name=profile_name,
                             gender=gender,
                             race=race,
                             language=language)
@@ -856,12 +879,17 @@ class PolicyCreationListener(govdslListener):
         if ctx.explainability():
             agent.explainability = float(ctx.explainability().FLOAT().getText())
         if ctx.withRole():
-            role_name = ctx.withRole().ID().getText()
-            role = self.__participants_map.get(role_name)
-            if not role:
-                raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
-            # agent.role = role # Should the relationship be bidirectional?
-            role.individuals.add(agent)
+            role_names = [role.getText() for role in ctx.withRole().ID()]
+            roles = set()
+            for role_name in role_names:
+                role = self.__participants_map.get(role_name)
+                if not role:
+                    raise UndefinedAttributeException("role", message=f"Role {role_name} not defined.")
+                if not isinstance(role, Role):
+                    raise UndefinedAttributeException("role", message=f"{role_name} is not a Role.")
+                roles.add(role)
+                role.individuals.add(agent)
+            agent.roles = roles
             
         self.__participants_map[name] = agent
 

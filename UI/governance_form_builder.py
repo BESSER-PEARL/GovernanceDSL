@@ -300,7 +300,7 @@ class GovernanceFormBuilder:
                     label="Vote Value (Optional)",
                     value=1.0,
                     step=0.1,
-                    info="Weight of this role's vote (must be between 0.0 and 2.0, default: 1.0)"
+                    info="Weight of this role's vote (must be >= 0.0, default: 1.0)"
                 )
             
             with gr.Row():
@@ -336,7 +336,7 @@ class GovernanceFormBuilder:
                     label="Vote Value (Optional)",
                     value=1.0,
                     step=0.1,
-                    info="Weight of this individual's vote (must be between 0.0 and 2.0, default: 1.0)"
+                    info="Weight of this individual's vote (must be >= 0.0, default: 1.0)"
                 )
                 
                 individual_profile = gr.Dropdown(
@@ -388,7 +388,7 @@ class GovernanceFormBuilder:
                     label="Vote Value (Optional)",
                     value=1.0,
                     step=0.1,
-                    info="Weight of this agent's vote (must be between 0.0 and 2.0, default: 1.0)"
+                    info="Weight of this agent's vote (must be >= 0.0, default: 1.0)"
                 )
                 
             with gr.Row():
@@ -1412,12 +1412,11 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
                 return current_roles, error_message, "", None
             
-            # Validate vote_value is within acceptable range if provided
-            if vote_value is not None:
-                if vote_value < 0.0 or vote_value > 2.0:
-                    display_text = self._format_roles_display(current_roles)
-                    error_message = f"❌ Error: Vote value must be between 0.0 and 2.0\n\n{display_text}" if current_roles else "❌ Error: Vote value must be between 0.0 and 2.0"
-                    return current_roles, error_message, "", None
+            # Validate vote_value is not negative if provided
+            if vote_value is not None and vote_value < 0.0:
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Vote value cannot be negative\n\n{display_text}" if current_roles else "❌ Error: Vote value cannot be negative"
+                return current_roles, error_message, "", None
             
             # Check for global name uniqueness across all participant types
             role_name = name.strip()
@@ -1459,10 +1458,9 @@ class GovernanceFormBuilder:
             if not name.strip():
                 return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
             
-            # Validate vote_value is within acceptable range if provided
-            if vote_value is not None:
-                if vote_value < 0.0 or vote_value > 2.0:
-                    return current_individuals, "❌ Vote value must be between 0.0 and 2.0", "", 1.0, None, None
+            # Validate vote_value is not negative if provided
+            if vote_value is not None and vote_value < 0.0:
+                return current_individuals, "❌ Vote value cannot be negative", "", 1.0, None, None
             
             # Check for global name uniqueness across all participant types
             individual_name = name.strip()
@@ -1512,10 +1510,9 @@ class GovernanceFormBuilder:
             if not name.strip():
                 return current_agents, "❌ Please enter an agent name", "", 1.0, None, None, None, None
             
-            # Validate vote_value is within acceptable range if provided
-            if vote_value is not None:
-                if vote_value < 0.0 or vote_value > 2.0:
-                    return current_agents, "❌ Vote value must be between 0.0 and 2.0", "", 1.0, None, None, None, None
+            # Validate vote_value is not negative if provided
+            if vote_value is not None and vote_value < 0.0:
+                return current_agents, "❌ Vote value cannot be negative", "", 1.0, None, None, None, None
             
             # Check for global name uniqueness across all participant types
             agent_name = name.strip()

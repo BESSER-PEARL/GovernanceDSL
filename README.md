@@ -1,6 +1,8 @@
 # A DSL to define and enforce governance policies
 
 This repository contains the definition of a domain-specific language (DSL) for governance policies (the engine for the enforcement of the policies is available [here](https://github.com/BESSER-PEARL/GovernanceDecisionEngine)).
+We provide details below for the contents of this repository.
+The DSL provides a form-based editor, available [here](https://besser-pearl.github.io/GovernanceDSL/).
 
 ## Contents
 

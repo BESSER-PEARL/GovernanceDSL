@@ -14,11 +14,11 @@ from grammar.PolicyCreationListener import PolicyCreationListener
 from grammar.govErrorListener import govErrorListener
 from utils.exceptions import (
     EmptySetException, InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
-    InvalidValueException
+    InvalidValueException, DuplicateAttributeException
 )
 from metamodel.governance import (
     AppealRight, ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
-    Individual, ComposedPolicy, Project,
+    Individual, ComposedPolicy, Project, Agent,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
@@ -178,6 +178,41 @@ class testPolicyCreation(unittest.TestCase):
                 walker.walk(listener, tree)
             print(f"\nException message: {str(raised_exception.exception)}")
 
+    def test_duplicate_profile_attribute(self):
+        """Test profile with duplicate attribute should raise DuplicateAttributeException."""
+        with open(self.test_cases_path / "invalid_examples/duplicate_profile_attribute.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(DuplicateAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+            
+            # Verify the exception contains the right information
+            self.assertIn("duplicateProfile", exception_message)
+            self.assertIn("gender", exception_message)
+
+    def test_individual_undefined_role(self):
+        """Test individual with undefined role should raise UndefinedAttributeException."""
+        with open(self.test_cases_path / "invalid_examples/individual_undefined_role.txt", "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            with self.assertRaises(UndefinedAttributeException) as raised_exception:
+                walker.walk(listener, tree)
+            
+            exception_message = str(raised_exception.exception)
+            print(f"\nException message: {exception_message}")
+            
+            # Verify the exception contains the right information
+            self.assertIn("undefinedRole", exception_message)
+
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
         with open(self.test_cases_path / "valid_examples/basic_examples/majority_policy.txt", "r") as file:
@@ -240,12 +275,21 @@ class testPolicyCreation(unittest.TestCase):
 
             agent = next((ind for ind in individuals if ind.name == "mike"), None)
             self.assertIsNotNone(agent, "mike not found")
+            self.assertIsInstance(agent, Agent)
             self.assertEqual(agent.name, "mike")
             self.assertEqual(agent.vote_value, 1.0) # This is the default value
             self.assertEqual(agent.confidence, 0.8)
             self.assertIsNotNone(agent.role_assignement)
             self.assertEqual(agent.role_assignement.name, "mike_maintainer")
             self.assertEqual(agent.role_assignement.role.vote_value, 1.5)
+            # Check roles attribute
+            self.assertIsNotNone(agent.roles, "mike should have roles")
+            self.assertIsInstance(agent.roles, set)
+            self.assertEqual(len(agent.roles), 1)
+            mike_role = next(iter(agent.roles))
+            self.assertEqual(mike_role.name, "reviewer")
+            # Check bidirectional relationship
+            self.assertIn(agent, mike_role.individuals)
             
             
             # Test Role participants
@@ -258,13 +302,13 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(maintainer_role.name, "maintainer")
             self.assertEqual(maintainer_role.vote_value, 1.5)
             
-            # Test reviewer role with composed individuals
+            # Test reviewer role with multiple individuals
             reviewer_role = next((r for r in roles if r.name == "reviewer"), None)
             self.assertIsNotNone(reviewer_role, "reviewer role not found")
             self.assertEqual(reviewer_role.name, "reviewer")
             self.assertEqual(reviewer_role.vote_value, 1.0) # Default vote value
             
-            # Check the individuals composed in the reviewer role
+            # Check the individuals in the reviewer role
             self.assertIsNotNone(reviewer_role.individuals, "reviewer role should have individuals")
             self.assertEqual(len(reviewer_role.individuals), 2, "reviewer should have 2 individuals")
             
@@ -272,6 +316,17 @@ class testPolicyCreation(unittest.TestCase):
             individuals_names = {ind.name for ind in reviewer_role.individuals}
             self.assertIn("mike", individuals_names, "mike should be in reviewer role")
             self.assertIn("alexander", individuals_names, "alexander should be in reviewer role")
+            
+            # Test alexander's roles attribute (it is not in policy participants directly)
+            alexander = next((ind for ind in reviewer_role.individuals if ind.name == "alexander"), None)
+            self.assertIsNotNone(alexander, "alexander not found")
+            self.assertIsNotNone(alexander.roles, "alexander should have roles")
+            self.assertIsInstance(alexander.roles, set)
+            self.assertEqual(len(alexander.roles), 1)
+            alexander_role = next(iter(alexander.roles))
+            self.assertEqual(alexander_role.name, "reviewer")
+            # Check bidirectional relationship
+            self.assertIn(alexander, alexander_role.individuals)
 
             # Test communication channel
             self.assertIsNotNone(policy.channel)
@@ -405,6 +460,28 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(individual[0].name, "mike")
             self.assertEqual(individual[0].profile.name, "mikeProfile")
             self.assertEqual(individual[0].profile.race, "caucasian")
+            
+            # Test mike's roles attribute
+            mike = individual[0]
+            self.assertIsNotNone(mike.roles, "mike should have roles")
+            self.assertIsInstance(mike.roles, set)
+            self.assertEqual(len(mike.roles), 2, "mike should have 2 roles")
+            
+            # Check that mike has both maintainer and projectOwner roles
+            mike_role_names = {role.name for role in mike.roles}
+            self.assertIn("maintainer", mike_role_names, "mike should have maintainer role")
+            self.assertIn("projectOwner", mike_role_names, "mike should have projectOwner role")
+            
+            # Test bidirectional relationships for both roles
+            maintainer_role = next((r for r in mike.roles if r.name == "maintainer"), None)
+            self.assertIsNotNone(maintainer_role)
+            self.assertEqual(len(maintainer_role.individuals), 1)
+            self.assertIn(mike, maintainer_role.individuals, "mike should be in maintainer role's individuals")
+            
+            projectOwner_role = next((r for r in mike.roles if r.name == "projectOwner"), None)
+            self.assertIsNotNone(projectOwner_role)
+            self.assertEqual(len(projectOwner_role.individuals), 1)
+            self.assertIn(mike, projectOwner_role.individuals, "mike should be in projectOwner role's individuals")
             
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)
@@ -1087,6 +1164,41 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(individual.role_assignement.name, "zoe_maintainer")
             role = roles[0]
             self.assertEqual(role.name, "maintainer")
+            
+            # Test individuals with roles attribute (alice and bob)
+            # These individuals are composed in the maintainer role
+            self.assertIsNotNone(role.individuals, "maintainer role should have individuals")
+            self.assertEqual(len(role.individuals), 2, "maintainer should have 2 individuals (alice and bob)")
+            
+            # Check individual members of the maintainer role
+            individuals_names = {ind.name for ind in role.individuals}
+            self.assertIn("alice", individuals_names, "alice should be in maintainer role")
+            self.assertIn("bob", individuals_names, "bob should be in maintainer role")
+            
+            # Get alice and bob from all individuals in the listener
+            alice = next((ind for ind in role.individuals if ind.name == "alice"), None)
+            bob = next((ind for ind in role.individuals if ind.name == "bob"), None)
+            
+            self.assertIsNotNone(alice, "alice not found")
+            self.assertIsNotNone(bob, "bob not found")
+            
+            # Test alice's roles attribute
+            self.assertIsNotNone(alice.roles, "alice should have roles")
+            self.assertIsInstance(alice.roles, set)
+            self.assertEqual(len(alice.roles), 1)
+            alice_role = next(iter(alice.roles))
+            self.assertEqual(alice_role.name, "maintainer")
+            # Check bidirectional relationship
+            self.assertIn(alice, alice_role.individuals)
+            
+            # Test bob's roles attribute
+            self.assertIsNotNone(bob.roles, "bob should have roles")
+            self.assertIsInstance(bob.roles, set)
+            self.assertEqual(len(bob.roles), 1)
+            bob_role = next(iter(bob.roles))
+            self.assertEqual(bob_role.name, "maintainer")
+            # Check bidirectional relationship
+            self.assertIn(bob, bob_role.individuals)
 
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)

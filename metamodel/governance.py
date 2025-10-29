@@ -132,7 +132,7 @@ class Participant(Element):
     
     @vote_value.setter
     def vote_value(self, vote_value: float):
-        if vote_value < 0 or vote_value > 2:
+        if vote_value < 0:
             raise InvalidValueException("vote_value", vote_value)
         self.__vote_value = vote_value
 
@@ -184,10 +184,11 @@ class Profile(Element):
         self.__language = language
 
 class Individual(Participant):
-    def __init__(self, name: str, vote_value: float = 1.0):
+    def __init__(self, name: str, vote_value: float = 1.0, roles: set['Role'] = None):
         super().__init__(name, vote_value)
         self.role_assignement = None
-    
+        self.roles = roles if roles is not None else set()
+
     @property
     def role_assignement(self) -> 'hasRole':
         return self.__role_assignement
@@ -196,9 +197,31 @@ class Individual(Participant):
     def role_assignement(self, role_assignement: 'hasRole'):
         self.__role_assignement = role_assignement
 
-class Human(Individual):
-    def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None):
+    @property
+    def roles(self) -> set['Role']:
+        return self.__roles
+    
+    @roles.setter
+    def roles(self, roles: set['Role']):
+        self.__roles = roles
+
+class Role(Participant):
+    def __init__(self, name: str, vote_value: float = 1.0):
         super().__init__(name, vote_value)
+        self.individuals = set()
+    
+    @property
+    def individuals(self) -> set[Individual]:
+        return self.__individuals
+    
+    @individuals.setter
+    def individuals(self, individuals: set[Individual]):
+        self.__individuals = individuals
+
+
+class Human(Individual):
+    def __init__(self, name: str, vote_value: float = 1.0, profile: Profile = None, roles: set[Role] = None):
+        super().__init__(name, vote_value, roles)
         self.profile = profile
 
     @property
@@ -210,8 +233,8 @@ class Human(Individual):
         self.__profile = profile
 
 class Agent(Individual):
-    def __init__(self, name: str, vote_value: float = 1.0, confidence: float = 1.0, autonomy_level: float = 1.0, explainability: float = 1.0):
-        super().__init__(name, vote_value)
+    def __init__(self, name: str, vote_value: float = 1.0, confidence: float = 1.0, autonomy_level: float = 1.0, explainability: float = 1.0, roles: set[Role] = None):
+        super().__init__(name, vote_value, roles)
         self.confidence = confidence
         self.autonomy_level = autonomy_level
         self.explainability = explainability
@@ -246,18 +269,7 @@ class Agent(Individual):
             raise InvalidValueException("explainability", explainability)
         self.__explainability = explainability
 
-class Role(Participant):
-    def __init__(self, name: str, vote_value: float = 1.0):
-        super().__init__(name, vote_value)
-        self.individuals = set()
-    
-    @property
-    def individuals(self) -> set[Individual]:
-        return self.__individuals
-    
-    @individuals.setter
-    def individuals(self, individuals: set[Individual]):
-        self.__individuals = individuals
+
 
 class hasRole(Element):
     def __init__(self, name: str, role: Role, individual: Individual, scope: Scope):

@@ -1,0 +1,14 @@
+Scopes:
+    Projects :
+        testProject
+Participants:
+    Roles : maintainer
+    Individuals : 
+        joe {
+            role : undefinedRole
+        }
+MajorityPolicy testPolicy {
+    Scope: testProject
+    DecisionType as BooleanDecision
+    Participant list : joe
+}

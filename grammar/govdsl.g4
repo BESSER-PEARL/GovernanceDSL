@@ -57,14 +57,15 @@ individualEntry     : individual | agent ;
 individual          : ID ('{' voteValue? (',')? withProfile? (',')? withRole? '}')? ; 
 voteValue           : 'vote value' ':' FLOAT ;
 withProfile         : 'profile' ':' ID ;
-withRole            : 'role' ':' ID ;
+withRole            : 'role' ':' ID (',' ID)* ;
 agent               : '(Agent)' ID ('{' voteValue? (',')? confidence? (',')? autonomyLevel? (',')? explainability? (',')? withRole? '}')? ;
 confidence          : 'confidence' ':' FLOAT ;
 autonomyLevel       : 'autonomy level' ':' FLOAT ;
 explainability      : 'explainability' ':' FLOAT ;
 profiles            : 'Profiles' ':' profile ((',')? profile)* ;
-profile             : ID '{' (gender (',')? race? (',')? language? | race (',')? gender? (',')? language? | language (',')? gender? (',')? race?) '}';
-gender              : 'gender' ':' ID ; // For now it will be a string, but we can improve it with a lexer rule
+profile             : ID '{' profileAttr (','? profileAttr)* '}';
+profileAttr         : gender | race | language ;
+gender              : 'gender' ':' ID ;
 race                : 'race' ':' ID ;
 language            : 'language' ':' ID ;
 policyParticipants  : 'Participant list' ':' partID (',' partID)* ;

@@ -1,0 +1,17 @@
+Scopes:
+    Projects :
+        testProject
+Participants:
+    Profiles:
+        duplicateProfile {
+            gender : male,
+            race : hispanic,
+            gender : female
+        }
+    Individuals : 
+        joe
+MajorityPolicy testPolicy {
+    Scope: testProject
+    DecisionType as BooleanDecision
+    Participant list : joe
+}

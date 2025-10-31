@@ -34,3 +34,31 @@ Access date: Date you accessed the repository
 Reporter: -
 Policy: If multiple, enter a new line for each.
 ```
+
+### Prerequisite
+- Python 3.11
+- Recommended: Create a virtual environment
+  (e.g. [venv](https://docs.python.org/3/library/venv.html),
+  [conda](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html))
+- Clone this repository
+- Install the dependencies by referencing to the requirements files:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run Tests
+
+From the project root directory, run all tests with:
+
+```bash
+python -m unittest tests.test_policy_creation -v
+```
+
+Or run a specific test:
+
+```bash
+python -m unittest tests.test_policy_creation.testPolicyCreation.test_majority_policy_creation -v
+```
+
+**Note:** Make sure you're in the project root directory when running the tests to ensure proper module imports.

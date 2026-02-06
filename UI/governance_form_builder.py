@@ -381,7 +381,7 @@ class GovernanceFormBuilder:
                 agent_name = gr.Textbox(
                     label="Agent Name",
                     placeholder="e.g., k8s-ci-robot, dependabot",
-                    info="Unique name for this automated agent"
+                    info="Unique name for this automated agent (no spaces allowed)"
                 )
                 
                 agent_vote_value = gr.Number(
@@ -395,32 +395,26 @@ class GovernanceFormBuilder:
                 agent_confidence = gr.Number(
                     label="Confidence (Optional)",
                     value=None,
-                    minimum=0.0,
-                    maximum=1.0,
                     step=0.1,
                     placeholder="Enter value (0.0-1.0)",
-                    info="Agent's confidence level (0.0 to 1.0)"
+                    info="How much trust is placed in this agent's outputs (0.0 = no trust, 1.0 = full trust)"
                 )
                 
                 agent_autonomy_level = gr.Number(
                     label="Autonomy Level (Optional)",
                     value=None,
-                    minimum=0.0,
-                    maximum=1.0,
                     step=0.1,
                     placeholder="Enter value (0.0-1.0)",
-                    info="Agent's autonomy level (0.0 to 1.0)"
+                    info="Degree of independent action the agent can take without human approval (0.0 = fully supervised, 1.0 = fully autonomous)"
                 )
                 
             with gr.Row():
                 agent_explainability = gr.Number(
                     label="Explainability (Optional)",
                     value=None,
-                    minimum=0.0,
-                    maximum=1.0,
                     step=0.1,
                     placeholder="Enter value (0.0-1.0)",
-                    info="Agent's explainability level (0.0 to 1.0)"
+                    info="Ability of the agent to provide understandable justifications for its decisions (0.0 = opaque, 1.0 = fully explainable)"
                 )
                 
                 agent_role = gr.Dropdown(
@@ -1373,6 +1367,12 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
                 return current_profiles, error_message, "", "", "", "", None
             
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                display_text = self._format_profiles_display(current_profiles)
+                error_message = f"❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')\n\n{display_text}" if current_profiles else "❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')"
+                return current_profiles, error_message, "", "", "", "", None
+            
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
@@ -1410,6 +1410,12 @@ class GovernanceFormBuilder:
             if not name.strip():
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
+                return current_roles, error_message, "", None
+            
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                display_text = self._format_roles_display(current_roles)
+                error_message = f"❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')\n\n{display_text}" if current_roles else "❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')"
                 return current_roles, error_message, "", None
             
             # Validate vote_value is not negative if provided
@@ -1457,6 +1463,10 @@ class GovernanceFormBuilder:
             """Add a new individual to the list"""
             if not name.strip():
                 return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
+            
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                return current_individuals, "❌ Individual name cannot contain spaces (use underscores instead, e.g., 'john_doe')", "", 1.0, None, None
             
             # Validate vote_value is not negative if provided
             if vote_value is not None and vote_value < 0.0:
@@ -1510,9 +1520,23 @@ class GovernanceFormBuilder:
             if not name.strip():
                 return current_agents, "❌ Please enter an agent name", "", 1.0, None, None, None, None
             
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                return current_agents, "❌ Agent name cannot contain spaces (use underscores instead, e.g., 'my_agent')", "", 1.0, None, None, None, None
+            
             # Validate vote_value is not negative if provided
             if vote_value is not None and vote_value < 0.0:
                 return current_agents, "❌ Vote value cannot be negative", "", 1.0, None, None, None, None
+            
+            # Validate agent attribute ranges (must be between 0.0 and 1.0)
+            if confidence is not None and (confidence < 0.0 or confidence > 1.0):
+                return current_agents, "❌ Confidence must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+            
+            if autonomy_level is not None and (autonomy_level < 0.0 or autonomy_level > 1.0):
+                return current_agents, "❌ Autonomy Level must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+            
+            if explainability is not None and (explainability < 0.0 or explainability > 1.0):
+                return current_agents, "❌ Explainability must be between 0.0 and 1.0", "", 1.0, None, None, None, None
             
             # Check for global name uniqueness across all participant types
             agent_name = name.strip()
@@ -1561,6 +1585,12 @@ class GovernanceFormBuilder:
             if not name.strip():
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Please enter a project name\n\n{display_text}" if current_projects else "❌ Error: Please enter a project name"
+                return current_projects, error_message, "", "", "", ""
+            
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')\n\n{display_text}" if current_projects else "❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')"
                 return current_projects, error_message, "", "", "", ""
             
             # Check for global name uniqueness across projects, activities, and tasks
@@ -1632,6 +1662,12 @@ class GovernanceFormBuilder:
                 error_message = f"❌ Error: Please enter an activity name\n\n{display_text}" if current_activities else "❌ Error: Please enter an activity name"
                 return current_activities, error_message, "", None
             
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                display_text = self._format_activities_display(current_activities)
+                error_message = f"❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')\n\n{display_text}" if current_activities else "❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')"
+                return current_activities, error_message, "", None
+            
             # Check for global name uniqueness across projects and activities
             activity_name = name.strip()
             
@@ -1672,6 +1708,12 @@ class GovernanceFormBuilder:
             if not name.strip():
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Please enter a task name\n\n{display_text}" if current_tasks else "❌ Error: Please enter a task name"
+                return current_tasks, error_message, "", None, "", ""
+            
+            # Validate no spaces in name
+            if ' ' in name.strip():
+                display_text = self._format_tasks_display(current_tasks)
+                error_message = f"❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')\n\n{display_text}" if current_tasks else "❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')"
                 return current_tasks, error_message, "", None, "", ""
             
             # Check for global name uniqueness across projects, activities, and tasks

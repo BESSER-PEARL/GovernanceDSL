@@ -21,7 +21,7 @@ ComposedPolicy pr_merge {
             DecisionType as BooleanDecision
             Participant list : Maintainers
             Conditions:
-                Deadline reviewDeadline : 14 days
+                Deadline reviewDeadline : 7 days
                 ParticipantExclusion : Author
             Parameters:
                 minVotes 2, ratio 1.0

@@ -4,8 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Governance DSL Form Builder</title>
-    <script type="module" crossorigin src="https://gradio-lite-previews.s3.amazonaws.com/PINNED_HF_HUB/dist/lite.js"></script>
+    <script type="module" crossorigin src="https://gradio-lite-previews.s3.amazonaws.com/PINNED_HF_HUB/dist/lite.js" onerror="handleGradioScriptError()"></script>
     <link rel="stylesheet" href="https://gradio-lite-previews.s3.amazonaws.com/PINNED_HF_HUB/dist/lite.css" />
+    <script>
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+        
+        posthog.init('phc_jLGxSs68mUsvgqG27u61axYEsaphGhxwObxwSXenzpp', {
+            api_host: 'https://eu.posthog.com',  // EU server for GDPR compliance
+            persistence: 'memory',  // Cookie-less tracking = GDPR-friendly, no consent banner technically required
+            autocapture: false,     // We'll manually track specific events for better control
+            capture_pageview: true, // Track page loads automatically
+            capture_pageleave: true, // Track when users leave
+            session_recording: {
+                maskAllInputs: true,  // Mask all input values for privacy
+                maskTextSelector: '.sensitive'  // Add class="sensitive" to elements you want masked
+            }
+        });
+        
+        // Start tracking page load time
+        window.pageLoadStart = Date.now();
+    </script>
+    
     <style>
         html, body {
             height: 100%;
@@ -22,7 +41,7 @@
         }
     </style>
 </head>
-<body>
+<body>    
     <gradio-lite>
     import gradio as gr
     from typing import Optional
@@ -403,7 +422,7 @@
                     agent_name = gr.Textbox(
                         label="Agent Name",
                         placeholder="e.g., k8s-ci-robot, dependabot",
-                        info="Unique name for this automated agent"
+                        info="Unique name for this automated agent (no spaces allowed)"
                     )
                     
                     agent_vote_value = gr.Number(
@@ -417,32 +436,26 @@
                     agent_confidence = gr.Number(
                         label="Confidence (Optional)",
                         value=None,
-                        minimum=0.0,
-                        maximum=1.0,
                         step=0.1,
                         placeholder="Enter value (0.0-1.0)",
-                        info="Agent's confidence level (0.0 to 1.0)"
+                        info="How much trust is placed in this agent's outputs (0.0 = no trust, 1.0 = full trust)"
                     )
                     
                     agent_autonomy_level = gr.Number(
                         label="Autonomy Level (Optional)",
                         value=None,
-                        minimum=0.0,
-                        maximum=1.0,
                         step=0.1,
                         placeholder="Enter value (0.0-1.0)",
-                        info="Agent's autonomy level (0.0 to 1.0)"
+                        info="Degree of independent action the agent can take without human approval (0.0 = fully supervised, 1.0 = fully autonomous)"
                     )
                     
                 with gr.Row():
                     agent_explainability = gr.Number(
                         label="Explainability (Optional)",
                         value=None,
-                        minimum=0.0,
-                        maximum=1.0,
                         step=0.1,
                         placeholder="Enter value (0.0-1.0)",
-                        info="Agent's explainability level (0.0 to 1.0)"
+                        info="Ability of the agent to provide understandable justifications for its decisions (0.0 = opaque, 1.0 = fully explainable)"
                     )
                     
                     agent_role = gr.Dropdown(
@@ -594,8 +607,6 @@
                     # Parameters (for voting policies)
                     voting_ratio = gr.Slider(
                         label="Voting Ratio",
-                        minimum=0.0,
-                        maximum=1.0,
                         value=0.5,
                         step=0.1,
                         visible=True,  # Start visible since MajorityPolicy is default
@@ -967,8 +978,6 @@
                     # Parameters (for voting policies)
                     phase_voting_ratio = gr.Slider(
                         label="Phase Voting Ratio",
-                        minimum=0.0,
-                        maximum=1.0,
                         value=0.5,
                         step=0.1,
                         visible=True,  # Start visible since MajorityPolicy is default for phases too
@@ -1395,6 +1404,12 @@
                     error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
                     return current_profiles, error_message, "", "", "", "", None
                 
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    display_text = self._format_profiles_display(current_profiles)
+                    error_message = f"❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')\n\n{display_text}" if current_profiles else "❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')"
+                    return current_profiles, error_message, "", "", "", "", None
+                
                 # Check if profile already exists
                 if any(p['name'] == name.strip() for p in current_profiles):
                     display_text = self._format_profiles_display(current_profiles)
@@ -1432,6 +1447,12 @@
                 if not name.strip():
                     display_text = self._format_roles_display(current_roles)
                     error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
+                    return current_roles, error_message, "", None
+                
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    display_text = self._format_roles_display(current_roles)
+                    error_message = f"❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')\n\n{display_text}" if current_roles else "❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')"
                     return current_roles, error_message, "", None
                 
                 # Validate vote_value is not negative if provided
@@ -1479,6 +1500,10 @@
                 """Add a new individual to the list"""
                 if not name.strip():
                     return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
+                
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    return current_individuals, "❌ Individual name cannot contain spaces (use underscores instead, e.g., 'john_doe')", "", 1.0, None, None
                 
                 # Validate vote_value is not negative if provided
                 if vote_value is not None and vote_value < 0.0:
@@ -1532,9 +1557,23 @@
                 if not name.strip():
                     return current_agents, "❌ Please enter an agent name", "", 1.0, None, None, None, None
                 
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    return current_agents, "❌ Agent name cannot contain spaces (use underscores instead, e.g., 'my_agent')", "", 1.0, None, None, None, None
+                
                 # Validate vote_value is not negative if provided
                 if vote_value is not None and vote_value < 0.0:
                     return current_agents, "❌ Vote value cannot be negative", "", 1.0, None, None, None, None
+                
+                # Validate agent attribute ranges (must be between 0.0 and 1.0)
+                if confidence is not None and (confidence < 0.0 or confidence > 1.0):
+                    return current_agents, "❌ Confidence must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+                
+                if autonomy_level is not None and (autonomy_level < 0.0 or autonomy_level > 1.0):
+                    return current_agents, "❌ Autonomy Level must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+                
+                if explainability is not None and (explainability < 0.0 or explainability > 1.0):
+                    return current_agents, "❌ Explainability must be between 0.0 and 1.0", "", 1.0, None, None, None, None
                 
                 # Check for global name uniqueness across all participant types
                 agent_name = name.strip()
@@ -1583,6 +1622,12 @@
                 if not name.strip():
                     display_text = self._format_projects_display(current_projects)
                     error_message = f"❌ Error: Please enter a project name\n\n{display_text}" if current_projects else "❌ Error: Please enter a project name"
+                    return current_projects, error_message, "", "", "", ""
+                
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    display_text = self._format_projects_display(current_projects)
+                    error_message = f"❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')\n\n{display_text}" if current_projects else "❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')"
                     return current_projects, error_message, "", "", "", ""
                 
                 # Check for global name uniqueness across projects, activities, and tasks
@@ -1654,6 +1699,12 @@
                     error_message = f"❌ Error: Please enter an activity name\n\n{display_text}" if current_activities else "❌ Error: Please enter an activity name"
                     return current_activities, error_message, "", None
                 
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    display_text = self._format_activities_display(current_activities)
+                    error_message = f"❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')\n\n{display_text}" if current_activities else "❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')"
+                    return current_activities, error_message, "", None
+                
                 # Check for global name uniqueness across projects and activities
                 activity_name = name.strip()
                 
@@ -1694,6 +1745,12 @@
                 if not name.strip():
                     display_text = self._format_tasks_display(current_tasks)
                     error_message = f"❌ Error: Please enter a task name\n\n{display_text}" if current_tasks else "❌ Error: Please enter a task name"
+                    return current_tasks, error_message, "", None, "", ""
+                
+                # Validate no spaces in name
+                if ' ' in name.strip():
+                    display_text = self._format_tasks_display(current_tasks)
+                    error_message = f"❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')\n\n{display_text}" if current_tasks else "❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')"
                     return current_tasks, error_message, "", None, "", ""
                 
                 # Check for global name uniqueness across projects, activities, and tasks
@@ -1897,6 +1954,11 @@
                 if not participants or (isinstance(participants, list) and len(participants) == 0):
                     display_text = self._format_policies_display(current_policies)
                     error_message = f"❌ Error: Please select at least one participant\n\n{display_text}" if current_policies else "❌ Error: Please select at least one participant"
+                    return current_policies, error_message
+
+                if voting_ratio is not None and (voting_ratio < 0.0 or voting_ratio > 1.0):
+                    display_text = self._format_policies_display(current_policies)
+                    error_message = f"❌ Error: Voting ratio must be between 0.0 and 1.0\n\n{display_text}" if current_policies else "❌ Error: Voting ratio must be between 0.0 and 1.0"
                     return current_policies, error_message
                 
                 # Check if policy already exists
@@ -4312,7 +4374,7 @@
                 display_lines.append(line)
             
             return '\n'.join(display_lines)
- 
+
     def main():
         """Main function to run the Gradio interface"""
         builder = GovernanceFormBuilder()
@@ -4324,5 +4386,388 @@
         app = main()
         app.launch()
     </gradio-lite>
+    
+    <script>        
+        // Check consent on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventTracking();
+        });
+
+        // Helper function to track events
+        function trackEvent(eventName, properties) {            
+            posthog.capture(eventName, properties);
+        }
+        
+        // ========================================
+        // EVENT TRACKING SETUP
+        // ========================================
+        // This single function tracks ALL the events you requested
+        // No need for individual snippets for each button!
+        
+        function setupEventTracking() {
+            // Wait for Gradio to load
+            setTimeout(function() {
+                // Track initial page load
+                trackEvent('page_loaded', {
+                    load_time_ms: Date.now() - window.pageLoadStart,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // ===== 1. TRACK ALL BUTTON CLICKS =====
+                // Single listener captures ALL buttons - no need for individual tracking!
+                document.addEventListener('click', function(e) {
+                    const button = e.target.closest('button');
+                    if (button) {
+                        const buttonText = button.textContent.trim();
+                        
+                        // Track all button clicks
+                        trackEvent('button_clicked', {
+                            button_text: buttonText,
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        // Track specific important buttons
+                        if (buttonText.includes('Add Policy')) {
+                            trackEvent('add_policy_clicked');
+                        } else if (buttonText.includes('Add Role')) {
+                            trackEvent('add_role_clicked');
+                        } else if (buttonText.includes('Add Individual')) {
+                            trackEvent('add_individual_clicked');
+                        } else if (buttonText.includes('Add Agent')) {
+                            trackEvent('add_agent_clicked');
+                        } else if (buttonText.includes('Download')) {
+                            trackEvent('download_dsl_clicked', {
+                                timestamp: new Date().toISOString()
+                            });
+                        } else if (buttonText.includes('Add Condition')) {
+                            trackEvent('add_condition_clicked');
+                        }
+                    }
+                });
+                
+                // ===== 2. TRACK TAB SWITCHES =====
+                // Track which tab user is on and time spent
+                let currentTab = null;
+                let tabStartTime = Date.now();
+                
+                // Use MutationObserver to detect tab changes
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        // Look for tab changes (Gradio uses specific class for active tabs)
+                        const tabs = document.querySelectorAll('[role="tab"]');
+                        tabs.forEach(function(tab) {
+                            if (tab.getAttribute('aria-selected') === 'true') {
+                                const tabName = tab.textContent.trim();
+                                
+                                if (tabName !== currentTab) {
+                                    // Track time spent on previous tab
+                                    if (currentTab) {
+                                        const timeSpent = Date.now() - tabStartTime;
+                                        trackEvent('tab_time_spent', {
+                                            tab: currentTab,
+                                            time_seconds: Math.round(timeSpent / 1000)
+                                        });
+                                    }
+                                    
+                                    // Track tab switch
+                                    trackEvent('tab_switched', {
+                                        from_tab: currentTab,
+                                        to_tab: tabName,
+                                        timestamp: new Date().toISOString()
+                                    });
+                                    
+                                    currentTab = tabName;
+                                    tabStartTime = Date.now();
+                                }
+                            }
+                        });
+                    });
+                });
+                
+                // Start observing for tab changes
+                const gradioContainer = document.querySelector('gradio-lite');
+                if (gradioContainer) {
+                    observer.observe(gradioContainer, {
+                        attributes: true,
+                        subtree: true,
+                        attributeFilter: ['aria-selected']
+                    });
+                }
+                
+                // ===== 3. TRACK DROPDOWN CHANGES (Policy Type, Decision Type, etc.) =====
+                document.addEventListener('change', function(e) {
+                    // Check if it's a select/dropdown
+                    if (e.target.tagName === 'SELECT' || e.target.hasAttribute('role') === 'combobox') {
+                        const label = findLabelForInput(e.target);
+                        const value = e.target.value || e.target.textContent;
+                        
+                        // Track Policy Type changes
+                        if (label && label.includes('Policy Type')) {
+                            trackEvent('policy_type_changed', {
+                                selected_type: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        
+                        // Track Decision Type changes
+                        if (label && label.includes('Decision Type')) {
+                            trackEvent('decision_type_changed', {
+                                selected_type: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        
+                        // Track Condition Type changes
+                        if (label && (label.includes('Condition Type') || label.includes('Add Condition'))) {
+                            trackEvent('condition_type_changed', {
+                                selected_type: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        
+                        // Track Agent Attributes
+                        if (label && label.includes('Confidence')) {
+                            trackEvent('agent_confidence_selected', {
+                                value: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        
+                        if (label && label.includes('Autonomy Level')) {
+                            trackEvent('agent_autonomy_selected', {
+                                value: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        
+                        if (label && label.includes('Explainability')) {
+                            trackEvent('agent_explainability_selected', {
+                                value: value,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                    }
+                });
+                
+                // ===== 4. TRACK ERRORS/WARNINGS =====
+                // Capture browser console errors
+                window.addEventListener('error', function(e) {
+                    trackEvent('javascript_error', {
+                        message: e.message,
+                        filename: e.filename,
+                        line: e.lineno,
+                        timestamp: new Date().toISOString()
+                    });
+                });
+                
+                // Track when Gradio shows error messages
+                const errorObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) { // Element node
+                                // Check for Gradio error/warning classes
+                                if (node.classList && (
+                                    node.classList.contains('error') ||
+                                    node.classList.contains('warning') ||
+                                    node.textContent.includes('Error') ||
+                                    node.textContent.includes('error')
+                                )) {
+                                    trackEvent('ui_error_displayed', {
+                                        error_text: node.textContent.substring(0, 200), // First 200 chars
+                                        timestamp: new Date().toISOString()
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
+                
+                if (gradioContainer) {
+                    errorObserver.observe(gradioContainer, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+                
+                // ===== 5. TRACK PAGE EXIT =====
+                window.addEventListener('beforeunload', function() {
+                    // Track final tab time
+                    if (currentTab) {
+                        const timeSpent = Date.now() - tabStartTime;
+                        trackEvent('tab_time_spent', {
+                            tab: currentTab,
+                            time_seconds: Math.round(timeSpent / 1000)
+                        });
+                    }
+                    
+                    // Track total session time
+                    const totalTime = Date.now() - window.pageLoadStart;
+                    trackEvent('page_exit', {
+                        total_session_seconds: Math.round(totalTime / 1000),
+                        timestamp: new Date().toISOString()
+                    });
+                });
+                
+            }, 2000); // Wait 2 seconds for Gradio to fully load
+        }
+        
+        // Helper function to find label for an input
+        function findLabelForInput(input) {
+            // Try to find associated label
+            const label = input.closest('label');
+            if (label) {
+                return label.textContent;
+            }
+            
+            // Try to find parent with label
+            const parent = input.closest('[class*="label"]');
+            if (parent) {
+                return parent.textContent;
+            }
+            
+            // Try previous sibling
+            let sibling = input.previousElementSibling;
+            while (sibling) {
+                if (sibling.tagName === 'LABEL' || sibling.textContent.includes(':')) {
+                    return sibling.textContent;
+                }
+                sibling = sibling.previousElementSibling;
+            }
+            
+            return '';
+        }
+    </script>
+    <script>
+        // --- Reload Guard Logic ---
+        const RELOAD_KEY = 'gradio_reload_count';
+        const RELOAD_TIME_KEY = 'gradio_reload_time';
+        const RELOAD_LIMIT = 2; // Max reloads allowed
+        const RELOAD_WINDOW_MS = 60 * 1000; // 1 minute window
+
+        function canReload() {
+            const now = Date.now();
+            const lastTime = parseInt(localStorage.getItem(RELOAD_TIME_KEY) || '0', 10);
+            let count = parseInt(localStorage.getItem(RELOAD_KEY) || '0', 10);
+
+            if (now - lastTime > RELOAD_WINDOW_MS) {
+            // Reset counter if outside time window
+            localStorage.setItem(RELOAD_TIME_KEY, now.toString());
+            localStorage.setItem(RELOAD_KEY, '1');
+            return true;
+            } else if (count < RELOAD_LIMIT) {
+            localStorage.setItem(RELOAD_KEY, (count + 1).toString());
+            return true;
+            }
+            return false;
+        }
+
+        function handleGradioScriptError() {
+            if (canReload()) {
+            location.reload();
+            } else {
+            alert('The application failed to load Gradio. Please try again later or contact support.');
+            }
+        }
+        
+        // We can have different loading errors due to the pinned HF version
+        // 1. CATCH SCRIPT LOADING ERRORS (via onerror attribute)
+        // This is for when the script tag itself fails to load
+
+        // 2. CATCH RUNTIME ERRORS (including from web workers indirectly)
+        window.addEventListener('error', function(e) {
+            const msg = (e.message || '').toLowerCase();
+            const fname = (e.filename || '').toLowerCase();
+
+            // Check for Gradio, Pyodide, Micropip, Huggingface, Webworker errors
+            if (
+            fname.includes('lite.js') ||
+            fname.includes('webworker') ||
+            msg.includes('gradio') ||
+            msg.includes('pyodide') ||
+            msg.includes('micropip') ||
+            msg.includes('huggingface-hub') ||
+            msg.includes("can't find a pure python 3 wheel")
+            ) {
+            console.error('Gradio error detected:', e.message);
+            if (canReload()) {
+                location.reload();
+            } else {
+                alert('A critical error occurred. Please try again later or contact support.');
+            }
+            }
+        });
+
+        // 3. CATCH UNHANDLED PROMISE REJECTIONS (this is key for async errors!)
+        window.addEventListener('unhandledrejection', function(e) {
+            const reason = (e.reason?.toString() || '').toLowerCase();
+            
+            console.error('Unhandled promise rejection:', e.reason);
+            
+            if (
+            reason.includes('micropip') ||
+            reason.includes('pyodide') ||
+            reason.includes('huggingface-hub') ||
+            reason.includes("can't find a pure python 3 wheel") ||
+            reason.includes('valueerror')
+            ) {
+            console.error('Gradio/Pyodide error in promise:', e.reason);
+            if (canReload()) {
+                location.reload();
+            } else {
+                alert('A critical error occurred during initialization. Please try again later.');
+            }
+            }
+        });
+
+        // 4. INTERCEPT CONSOLE ERRORS (watch for error messages logged to console)
+        (function() {
+            const originalConsoleError = console.error;
+            console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            
+            const errorMessage = args.join(' ').toLowerCase();
+            
+            if (
+                errorMessage.includes('micropip') ||
+                errorMessage.includes('huggingface-hub') ||
+                errorMessage.includes("can't find a pure python 3 wheel") ||
+                errorMessage.includes('valueerror')
+            ) {
+                console.log('Detected critical error in console.error, attempting reload...');
+                if (canReload()) {
+                setTimeout(() => location.reload(), 500); // Small delay to let error log
+                }
+            }
+            };
+        })();
+
+        // 5. WATCH FOR ERROR MESSAGES IN DOM (Gradio might display errors)
+        setTimeout(function() {
+            const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) {
+                    const text = node.textContent || '';
+                    if (
+                    text.includes('huggingface-hub') ||
+                    text.includes('micropip') ||
+                    text.includes("Can't find a pure Python 3 wheel")
+                    ) {
+                    console.log('Detected error in DOM, attempting reload...');
+                    if (canReload()) {
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                    }
+                }
+                });
+            });
+            });
+
+            observer.observe(document.body, {
+            childList: true,
+            subtree: true
+            });
+        }, 1000);
+        </script>
 </body>
 </html>

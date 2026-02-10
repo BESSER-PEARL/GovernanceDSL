@@ -566,8 +566,6 @@ class GovernanceFormBuilder:
                 # Parameters (for voting policies)
                 voting_ratio = gr.Slider(
                     label="Voting Ratio",
-                    minimum=0.0,
-                    maximum=1.0,
                     value=0.5,
                     step=0.1,
                     visible=True,  # Start visible since MajorityPolicy is default
@@ -939,8 +937,6 @@ class GovernanceFormBuilder:
                 # Parameters (for voting policies)
                 phase_voting_ratio = gr.Slider(
                     label="Phase Voting Ratio",
-                    minimum=0.0,
-                    maximum=1.0,
                     value=0.5,
                     step=0.1,
                     visible=True,  # Start visible since MajorityPolicy is default for phases too
@@ -1917,6 +1913,11 @@ class GovernanceFormBuilder:
             if not participants or (isinstance(participants, list) and len(participants) == 0):
                 display_text = self._format_policies_display(current_policies)
                 error_message = f"❌ Error: Please select at least one participant\n\n{display_text}" if current_policies else "❌ Error: Please select at least one participant"
+                return current_policies, error_message
+
+            if voting_ratio is not None and (voting_ratio < 0.0 or voting_ratio > 1.0):
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Voting ratio must be between 0.0 and 1.0\n\n{display_text}" if current_policies else "❌ Error: Voting ratio must be between 0.0 and 1.0"
                 return current_policies, error_message
             
             # Check if policy already exists

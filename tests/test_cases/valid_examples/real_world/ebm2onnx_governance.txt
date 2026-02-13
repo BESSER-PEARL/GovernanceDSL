@@ -1,0 +1,32 @@
+Scopes:
+    Projects:
+        Ebm2onnx from GitHub : interpretml/ebm2onnx {
+            Activities : appealingIssue
+        }
+Participants:
+    Roles: Contributors, Maintainers, TSC
+LazyConsensusPolicy decisionMaking {
+    Scope: Ebm2onnx
+    DecisionType as BooleanDecision
+    Participant list: Maintainers
+    Conditions:
+        AppealRight : { 
+            Appealers : Contributors, Maintainers, TSC
+            Policy : appealingPolicy
+        }
+}
+ConsensusPolicy appealingPolicy {
+    Scope: appealingIssue
+    DecisionType as BooleanDecision
+    Participant list: Maintainers
+    Conditions:
+        AppealRight : { 
+            Appealers : Contributors, Maintainers, TSC
+            Policy : appealingPolicyTSC
+    }
+}
+ConsensusPolicy appealingPolicyTSC {
+    Scope: appealingIssue
+    DecisionType as BooleanDecision
+    Participant list: TSC
+}

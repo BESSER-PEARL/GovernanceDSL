@@ -1350,6 +1350,19 @@ class testPolicyCreation(unittest.TestCase):
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)
 
+    def test_generic(self):
+        """Generic test: parses the specified file and checks policies are created."""
+        file_path = self.test_cases_path / "valid_examples/real_world/ethicalsourcedev_governance.txt" 
+        with open(file_path, "r") as file:
+            text = file.read()
+            parser = self.setup_parser(text)
+            tree = parser.governance()
+            self.assertIsNotNone(tree)
+            listener = PolicyCreationListener()
+            walker = ParseTreeWalker()
+            walker.walk(listener, tree)
+            policies = listener.get_policies()
+            self.assertTrue(len(policies) > 0)
 
 if __name__ == '__main__':
     unittest.main()

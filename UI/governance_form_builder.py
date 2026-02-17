@@ -26,14 +26,22 @@ class GovernanceFormBuilder:
             title="Governance Policy Builder",
             theme=gr.themes.Soft(),
             css="""
-            .main-container { max-width: 1200px; margin: auto; }
+            .main-container { display: flex !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; height: 100%; }
             .form-section { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0; }
             .preview-panel { background-color: #f8f9fa; padding: 15px; border-radius: 8px; }
+            .scope-hint { font-size: 0.92em; color: #555; background: #f0f4ff; border-left: 3px solid #4a7dff; padding: 8px 12px; margin: 6px 0 12px 0; border-radius: 0 4px 4px 0; }
             """
         ) as ui:
             
             gr.Markdown("# 🏛️ Governance Policy Builder")
-            gr.Markdown("Define governance rules for your software project using an intuitive form interface.")
+            gr.Markdown("Define governance rules for your software project using our form interface.\n\n"
+                        "**How it works:**\n\n"
+                        "1. **Define scopes**: Set up the structure of your project by adding projects, activities, and tasks where governance will apply.\n"
+                        "2. **Add participants**: Specify the roles, individuals, and agents who can take part in governance decisions.\n"
+                        "3. **Create policies**: Build governance policies by selecting from your defined scopes and participants.\n\n"
+                        "**Follow the steps in order. As you complete each section, your options in the next will update automatically.** " 
+                        "Each added element can be previewed in the Live Preview panel. "
+                        "When finished, you can download your generated governance policy.")
             
             # State to store form data across tabs
             form_state = gr.State(self.form_data)
@@ -60,40 +68,55 @@ class GovernanceFormBuilder:
     
     def _create_scope_forms(self):
         """Create forms for defining scopes (Projects, Activities, Tasks)"""
-        gr.Markdown("## Define Project Scopes")
-        gr.Markdown("Set up the organizational structure of your project.")
+        gr.Markdown("## Define Scopes for your Governance Policies")
+        gr.Markdown(
+            "Scopes form a **hierarchy**: Project → Activity → Task. "
+            "Governance policies can be assigned at any level, and **a policy on a higher scope applies to all its children** unless overridden.\n\n"
+            "**How scope inheritance works:**\n\n"
+            "```\n" 
+            "Project (e.g., Kubernetes)\n"
+            "  └── Activity (e.g., CodeReview)         → policy: 2 approvals required\n"
+            "       └── Task (e.g., APIChangeReview)   → policy: 3 approvals from API team (overrides activity)\n"
+            "       └── Task (e.g., DocFixReview)      → no policy → inherits activity's 2-approval rule\n"
+            "```\n"
+            "The most specific rule wins: a task-level policy **overrides** its parent activity's policy. If a task has no policy of its own, it inherits from its parent activity (or project).\n"
+            "> **Tip:** You only need to create tasks when you need *different* governance at a more granular level. If all code reviews follow the same rules, a single Activity is enough."
+        )
         
-        with gr.Accordion("Projects", open=True):
+        # ── PROJECTS: uses info= parameter for field-level help ──────────────────
+        with gr.Accordion("Projects", open=False):
             gr.Markdown("### Define Projects")
-            gr.Markdown("*Define individual projects with optional platform and repository information*")
-            gr.Markdown("**Note:** Only Project Name is required")
+            with gr.Accordion("ℹ️ What is a Project?", open=False):
+                gr.Markdown("A **Project** is the highest-level scope — typically corresponding to a software project or repository. "
+                         "All activities and tasks you create later can be nested under a project. "
+                         "Only the project name is required; platform and repository details are optional and used to link policies to a specific repository.")
             
             with gr.Row():
                 project_name = gr.Textbox(
                     label="Project Name *",
-                    placeholder="e.g., MyProject, K8sProject",
-                    info="Unique name for this project (required - must be unique across all projects, activities, and tasks)"
+                    placeholder="e.g., kubernetes, GovernanceDSL, MyProject",
+                    info="A unique identifier for this project (e.g., the name of your open-source  repository). Must be unique across all scopes."
                 )
                 
                 project_platform = gr.Dropdown(
                     label="Platform (Optional)",
                     choices=["", "GitHub", "GitLab"],
                     value="",
-                    info="Select the platform where the project is hosted"
+                    info="The hosting platform — set this to link the project to a specific repository"
                 )
             
             with gr.Row():
                 project_repo_owner = gr.Textbox(
                     label="Repository Owner *",
-                    placeholder="e.g., kubernetes, microsoft, myorganization",
-                    info="Username or organization name",
+                    placeholder="e.g., kubernetes, BESSER-PEARL, myorganization",
+                    info="The GitHub/GitLab username or organization that owns the repository (the first part of the URL path)",
                     visible=False
                 )
                 
                 project_repo_name = gr.Textbox(
                     label="Repository Name *",
                     placeholder="e.g., kubernetes, vscode, myproject",
-                    info="Repository name",
+                    info="The repository name (the part after the owner in the URL)",
                     visible=False
                 )
             
@@ -106,23 +129,36 @@ class GovernanceFormBuilder:
                 label="Added Projects",
                 lines=4,
                 interactive=False,
-                placeholder="No projects added yet. Create projects to define your organizational structure.",
-                info="Projects you've added will appear here"
+                placeholder="No projects added yet. Add a project to define the top-level scope for your governance policies."
             )
             
             # Hidden component to store projects data
             projects_data = gr.State([])
         
+        # ── ACTIVITIES: uses ℹ️ accordion for contextual help ────────────────────
         with gr.Accordion("Activities", open=False):
             gr.Markdown("### Define Activities")
-            gr.Markdown("*Define activities with optional parent project association*")
-            gr.Markdown("**Note:** Only Activity Name is required")
+            
+            with gr.Accordion("ℹ️ What is an Activity?", open=False):
+                gr.Markdown("""
+An **Activity** represents a *category of collaborative work* — a recurring type of process 
+that happens within a project.
+
+Think of it as a **class of work, not a single instance**. For example:
+- ✅ `CodeReview` → means *all code reviews in general*
+- ❌ `Merge of a Pull Request` → that's a specific instance, not an activity (can be defined as a Task instead)
+
+You can assign a governance policy to an activity so that **every instance** of that work 
+follows the same rules. A policy on an activity applies to all its child tasks unless overridden.
+
+**Common examples:** `CodeReview`, `ReleaseManagement`, `Documentation`, `IssueTriaging`
+""")
             
             with gr.Row():
                 activity_name = gr.Textbox(
                     label="Activity Name *",
-                    placeholder="e.g., CodeReview, TestActivity, Documentation",
-                    info="Unique name for this activity (required - must be unique across all projects, activities, and tasks)"
+                    placeholder="e.g., CodeReview, ReleaseManagement, Documentation",
+                    info="A unique name for this category of work (e.g., 'CodeReview' covers all code reviews)"
                 )
                 
                 activity_parent = gr.Dropdown(
@@ -130,7 +166,7 @@ class GovernanceFormBuilder:
                     choices=[],  # Will be populated dynamically from added projects
                     value=None,
                     allow_custom_value=False,
-                    info="Select a parent project or leave empty for root-level activity"
+                    info="Assign this activity to a project — policies on the project will also apply here unless overridden"
                 )
             
             with gr.Row():
@@ -142,23 +178,27 @@ class GovernanceFormBuilder:
                 label="Added Activities",
                 lines=4,
                 interactive=False,
-                placeholder="No activities added yet. Create activities to organize your project workflow.",
-                info="Activities you've added will appear here"
+                placeholder="No activities added yet. Add activities to represent categories of work (e.g., CodeReview, ReleaseManagement).",
+                info="Activities are the middle level of the scope hierarchy — they group related tasks"
             )
             
             # Hidden component to store activities data
             activities_data = gr.State([])
             
+        # ── TASKS: uses Markdown with tables inside accordions ───────────────────
         with gr.Accordion("Tasks", open=False):
             gr.Markdown("### Define Tasks")
-            gr.Markdown("*Define specific tasks with optional parent, type, and action details*")
-            gr.Markdown("**Note:** Only Task Name is required")
+            
+            with gr.Accordion("ℹ️ What is a Task?", open=False):
+                gr.Markdown("A **Task** is the most granular scope — a *specific, concrete type of action* within an activity (e.g., merging a pull request or onboarding a member). "
+                         "Define a task when you need a governance rule for a particular type of action. "
+                         "If not, the activity's policy will apply by default.")
             
             with gr.Row():
                 task_name = gr.Textbox(
                     label="Task Name *",
-                    placeholder="e.g., MergeTask, PRMerge, ApprovalTask",
-                    info="Unique name for this task (required - must be unique across all projects, activities, and tasks)"
+                    placeholder="e.g., PRMerge, HotfixApproval, APIChangeReview",
+                    info="A unique name for this specific action type (the most granular governance target)"
                 )
                 
                 task_parent = gr.Dropdown(
@@ -166,7 +206,7 @@ class GovernanceFormBuilder:
                     choices=[],  # Will be populated dynamically from activities only
                     value=None,
                     allow_custom_value=False,
-                    info="Select a parent activity (tasks can only belong to activities)"
+                    info="Assign this task to an activity — it inherits the activity's policy unless it has its own"
                 )
             
             with gr.Row():
@@ -174,14 +214,14 @@ class GovernanceFormBuilder:
                     label="Type (Optional)",
                     choices=["", "Pull request", "MemberLifecycle"],
                     value="",
-                    info="Type of task"
+                    info="The platform-level object type this task corresponds to (e.g., Pull Request or member lifecycle event)"
                 )
                 
                 task_action = gr.Dropdown(
                     label="Action (Optional)",
                     choices=[""],
                     value="",
-                    info="Specific action this task performs",
+                    info="The specific platform action (e.g., 'merge', 'onboard') — only shown when a Type is selected",
                     visible=False
                 )
             
@@ -194,8 +234,8 @@ class GovernanceFormBuilder:
                 label="Added Tasks",
                 lines=4,
                 interactive=False,
-                placeholder="No tasks added yet. Create tasks to define specific governance actions.",
-                info="Tasks you've added will appear here"
+                placeholder="No tasks added yet. Add tasks for specific actions that need their own governance rules (e.g., PRMerge, HotfixApproval).",
+                info="Tasks are the most granular scope level — a task-level policy overrides its parent activity's policy"
             )
             
             # Hidden component to store tasks data
@@ -229,17 +269,25 @@ class GovernanceFormBuilder:
     def _create_participant_forms(self):
         """Create forms for defining participants (Roles, Individuals, Agents)"""
         gr.Markdown("## Define Participants")
-        gr.Markdown("Set up the people and roles involved in governance decisions.")
+        gr.Markdown(
+            "Define the people, roles, and automated systems that drive your project's governance. These entities are the \"Who\" behind every policy. "
+            "Define the people, roles, and automated systems involved in your project's governance.\n\n"
+            "In this section, you will set up the participants who will later be assigned to specific governance policies. "
+            "Participants (Roles, Individuals, or Agents) can have a custom **Vote Value** (1.0 by default) representing their influence in decisions. \n\n"
+            "> **Note:** Names must be unique across all participants (roles, individuals and agents)"
+        )
         
-        with gr.Accordion("Profiles", open=True):
+        with gr.Accordion("Profiles", open=False):
             gr.Markdown("### Define Profiles")
-            gr.Markdown("*Create diversity profiles for tracking inclusive governance*")
-            gr.Markdown("*Both gender and race are optional - you can define profiles with just one attribute or both*")
+            with gr.Accordion("ℹ️ What is a Profile?", open=False):
+                gr.Markdown("A **Profile** is a set of diversity attributes (such as gender, race, or language) used to track and promote inclusivity. "
+                "Once defined, profiles can be assigned to **Individuals** to reflect the diverse composition of your project's decision-makers."
+            )
             
             with gr.Row():
                 profile_name = gr.Textbox(
                     label="Profile Name",
-                    placeholder="e.g., diverse_profile, senior_dev_profile",
+                    placeholder="e.g., female_profile",
                     info="Unique name for this profile"
                 )
                 
@@ -284,16 +332,30 @@ class GovernanceFormBuilder:
             # Hidden component to store profiles data
             profiles_data = gr.State([])
         
-        with gr.Accordion("Roles", open=True):
+        with gr.Accordion("Roles", open=False):
             gr.Markdown("### Define Roles")
-            gr.Markdown("*Define individual roles for your project*")
-            gr.Markdown("**Note:** Role names must be unique across all participants (roles, individuals, agents)")
+            with gr.Accordion("ℹ️ What is a Role?", open=False):
+                gr.Markdown(
+                    """
+                    A **Role** represents a formal position or structural group within your project (e.g., `Maintainer`, `Reviewer`).
+
+                    Instead of naming every person in a policy, you point the policy to a **Role**. This makes your governance "future-proof":
+                    ```text
+                    [Policy: PR Merge] ──▶ Requires: [Role: Maintainer]
+                                                  │
+                            ┌───────────────────────┴──────────────────────┐
+                    [Individual: Alice]      [Individual: Bob]      [Individual: Charlie]
+                    ```
+                    **Vote value** defines the weight of this role's vote in decision-making. If an individual has already a vote value defined, that will override the role's vote value for that individual.
+
+                    """
+                )
             
             with gr.Row():
                 role_name = gr.Textbox(
                     label="Role Name *",
-                    placeholder="e.g., maintainer, reviewer, approver, owner",
-                    info="Unique name for this role (required - must be unique across all participants)"
+                    placeholder="e.g., maintainer, reviewer, approver, owner"
+                    # info="Unique name for this role (required - must be unique across all participants)"
                 )
                 
                 role_vote_value = gr.Number(
@@ -319,26 +381,32 @@ class GovernanceFormBuilder:
             # Hidden component to store roles data
             roles_data = gr.State([])
         
-        with gr.Accordion("Individuals", open=True):
+        with gr.Accordion("Individuals", open=False):
             gr.Markdown("### Individual Participants")
-            gr.Markdown("*Define individual human participants with optional attributes*")
-            gr.Markdown("*All attributes except name are optional*")
+            with gr.Accordion("ℹ️ What is an Individual?", open=False):
+                gr.Markdown(
+                    """
+                    An **Individual** represents a specific human participant in your project:
+                    *   **Position:** Can be assigned a **Role**.
+                    *   **Diversity:** Can be linked to a **Profile**.
+                    *   **Custom Power:** You can override an individual's **Vote Value** to give them more/less influence than their role suggests.
+                    """
+                )
             
             with gr.Row():
                 individual_name = gr.Textbox(
                     label="Individual Name",
-                    placeholder="e.g., john_doe, jane_smith",
-                    info="Unique name for this individual"
+                    placeholder="e.g., john_doe, jane_smith"
+                    # info="Unique name for this individual"
                 )
-                
-            with gr.Row():
                 individual_vote_value = gr.Number(
                     label="Vote Value (Optional)",
                     value=1.0,
                     step=0.1,
                     info="Weight of this individual's vote (must be >= 0.0, default: 1.0)"
                 )
-                
+
+            with gr.Row():
                 individual_profile = gr.Dropdown(
                     label="Profile (Optional)",
                     choices=[],  # Will be populated dynamically from added profiles
@@ -346,8 +414,6 @@ class GovernanceFormBuilder:
                     allow_custom_value=False,
                     info="Diversity profile for this individual"
                 )
-                
-            with gr.Row():
                 individual_role = gr.Dropdown(
                     label="Role (Optional)",
                     choices=[],  # Will be populated dynamically from roles text
@@ -372,16 +438,30 @@ class GovernanceFormBuilder:
             # Hidden component to store individuals data
             individuals_data = gr.State([])
             
-        with gr.Accordion("Agents", open=True):
+        with gr.Accordion("Agents", open=False):
             gr.Markdown("### Automated Participants")
-            gr.Markdown("*Define automated systems that participate in decisions*")
-            gr.Markdown("*All attributes except name are optional*")
+            with gr.Accordion("ℹ️ What is an Agent?", open=False):
+                gr.Markdown(
+                    """
+                    An **Agent** is an automated system or bot that participates in decisions. 
+                    Agents can be assigned a role and have additional attributes to specify their influence and trustworthiness in the decision-making process.
+                    Agents are evaluated based on three "Trust Metrics" that the engine uses to calculate their final weight:
+
+                    1. **Confidence:** How much do we trust the agent's logic/output?
+                    2. **Autonomy:** Does the agent act independently or require human supervision?
+                    3. **Explainability:** Can the agent provide clear reasons for its "vote" or action?
+
+                    ```text
+                    [Metric Scores] ──Σ──▶ [Calculated Influence] ──▶ [Governance Decision]
+                    ```
+                    """
+                )
             
             with gr.Row():
                 agent_name = gr.Textbox(
                     label="Agent Name",
-                    placeholder="e.g., k8s-ci-robot, dependabot",
-                    info="Unique name for this automated agent (no spaces allowed)"
+                    placeholder="e.g., k8s-ci-robot, dependabot"
+                    # info="Unique name for this automated agent (no spaces allowed)"
                 )
                 
                 agent_vote_value = gr.Number(
@@ -479,12 +559,28 @@ class GovernanceFormBuilder:
     def _create_policy_forms(self):
         """Create forms for defining policies"""
         gr.Markdown("## Define Governance Policies")
-        gr.Markdown("Configure the decision-making rules for your project.")
+        gr.Markdown(
+            "Configure how decisions are made by linking your **Scopes** (where) with **Participants** (who).\n\n"
+            "We can define two main categories of policies:\n"
+            "* **Simple Policies**: Single-step rules like \"Majority Vote\" or \"Technical Lead Approval\".\n"
+            "* **Composed Policies**: Multi-phase workflows (e.g., a Community Vote followed by a Board Approval). "
+        )
         
-        with gr.Accordion("Add New Policy", open=True):
-            gr.Markdown("### Create a New Policy")
-            gr.Markdown("*Define individual policies and add them to your governance structure*")
-            gr.Markdown("**Note:** Fields marked with * are mandatory")
+        with gr.Accordion("Simple Policy", open=False):
+            gr.Markdown("### Create a Single-step Policy")
+            with gr.Accordion("ℹ️ What is a Policy?", open=False):
+                gr.Markdown(
+                    """
+                    A **Policy** defines the rules for how decisions are made within a specific scope.
+
+                    Available Types:
+                    *   **Voting:** evaluated either by the number of votes actually cast (`MajorityPolicy`) or by the total number of eligible members (`AbsoluteMajorityPolicy`). Can be customized with different ratios (e.g., 2/3 majority).
+                    *   **Consensus:** Requires agreement from all; **Lazy Consensus** assumes agreement unless someone objects. Both can include fallback policies for when consensus cannot be reached.
+                    *   **Leader-Driven:** Decisions made by a specific lead (with optional default policy if lead is not available).
+
+                    > **Note:** Fallback policies must be created **before** the main policy and share the same scope.
+                    """
+                )
             
             with gr.Row():
                 policy_name = gr.Textbox(
@@ -595,8 +691,30 @@ class GovernanceFormBuilder:
             
             # Conditions section wrapped in a visual box
             with gr.Group():
-                gr.Markdown("#### 📜 Policy Conditions (Optional)")
-                gr.Markdown("*Configure additional rules and constraints for this policy*")
+                gr.Markdown("#### Policy Conditions (Optional)")
+                with gr.Accordion("ℹ️ What are Conditions?", open=False):
+                    gr.Markdown(
+                        """
+                        **Conditions** are additional constraints that must be met before, during or after a policy to be resolved.
+
+                        Condition Categories:
+                        *   **⏰ Time Management:**
+                            *   `Deadline`: Maximum time allowed.
+                            *   `MinDecisionTime`: Minimum discussion period before a decision.
+                        *   **👥 Participation:**
+                            *   `MinParticipants`: Ensures a quorum is reached.
+                            *   **Veto Right**: Grants specific individuals the power to block a proposal.
+                            *   **Participant Exclusion**: Prevents specific members from voting (e.g., conflict of interest).
+                        *   **⚙️ Technical:**
+                            *   `CheckCiCd`: Requires automated tests to pass.
+                            *   `LabelCondition`: Checks for specific GitHub/GitLab labels.
+                            *   `MinTime`: Checks for member activity/inactivity history.
+                            *   ⏱️ Evaluation Timing. Technical conditions can be checked at different stages:
+                                1.  **Pre:** Before the decision starts.
+                                2.  **Concurrent:** While the decision is being made.
+                                3.  **Post:** After the logic finishes but before the result is finalized.
+                        """
+                    )
                 
                 # Add visual containment with padding
                 # We add left and right spacers to make it visual that it's contained
@@ -819,9 +937,34 @@ class GovernanceFormBuilder:
         
 
         
-        with gr.Accordion("🔄 Composed Policy (Multi-phase)", open=False):
+        with gr.Accordion(" Composed Policy (Multi-phase)", open=False):
             gr.Markdown("### Create Complex Multi-Phase Governance Policies")
-            gr.Markdown("Composed policies orchestrate multiple existing policies in sequence or parallel.")
+            with gr.Accordion("ℹ️ What is a Composed Policy?", open=False):
+                gr.Markdown(
+                    """
+                    A **Composed Policy** orchestrates multiple phases into one complex workflow. Each phase can have its own policy type, participants, conditions, and communication channels, but they will all be linked together under a single composed policy name and scope.
+
+                    Execution patterns:
+                    * **Sequential (Phase 1 → Phase 2)**
+                        *Perfect for "Review then Approve" workflows.*
+                        ```text
+                        [Phase 1: RFC Discussion] ───(Success)───▶ [Phase 2: Formal Vote] ──▶ Result
+                        ```
+                    * **Parallel (Phase 1 & Phase 2 at once)**
+                        *Great for requiring simultaneous approvals from different departments.*
+                        ```text
+                                  ┌──▶ [Phase A: Security Audit] ──┐
+                        [Start] ──┤                                ├──▶ { All Pass? } ──▶ Result
+                                  └──▶ [Phase B: Legal Review] ────┘
+                        ```
+                    
+                    Further configuration options:
+                    *   **Carry Over:** Whether results should be carried over between phases (e.g., votes cast on the first phase are available in the second phase). *(only applicable for sequential execution).*
+                    *   **Require All:** Decide if every single phase must succeed for the final decision to pass.
+
+                    Policy types and conditions are the same as those available for single policies, see the section above for reference.
+                    """
+                )
             
             # Basic composed policy information
             with gr.Row():

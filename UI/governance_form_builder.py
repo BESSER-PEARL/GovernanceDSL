@@ -1504,25 +1504,25 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
-                return current_profiles, error_message, "", "", "", "", None
+                return current_profiles, error_message, name, gender, race, language, None
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')\n\n{display_text}" if current_profiles else "❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')"
-                return current_profiles, error_message, "", "", "", "", None
+                return current_profiles, error_message, name, gender, race, language, None
             
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name already exists\n\n{display_text}" if current_profiles else "❌ Error: Profile name already exists"
-                return current_profiles, error_message, "", "", "", "", None
+                return current_profiles, error_message, name, gender, race, language, None
             
             # Validate that at least one attribute is provided
             if not gender and not race and not language:
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profiles must have at least one attribute (gender, race, or language)\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have at least one attribute (gender, race, or language)"
-                return current_profiles, error_message, "", "", "", "", None
+                return current_profiles, error_message, name, gender, race, language, None
             
             # Create new profile
             new_profile = {
@@ -1549,19 +1549,19 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not name.strip():
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Please enter a role name\n\n{display_text}" if current_roles else "❌ Error: Please enter a role name"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')\n\n{display_text}" if current_roles else "❌ Error: Role name cannot contain spaces (use underscores instead, e.g., 'my_role')"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Validate vote_value is not negative if provided
             if vote_value is not None and vote_value < 0.0:
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Vote value cannot be negative\n\n{display_text}" if current_roles else "❌ Error: Vote value cannot be negative"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Check for global name uniqueness across all participant types
             role_name = name.strip()
@@ -1570,19 +1570,19 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if any(i['name'] == role_name for i in current_individuals):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Name '{role_name}' already exists as an individual\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an individual"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Check against existing agents
             if any(a['name'] == role_name for a in current_agents):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Name '{role_name}' already exists as an agent\n\n{display_text}" if current_roles else f"❌ Error: Name '{role_name}' already exists as an agent"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Check against existing roles
             if any(r['name'] == role_name for r in current_roles):
                 display_text = self._format_roles_display(current_roles)
                 error_message = f"❌ Error: Role name already exists\n\n{display_text}" if current_roles else "❌ Error: Role name already exists"
-                return current_roles, error_message, "", None
+                return current_roles, error_message, name, vote_value
             
             # Add new role with optional vote value
             new_role = {
@@ -1601,30 +1601,30 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def add_individual(name, vote_value, profile, role, current_individuals, current_profiles, current_roles, current_agents):
             """Add a new individual to the list"""
             if not name.strip():
-                return current_individuals, "❌ Please enter an individual name", "", 1.0, None, None
+                return current_individuals, "❌ Please enter an individual name", name, vote_value, profile, role
             
             # Validate no spaces in name
             if ' ' in name.strip():
-                return current_individuals, "❌ Individual name cannot contain spaces (use underscores instead, e.g., 'john_doe')", "", 1.0, None, None
+                return current_individuals, "❌ Individual name cannot contain spaces (use underscores instead, e.g., 'john_doe')", name, vote_value, profile, role
             
             # Validate vote_value is not negative if provided
             if vote_value is not None and vote_value < 0.0:
-                return current_individuals, "❌ Vote value cannot be negative", "", 1.0, None, None
+                return current_individuals, "❌ Vote value cannot be negative", name, vote_value, profile, role
             
             # Check for global name uniqueness across all participant types
             individual_name = name.strip()
             
             # Check against existing roles
             if any(r['name'] == individual_name for r in current_roles):
-                return current_individuals, f"❌ Name '{individual_name}' already exists as a role", "", 1.0, None, None
+                return current_individuals, f"❌ Name '{individual_name}' already exists as a role", name, vote_value, profile, role
             
             # Check against existing agents
             if any(a['name'] == individual_name for a in current_agents):
-                return current_individuals, f"❌ Name '{individual_name}' already exists as an agent", "", 1.0, None, None
+                return current_individuals, f"❌ Name '{individual_name}' already exists as an agent", name, vote_value, profile, role
             
             # Check against existing individuals
             if any(i['name'] == individual_name for i in current_individuals):
-                return current_individuals, "❌ Individual name already exists", "", 1.0, None, None
+                return current_individuals, "❌ Individual name already exists", name, vote_value, profile, role
             
             # Create new individual
             new_individual = {
@@ -1657,40 +1657,40 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def add_agent(name, vote_value, confidence, autonomy_level, explainability, role, current_agents, current_roles, current_individuals):
             """Add a new agent to the list"""
             if not name.strip():
-                return current_agents, "❌ Please enter an agent name", "", 1.0, None, None, None, None
+                return current_agents, "❌ Please enter an agent name", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Validate no spaces in name
             if ' ' in name.strip():
-                return current_agents, "❌ Agent name cannot contain spaces (use underscores instead, e.g., 'my_agent')", "", 1.0, None, None, None, None
+                return current_agents, "❌ Agent name cannot contain spaces (use underscores instead, e.g., 'my_agent')", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Validate vote_value is not negative if provided
             if vote_value is not None and vote_value < 0.0:
-                return current_agents, "❌ Vote value cannot be negative", "", 1.0, None, None, None, None
+                return current_agents, "❌ Vote value cannot be negative", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Validate agent attribute ranges (must be between 0.0 and 1.0)
             if confidence is not None and (confidence < 0.0 or confidence > 1.0):
-                return current_agents, "❌ Confidence must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+                return current_agents, "❌ Confidence must be between 0.0 and 1.0", name, vote_value, confidence, autonomy_level, explainability, role
             
             if autonomy_level is not None and (autonomy_level < 0.0 or autonomy_level > 1.0):
-                return current_agents, "❌ Autonomy Level must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+                return current_agents, "❌ Autonomy Level must be between 0.0 and 1.0", name, vote_value, confidence, autonomy_level, explainability, role
             
             if explainability is not None and (explainability < 0.0 or explainability > 1.0):
-                return current_agents, "❌ Explainability must be between 0.0 and 1.0", "", 1.0, None, None, None, None
+                return current_agents, "❌ Explainability must be between 0.0 and 1.0", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Check for global name uniqueness across all participant types
             agent_name = name.strip()
             
             # Check against existing roles
             if any(r['name'] == agent_name for r in current_roles):
-                return current_agents, f"❌ Name '{agent_name}' already exists as a role", "", 1.0, None, None, None, None
+                return current_agents, f"❌ Name '{agent_name}' already exists as a role", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Check against existing individuals
             if any(i['name'] == agent_name for i in current_individuals):
-                return current_agents, f"❌ Name '{agent_name}' already exists as an individual", "", 1.0, None, None, None, None
+                return current_agents, f"❌ Name '{agent_name}' already exists as an individual", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Check against existing agents
             if any(a['name'] == agent_name for a in current_agents):
-                return current_agents, "❌ Agent name already exists", "", 1.0, None, None, None, None
+                return current_agents, "❌ Agent name already exists", name, vote_value, confidence, autonomy_level, explainability, role
             
             # Create new agent
             new_agent = {
@@ -1724,13 +1724,21 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not name.strip():
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Please enter a project name\n\n{display_text}" if current_projects else "❌ Error: Please enter a project name"
-                return current_projects, error_message, "", "", "", ""
+                return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')\n\n{display_text}" if current_projects else "❌ Error: Project name cannot contain spaces (use underscores instead, e.g., 'my_project')"
-                return current_projects, error_message, "", "", "", ""
+                return current_projects, error_message, name, platform, repo_owner, repo_name
+            if repo_owner is not None and ' ' in repo_owner.strip():
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Repository owner name cannot contain spaces\n\n{display_text}" if current_projects else "❌ Error: Repository owner name cannot contain spaces"
+                return current_projects, error_message, name, platform, repo_owner, repo_name
+            if repo_name is not None and ' ' in repo_name.strip():
+                display_text = self._format_projects_display(current_projects)
+                error_message = f"❌ Error: Repository name cannot contain spaces\n\n{display_text}" if current_projects else "❌ Error: Repository name cannot contain spaces"
+                return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Check for global name uniqueness across projects, activities, and tasks
             project_name = name.strip()
@@ -1739,37 +1747,37 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if any(p['name'] == project_name for p in current_projects):
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Project name already exists\n\n{display_text}" if current_projects else "❌ Error: Project name already exists"
-                return current_projects, error_message, "", "", "", ""
+                return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Check against existing activities (if provided)
             if current_activities and any(a['name'] == project_name for a in current_activities):
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Name '{project_name}' already exists as an activity\n\n{display_text}" if current_projects else f"❌ Error: Name '{project_name}' already exists as an activity"
-                return current_projects, error_message, "", "", "", ""
+                return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Check against existing tasks (if provided)
             if current_tasks and any(t['name'] == project_name for t in current_tasks):
                 display_text = self._format_projects_display(current_projects)
                 error_message = f"❌ Error: Name '{project_name}' already exists as a task\n\n{display_text}" if current_projects else f"❌ Error: Name '{project_name}' already exists as a task"
-                return current_projects, error_message, "", "", "", ""
+                return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Validate platform and repository relationship
             if platform and platform.strip():
                 if not repo_owner or not repo_owner.strip():
                     display_text = self._format_projects_display(current_projects)
                     error_message = f"❌ Error: Repository owner is required when a platform is selected\n\n{display_text}" if current_projects else "❌ Error: Repository owner is required when a platform is selected"
-                    return current_projects, error_message, "", "", "", ""
+                    return current_projects, error_message, name, platform, repo_owner, repo_name
                 if not repo_name or not repo_name.strip():
                     display_text = self._format_projects_display(current_projects)
                     error_message = f"❌ Error: Repository name is required when a platform is selected\n\n{display_text}" if current_projects else "❌ Error: Repository name is required when a platform is selected"
-                    return current_projects, error_message, "", "", "", ""
+                    return current_projects, error_message, name, platform, repo_owner, repo_name
                 
                 # Check for duplicate platform-repository combination
                 full_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
                 if any(p.get('platform') == platform.strip() and p.get('repo') == full_repo for p in current_projects):
                     display_text = self._format_projects_display(current_projects)
                     error_message = f"❌ Error: Repository {full_repo} already exists for {platform}\n\n{display_text}" if current_projects else f"❌ Error: Repository {full_repo} already exists for {platform}"
-                    return current_projects, error_message, "", "", "", ""
+                    return current_projects, error_message, name, platform, repo_owner, repo_name
             
             # Create new project
             new_project = {
@@ -1799,13 +1807,13 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not name.strip():
                 display_text = self._format_activities_display(current_activities)
                 error_message = f"❌ Error: Please enter an activity name\n\n{display_text}" if current_activities else "❌ Error: Please enter an activity name"
-                return current_activities, error_message, "", None
+                return current_activities, error_message, name, parent
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_activities_display(current_activities)
                 error_message = f"❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')\n\n{display_text}" if current_activities else "❌ Error: Activity name cannot contain spaces (use underscores instead, e.g., 'my_activity')"
-                return current_activities, error_message, "", None
+                return current_activities, error_message, name, parent
             
             # Check for global name uniqueness across projects and activities
             activity_name = name.strip()
@@ -1814,13 +1822,13 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if any(p['name'] == activity_name for p in current_projects):
                 display_text = self._format_activities_display(current_activities)
                 error_message = f"❌ Error: Name '{activity_name}' already exists as a project\n\n{display_text}" if current_activities else f"❌ Error: Name '{activity_name}' already exists as a project"
-                return current_activities, error_message, "", None
+                return current_activities, error_message, name, parent
             
             # Check against existing activities
             if any(a['name'] == activity_name for a in current_activities):
                 display_text = self._format_activities_display(current_activities)
                 error_message = f"❌ Error: Activity name already exists\n\n{display_text}" if current_activities else "❌ Error: Activity name already exists"
-                return current_activities, error_message, "", None
+                return current_activities, error_message, name, parent
             
             # Create new activity
             new_activity = {
@@ -1847,13 +1855,13 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not name.strip():
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Please enter a task name\n\n{display_text}" if current_tasks else "❌ Error: Please enter a task name"
-                return current_tasks, error_message, "", None, "", ""
+                return current_tasks, error_message, name, parent, task_type, action
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')\n\n{display_text}" if current_tasks else "❌ Error: Task name cannot contain spaces (use underscores instead, e.g., 'my_task')"
-                return current_tasks, error_message, "", None, "", ""
+                return current_tasks, error_message, name, parent, task_type, action
             
             # Check for global name uniqueness across projects, activities, and tasks
             task_name = name.strip()
@@ -1862,26 +1870,26 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if any(p['name'] == task_name for p in current_projects):
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Name '{task_name}' already exists as a project\n\n{display_text}" if current_tasks else f"❌ Error: Name '{task_name}' already exists as a project"
-                return current_tasks, error_message, "", None, "", ""
+                return current_tasks, error_message, name, parent, task_type, action
             
             # Check against existing activities
             if any(a['name'] == task_name for a in current_activities):
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Name '{task_name}' already exists as an activity\n\n{display_text}" if current_tasks else f"❌ Error: Name '{task_name}' already exists as an activity"
-                return current_tasks, error_message, "", None, "", ""
+                return current_tasks, error_message, name, parent, task_type, action
             
             # Check against existing tasks
             if any(t['name'] == task_name for t in current_tasks):
                 display_text = self._format_tasks_display(current_tasks)
                 error_message = f"❌ Error: Task name already exists\n\n{display_text}" if current_tasks else "❌ Error: Task name already exists"
-                return current_tasks, error_message, "", None, "", ""
+                return current_tasks, error_message, name, parent, task_type, action
             
             # Validate parent is an activity (if provided)
             if parent and parent.strip():
                 if not any(a['name'] == parent for a in current_activities):
                     display_text = self._format_tasks_display(current_tasks)
                     error_message = f"❌ Error: Parent '{parent}' is not a valid activity\n\n{display_text}" if current_tasks else f"❌ Error: Parent '{parent}' is not a valid activity"
-                    return current_tasks, error_message, "", None, "", ""
+                    return current_tasks, error_message, name, parent, task_type, action
             
             # Create new task
             new_task = {
@@ -2045,7 +2053,10 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 display_text = self._format_policies_display(current_policies)
                 error_message = f"❌ Error: Please enter a policy name\n\n{display_text}" if current_policies else "❌ Error: Please enter a policy name"
                 return current_policies, error_message
-            
+            if ' ' in name.strip():
+                display_text = self._format_policies_display(current_policies)
+                error_message = f"❌ Error: Policy name cannot contain spaces (use underscores instead, e.g., 'my_policy')\n\n{display_text}" if current_policies else "❌ Error: Policy name cannot contain spaces (use underscores instead, e.g., 'my_policy')"
+                return current_policies, error_message
             # Validate policy scope (mandatory)
             if not scope:
                 display_text = self._format_policies_display(current_policies)
@@ -2148,29 +2159,29 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 else:
                     return f"❌ Error: {error_msg}"
             
-            # Helper function to return error with all condition fields reset
+            # Helper function to return error while keeping form values
             def return_error(error_msg):
                 return (
                     format_conditions_with_error(error_msg),  # added_conditions_list
-                    gr.Dropdown(value=""),  # condition_type
-                    gr.Dropdown(value=None),  # veto_participants
-                    gr.Dropdown(value=None),  # excluded_participants
-                    None,  # min_participants
-                    None,  # deadline_offset_value  
-                    "days",  # deadline_offset_unit
-                    "",  # deadline_date
-                    None,  # min_decision_offset_value
-                    "days",  # min_decision_offset_unit
-                    "",  # min_decision_date
-                    "",  # check_ci_cd_evaluation_mode
-                    True,  # check_ci_cd_value
-                    "",  # label_condition_type
-                    "",  # label_condition_operator
-                    "",  # label_condition_labels
-                    "",  # min_time_evaluation_mode
-                    "Activity",  # min_time_activity
-                    None,  # min_time_offset_value
-                    "days"  # min_time_offset_unit
+                    condition_type,  # keep condition_type
+                    veto_participants,  # keep veto_participants
+                    excluded_participants,  # keep excluded_participants
+                    min_participants,  # keep min_participants
+                    deadline_offset_value,  # keep deadline_offset_value
+                    deadline_offset_unit,  # keep deadline_offset_unit
+                    deadline_date,  # keep deadline_date
+                    min_decision_offset_value,  # keep min_decision_offset_value
+                    min_decision_offset_unit,  # keep min_decision_offset_unit
+                    min_decision_date,  # keep min_decision_date
+                    check_ci_cd_evaluation_mode,  # keep check_ci_cd_evaluation_mode
+                    check_ci_cd_value,  # keep check_ci_cd_value
+                    label_condition_type,  # keep label_condition_type
+                    label_condition_operator,  # keep label_condition_operator
+                    label_condition_labels,  # keep label_condition_labels
+                    min_time_evaluation_mode,  # keep min_time_evaluation_mode
+                    min_time_activity,  # keep min_time_activity
+                    min_time_offset_value,  # keep min_time_offset_value
+                    min_time_offset_unit  # keep min_time_offset_unit
                 )
             
             if not condition_type:
@@ -2340,29 +2351,29 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 else:
                     return f"❌ Error: {error_msg}"
             
-            # Helper function to return error with all condition fields reset
+            # Helper function to return error while keeping form values
             def return_error(error_msg):
                 return (
                     format_conditions_with_error(error_msg),  # added_phase_conditions_list
-                    gr.Dropdown(value=""),  # phase_condition_type
-                    gr.Dropdown(value=None),  # phase_veto_participants
-                    gr.Dropdown(value=None),  # phase_excluded_participants
-                    None,  # phase_min_participants
-                    None,  # phase_deadline_offset_value  
-                    "days",  # phase_deadline_offset_unit
-                    "",  # phase_deadline_date
-                    None,  # phase_min_decision_offset_value
-                    "days",  # phase_min_decision_offset_unit
-                    "",  # phase_min_decision_date
-                    "",  # phase_check_ci_cd_evaluation_mode
-                    True,  # phase_check_ci_cd_value
-                    "",  # phase_label_condition_type
-                    "",  # phase_label_condition_operator
-                    "",  # phase_label_condition_labels
-                    "",  # phase_min_time_evaluation_mode
-                    "Activity",  # phase_min_time_activity
-                    None,  # phase_min_time_offset_value
-                    "days"  # phase_min_time_offset_unit
+                    phase_condition_type,  # keep phase_condition_type
+                    phase_veto_participants,  # keep phase_veto_participants
+                    phase_excluded_participants,  # keep phase_excluded_participants
+                    phase_min_participants,  # keep phase_min_participants
+                    phase_deadline_offset_value,  # keep phase_deadline_offset_value
+                    phase_deadline_offset_unit,  # keep phase_deadline_offset_unit
+                    phase_deadline_date,  # keep phase_deadline_date
+                    phase_min_decision_offset_value,  # keep phase_min_decision_offset_value
+                    phase_min_decision_offset_unit,  # keep phase_min_decision_offset_unit
+                    phase_min_decision_date,  # keep phase_min_decision_date
+                    phase_check_ci_cd_evaluation_mode,  # keep phase_check_ci_cd_evaluation_mode
+                    phase_check_ci_cd_value,  # keep phase_check_ci_cd_value
+                    phase_label_condition_type,  # keep phase_label_condition_type
+                    phase_label_condition_operator,  # keep phase_label_condition_operator
+                    phase_label_condition_labels,  # keep phase_label_condition_labels
+                    phase_min_time_evaluation_mode,  # keep phase_min_time_evaluation_mode
+                    phase_min_time_activity,  # keep phase_min_time_activity
+                    phase_min_time_offset_value,  # keep phase_min_time_offset_value
+                    phase_min_time_offset_unit  # keep phase_min_time_offset_unit
                 )
             
             if not phase_condition_type:
@@ -2558,20 +2569,20 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 else:
                     return f"❌ Error: {error_msg}"
 
-            # Helper function to return error with all phase fields reset
+            # Helper function to return error while keeping form values
             def return_phase_error(error_msg):
                 return (
                     format_phases_with_error(error_msg),  # added_phases_list
-                    "",  # phase_name
-                    "MajorityPolicy",  # phase_type
-                    [],  # phase_participants - use empty list
-                    "BooleanDecision",  # phase_decision_type
-                    "",  # phase_decision_options
-                    1.0,  # phase_voting_ratio
-                    None,  # phase_default_decision
-                    None,  # phase_fallback_policy
-                    "",   # phase_communication_channel
-                    ""    # added_phase_conditions_text - clear conditions
+                    phase_name,  # keep phase_name
+                    phase_type,  # keep phase_type
+                    phase_participants,  # keep phase_participants
+                    phase_decision_type,  # keep phase_decision_type
+                    phase_decision_options,  # keep phase_decision_options
+                    phase_voting_ratio,  # keep phase_voting_ratio
+                    phase_default_decision,  # keep phase_default_decision
+                    phase_fallback_policy,  # keep phase_fallback_policy
+                    phase_communication_channel,   # keep phase_communication_channel
+                    added_phase_conditions_text    # keep added_phase_conditions_text
                 )
 
             # Validate phase name (mandatory)
@@ -2635,7 +2646,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     if line and not line.startswith('❌') and not line.startswith('✅'):
                         clean_conditions.append(line)
                 if clean_conditions:
-                    phase_display += f" [Conditions: {', '.join(clean_conditions)}]"
+                    phase_display += f" [Conditions: {'; '.join(clean_conditions)}]"
 
             # Add to existing phases and format success message
             updated_phases = existing_phases + [phase_display]
@@ -2799,15 +2810,26 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def add_project_and_clear_form(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
             """Add project and return cleared form with proper repository visibility"""
             # First add the project
-            updated_projects, message, clear_name, clear_platform, _, _ = add_project(
+            updated_projects, message, new_name, new_platform, new_repo_owner, new_repo_name = add_project(
                 name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks
             )
 
-            # After clearing, repository fields should be hidden and empty since platform is cleared
-            hidden_repo_owner = gr.Textbox(value="", visible=False)
-            hidden_repo_name = gr.Textbox(value="", visible=False)
-
-            return updated_projects, message, clear_name, clear_platform, hidden_repo_owner, hidden_repo_name
+            # Check if the addition was successful (no error message)
+            if "❌ Error:" not in message:
+                # Success: clear and hide repo fields since platform is cleared
+                return (
+                    updated_projects, message, "", "", 
+                    gr.Textbox(value="", visible=False), 
+                    gr.Textbox(value="", visible=False)
+                )
+            else:
+                # Error: keep the values and maintain proper visibility of repo fields
+                is_visible = bool(platform and platform.strip())
+                return (
+                    updated_projects, message, new_name, new_platform, 
+                    gr.Textbox(value=new_repo_owner, visible=is_visible), 
+                    gr.Textbox(value=new_repo_name, visible=is_visible)
+                )
 
         scope_components['add_project_btn'].click(
             fn=add_project_and_clear_form,
@@ -3860,6 +3882,22 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                         elif condition_line.startswith('MinDecisionTime:'):
                             condition_content = condition_line.split(':', 1)[1].strip()
                             conditions.append(f"        MinDecisionTime : {condition_content}")
+                        elif condition_line.startswith('CheckCiCd'):
+                            # Handles CheckCiCd [evaluation]: true/false
+                            condition_content = condition_line.split(':', 1)[1].strip() if ':' in condition_line else ""
+                            condition_prefix = condition_line.split(':', 1)[0].strip()
+                            if condition_content:
+                                conditions.append(f"        {condition_prefix} : {condition_content}")
+                            else:
+                                conditions.append(f"        {condition_prefix}")
+                        elif condition_line.startswith('MinTime'):
+                            # Handles MinTime [evaluation] of [Activity/InActivity]: [offset]
+                            condition_content = condition_line.split(':', 1)[1].strip() if ':' in condition_line else ""
+                            condition_prefix = condition_line.split(':', 1)[0].strip()
+                            if condition_content:
+                                conditions.append(f"        {condition_prefix} : {condition_content}")
+                            else:
+                                conditions.append(f"        {condition_prefix}")
                         elif condition_line.startswith('LabelCondition'):
                             # Parse LabelCondition format: "LabelCondition pre not : label1, label2"
                             condition_content = condition_line.split(':', 1)[1].strip()
@@ -3897,7 +3935,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                             else:
                                 deadline_parts.append(policy['deadline_date'])
                         if deadline_parts:
-                            conditions.append(f"        Deadline policy_deadline : {''.join(deadline_parts)}")
+                            conditions.append(f"        Deadline : {', '.join(deadline_parts)}")
                     
                     elif condition_type == "MinDecisionTime":
                         min_decision_parts = []
@@ -3909,7 +3947,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                             else:
                                 min_decision_parts.append(policy['min_decision_date'])
                         if min_decision_parts:
-                            conditions.append(f"        MinDecisionTime min_time_id : {''.join(min_decision_parts)}")
+                            conditions.append(f"        MinDecisionTime : {', '.join(min_decision_parts)}")
                     
                     elif condition_type == "LabelCondition" and policy.get('label_condition_labels'):
                         label_type = policy.get('label_condition_type', 'pre')
@@ -4003,7 +4041,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                                     base_part = after_participants.split(' [Conditions: ')[0]
                                     conditions_part = after_participants.split(' [Conditions: ')[1].rstrip(']')
                                     # Parse conditions: split by comma, then strip and add to list
-                                    phase_conditions = [c.strip() for c in conditions_part.split(',')]
+                                    phase_conditions = [c.strip() for c in conditions_part.split(';')]
                                 else:
                                     base_part = after_participants
                                 
@@ -4068,6 +4106,22 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                                     elif condition.startswith('MinDecisionTime:'):
                                         condition_content = condition.split(':', 1)[1].strip()
                                         dsl_parts.append(f"                MinDecisionTime : {condition_content}")
+                                    elif condition.startswith('CheckCiCd'):
+                                        # Handles CheckCiCd [evaluation]: true/false
+                                        condition_content = condition.split(':', 1)[1].strip() if ':' in condition else ""
+                                        condition_prefix = condition.split(':', 1)[0].strip()
+                                        if condition_content:
+                                            dsl_parts.append(f"                {condition_prefix} : {condition_content}")
+                                        else:
+                                            dsl_parts.append(f"                {condition_prefix}")
+                                    elif condition.startswith('MinTime'):
+                                        # Handles MinTime [evaluation] of [Activity/InActivity]: [offset]
+                                        condition_content = condition.split(':', 1)[1].strip() if ':' in condition else ""
+                                        condition_prefix = condition.split(':', 1)[0].strip()
+                                        if condition_content:
+                                            dsl_parts.append(f"                {condition_prefix} : {condition_content}")
+                                        else:
+                                            dsl_parts.append(f"                {condition_prefix}")
                                     elif condition.startswith('LabelCondition'):
                                         # Parse LabelCondition format: "LabelCondition pre not : label1, label2"
                                         condition_content = condition.split(':', 1)[1].strip() if ':' in condition else ""

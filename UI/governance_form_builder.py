@@ -1936,6 +1936,29 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 gr.Textbox(visible=show_url), # repo_url_input
                 gr.Row(visible=show_manual),  # manual_repo_row
             )
+        
+        def autofill_from_url(url: str):
+            """Parse the URL and populate manual fields as a convenience."""
+            if not url or not url.strip():
+                return (
+                    gr.Dropdown(value="GitHub"),
+                    gr.Textbox(value=""),
+                    gr.Textbox(value=""),
+                    ""  # status
+                )
+            platform, owner, name = self._parse_repo_url(url.strip())
+            if platform:
+                status = f"✅ Detected: **{platform}** — `{owner}/{name}`"
+            else:
+                status = "⚠️ Could not parse URL. Check the format: `https://github.com/owner/repo`"
+                platform, owner, name = "GitHub", "", ""
+
+            return (
+                gr.Dropdown(value=platform),
+                gr.Textbox(value=owner),
+                gr.Textbox(value=name),
+                status
+            )
 
         def apply_template(template_name, custom_project_name,
                    repo_link_mode, repo_url_input,
@@ -4283,29 +4306,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             return "GitLab", m.group(1), m.group(2)
 
         return None, None, None
-    
-    def autofill_from_url(self, url: str):
-        """Parse the URL and populate manual fields as a convenience."""
-        if not url or not url.strip():
-            return (
-                gr.Dropdown(value="GitHub"),
-                gr.Textbox(value=""),
-                gr.Textbox(value=""),
-                ""  # status
-            )
-        platform, owner, name = self._parse_repo_url(url.strip())
-        if platform:
-            status = f"✅ Detected: **{platform}** — `{owner}/{name}`"
-        else:
-            status = "⚠️ Could not parse URL. Check the format: `https://github.com/owner/repo`"
-            platform, owner, name = "GitHub", "", ""
-
-        return (
-            gr.Dropdown(value=platform),
-            gr.Textbox(value=owner),
-            gr.Textbox(value=name),
-            status
-        )
     
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""

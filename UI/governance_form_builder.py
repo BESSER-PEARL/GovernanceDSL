@@ -8,6 +8,9 @@ import os
 from datetime import datetime
 import urllib.parse
 import copy
+import re
+import tempfile
+                
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -437,6 +440,39 @@ class GovernanceFormBuilder:
             info="If set, replaces the default 'MyProject' name in the template"
         )
 
+        repo_link_mode = gr.Radio(
+            label="Link to a repository? (optional)",
+            choices=["No", "Via URL", "Manual"],
+            value="No",
+            info="Connect the template project to a GitHub or GitLab repository"
+        )
+
+        # Via URL inputs (hidden by default) 
+        repo_url_input = gr.Textbox(
+            label="Repository URL",
+            placeholder="https://github.com/owner/repo  or  https://gitlab.com/owner/repo",
+            info="Paste the full URL of your repository",
+            visible=False
+        )
+
+        # Manual inputs (hidden by default) 
+        with gr.Row(visible=False) as manual_repo_row:
+            repo_platform = gr.Dropdown(
+                label="Platform",
+                choices=["GitHub", "GitLab"],
+                value="GitHub",
+            )
+            repo_owner = gr.Textbox(
+                label="Repository Owner",
+                placeholder="e.g., kubernetes",
+                info="The user or organisation that owns the repository"
+            )
+            repo_name = gr.Textbox(
+                label="Repository Name",
+                placeholder="e.g., kubernetes",
+                info="The repository name (after the owner in the URL)"
+            )
+
         apply_template_btn = gr.Button(
             "🚀 Apply Template",
             variant="primary"
@@ -448,6 +484,12 @@ class GovernanceFormBuilder:
             'template_dropdown': template_dropdown,
             'template_description': template_description,
             'template_project_name': template_project_name,
+            'repo_link_mode': repo_link_mode,
+            'repo_url_input': repo_url_input,
+            'manual_repo_row': manual_repo_row,
+            'repo_platform': repo_platform,
+            'repo_owner': repo_owner,
+            'repo_name': repo_name,
             'apply_template_btn': apply_template_btn,
             'template_status': template_status,
         }
@@ -521,7 +563,7 @@ class GovernanceFormBuilder:
             # Hidden component to store projects data
             projects_data = gr.State([])
         
-        # ── ACTIVITIES: uses ℹ️ accordion for contextual help ────────────────────
+        # ACTIVITIES: uses ℹ️ accordion for contextual help 
         with gr.Accordion("Activities", open=False):
             gr.Markdown("### Define Activities")
             
@@ -571,7 +613,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             # Hidden component to store activities data
             activities_data = gr.State([])
             
-        # ── TASKS: uses Markdown with tables inside accordions ───────────────────
+        # TASKS: uses Markdown with tables inside accordions 
         with gr.Accordion("Tasks", open=False):
             gr.Markdown("### Define Tasks")
             
@@ -1862,7 +1904,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not date_string or not date_string.strip():
                 return True, ""  # Date is optional
             
-            import re
             date_string = date_string.strip()
             # Check format DD/MM/YYYY
             pattern = r'^(\d{1,2})/(\d{1,2})/(\d{4})$'
@@ -1887,7 +1928,18 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             
             return True, ""
         
+        def update_repo_link_visibility(mode):
+            """Show/hide repository input fields based on the selected mode."""
+            show_url = (mode == "Via URL")
+            show_manual = (mode == "Manual")
+            return (
+                gr.Textbox(visible=show_url), # repo_url_input
+                gr.Row(visible=show_manual),  # manual_repo_row
+            )
+
         def apply_template(template_name, custom_project_name,
+                   repo_link_mode, repo_url_input,
+                   repo_platform, repo_owner, repo_name,
                    current_projects, current_activities, current_tasks,
                    current_profiles, current_roles, current_individuals, current_agents,
                    current_policies, current_composed_policies):
@@ -1926,6 +1978,31 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 for cp in template["composed_policies"]:
                     if cp.get("scope") == "MyProject":
                         cp["scope"] = project_name_override
+            
+            # Resolve repository details 
+            resolved_platform = None
+            resolved_repo = None      # stored as "owner/repo" string
+
+            if repo_link_mode == "Via URL" and repo_url_input and repo_url_input.strip():
+                parsed_platform, parsed_owner, parsed_repo_name = self._parse_repo_url(repo_url_input.strip())
+                if parsed_platform:
+                    resolved_platform = parsed_platform
+                    resolved_repo = f"{parsed_owner}/{parsed_repo_name}"
+            elif repo_link_mode == "Manual" and repo_owner and repo_owner.strip() and repo_name and repo_name.strip():
+                resolved_platform = repo_platform if repo_platform else "GitHub"
+                resolved_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
+
+            # Inject platform + repo into the first project of the template
+            if resolved_platform and resolved_repo:
+                project_name_in_template = (
+                    project_name_override
+                    if project_name_override
+                    else (template["projects"][0]["name"] if template["projects"] else "MyProject")
+                )
+                for p in template["projects"]:
+                    if p["name"] == project_name_in_template:
+                        p["platform"] = resolved_platform
+                        p["repo"] = resolved_repo
 
             # Build return values: data states + display texts + status message
             projects = template["projects"]
@@ -1937,6 +2014,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             agents = template["agents"]
             policies = template["policies"]
             composed_policies = template["composed_policies"]
+
+            repo_info = f" (linked to **{resolved_platform}**: `{resolved_repo}`)" if resolved_platform else ""
+            status_msg = f"✅ Template **\"{template_name}\"** applied{repo_info}! Switch to the other tabs to review and customize."
 
             return (
                 projects, activities, tasks,
@@ -1953,7 +2033,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 self._format_policies_display(policies),
                 self._format_composed_policies_display(composed_policies),
                 # Status
-                f"✅ Template **\"{template_name}\"** applied! Switch to the other tabs to review and customize."
+                status_msg
             )
         
         def update_template_description(template_name):
@@ -3300,11 +3380,36 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             outputs=[template_components['template_description']]
         )
 
+        template_components['repo_link_mode'].change(
+            fn=update_repo_link_visibility,
+            inputs=[template_components['repo_link_mode']],
+            outputs=[
+                template_components['repo_url_input'],
+                template_components['manual_repo_row'],
+            ]
+        )
+
+        template_components['repo_url_input'].change(
+            fn=autofill_from_url,
+            inputs=[template_components['repo_url_input']],
+            outputs=[
+                template_components['repo_platform'],
+                template_components['repo_owner'],
+                template_components['repo_name'],
+                template_components['template_status'],
+            ]
+        )
+
         template_components['apply_template_btn'].click(
             fn=apply_template,
             inputs=[
                 template_components['template_dropdown'],
                 template_components['template_project_name'],
+                template_components['repo_link_mode'],
+                template_components['repo_url_input'],
+                template_components['repo_platform'],
+                template_components['repo_owner'],
+                template_components['repo_name'],
                 # Current state components (to return unchanged if no template selected)
                 scope_components['projects_data'],
                 scope_components['activities_data'],
@@ -4108,9 +4213,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             
             # Write to a temporary file with the proper name
             try:
-                import tempfile
-                import os
-                
                 # Get temp directory
                 temp_dir = tempfile.gettempdir()
                 if not temp_dir or temp_dir == '/':
@@ -4123,7 +4225,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 
                 # Return just the file path
                 return temp_path
-            except Exception as e:
+            except Exception:
                 # If file creation fails, try in current directory
                 try:
                     with open(filename, 'w') as f:
@@ -4150,6 +4252,60 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             return f"{int(float_val)}.0"
         else:
             return str(float_val)
+    
+    def _parse_repo_url(self, url: str):
+        """
+        Parse a GitHub or GitLab URL into (platform, owner, repo_name).
+        Returns (None, None, None) if the URL is not recognisable.
+
+        Supported patterns:
+            https://github.com/owner/repo
+            https://github.com/owner/repo.git
+            https://github.com/owner/repo/tree/main
+            https://gitlab.com/owner/repo
+            https://gitlab.com/group/subgroup/repo  (returns group/subgroup as owner)
+        """
+        url = url.strip().rstrip('/')
+
+        github_pattern = re.compile(
+            r'https?://github\.com/([^/]+)/([^/\s]+?)(?:\.git)?(?:/.*)?$'
+        )
+        gitlab_pattern = re.compile(
+            r'https?://gitlab\.com/(.+)/([^/\s]+?)(?:\.git)?(?:/.*)?$'
+        )
+
+        m = github_pattern.match(url)
+        if m:
+            return "GitHub", m.group(1), m.group(2)
+
+        m = gitlab_pattern.match(url)
+        if m:
+            return "GitLab", m.group(1), m.group(2)
+
+        return None, None, None
+    
+    def autofill_from_url(self, url: str):
+        """Parse the URL and populate manual fields as a convenience."""
+        if not url or not url.strip():
+            return (
+                gr.Dropdown(value="GitHub"),
+                gr.Textbox(value=""),
+                gr.Textbox(value=""),
+                ""  # status
+            )
+        platform, owner, name = self._parse_repo_url(url.strip())
+        if platform:
+            status = f"✅ Detected: **{platform}** — `{owner}/{name}`"
+        else:
+            status = "⚠️ Could not parse URL. Check the format: `https://github.com/owner/repo`"
+            platform, owner, name = "GitHub", "", ""
+
+        return (
+            gr.Dropdown(value=platform),
+            gr.Textbox(value=owner),
+            gr.Textbox(value=name),
+            status
+        )
     
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""

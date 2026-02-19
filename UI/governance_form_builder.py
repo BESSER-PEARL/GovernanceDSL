@@ -7,6 +7,7 @@ from typing import Optional
 import os
 from datetime import datetime
 import urllib.parse
+import copy
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -19,6 +20,327 @@ class GovernanceFormBuilder:
         self.current_policy_conditions = []
         # Preview component placeholder (initialized in _create_preview_panel)
         self.preview_code: Optional[gr.Textbox] = None
+
+        self.TEMPLATES = {
+            "Simple Majority Vote": {
+                "description": (
+                    "**Simple Majority Vote** — The most common governance model.\n\n"
+                    "Decisions pass when **more than half** of the participating voters approve.\n\n"
+                    "Best for: Pull request approvals, routine decisions, community votes."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "majority_policy",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Two-Thirds Supermajority": {
+                "description": (
+                    "**Two-Thirds Supermajority** — For high-stakes decisions.\n\n"
+                    "Requires **at least 2/3** of participating voters to approve.\n\n"
+                    "Best for: Constitutional changes, major architecture decisions, removing maintainers."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "supermajority_policy",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.67,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Consensus (Unanimous Agreement)": {
+                "description": (
+                    "**Consensus** — Everyone must agree.\n\n"
+                    "All participants must explicitly approve for a decision to pass. "
+                    "If any member objects, the decision is blocked.\n\n"
+                    "Best for: Small teams, critical security decisions, foundational governance changes."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Member", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "consensus_policy",
+                        "type": "ConsensusPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Lazy Consensus (Silence = Approval)": {
+                "description": (
+                    "**Lazy Consensus** — Silence means approval.\n\n"
+                    "A proposal is assumed approved unless someone explicitly objects within the decision window. "
+                    "If objections arise, the process falls back to a majority vote.\n\n"
+                    "Best for: Low-risk changes, documentation updates, dependency bumps."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Member", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "fallback_vote",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                    {
+                        "name": "lazy_consensus_policy",
+                        "type": "LazyConsensusPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": None,
+                        "fallback_policy": "fallback_vote",
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                ],
+                "composed_policies": [],
+            },
+            "Leader-Driven (with Default Vote Fallback)": {
+                "description": (
+                    "**Leader-Driven** — One person decides, with a safety net.\n\n"
+                    "A designated leader (e.g., Tech Lead, BDFL) makes the call. "
+                    "If the leader is unavailable, the decision falls back to a majority vote among members.\n\n"
+                    "Best for: Fast-moving teams, time-sensitive decisions, benevolent dictator models."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [
+                    {"name": "Leader", "vote_value": None},
+                    {"name": "Member", "vote_value": None},
+                ],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "default_vote",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                    {
+                        "name": "leader_policy",
+                        "type": "LeaderDrivenPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Leader"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": "default_vote",
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                ],
+                "composed_policies": [],
+            },
+            "Absolute Majority": {
+                "description": (
+                    "**Absolute Majority** — Counted against *all* eligible members.\n\n"
+                    "Unlike a simple majority (counted among those who voted), an absolute majority counts "
+                    "against **every eligible participant**, including those who did not vote. "
+                    "Abstentions and no-shows count as 'no'.\n\n"
+                    "Best for: Formal governance bodies, elections, constitutional amendments."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "absolute_majority_policy",
+                        "type": "AbsoluteMajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+        }
         
     def create_interface(self):
         """Create the main Gradio interface"""
@@ -30,6 +352,17 @@ class GovernanceFormBuilder:
             .form-section { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0; }
             .preview-panel { background-color: #f8f9fa; padding: 15px; border-radius: 8px; }
             .scope-hint { font-size: 0.92em; color: #555; background: #f0f4ff; border-left: 3px solid #4a7dff; padding: 8px 12px; margin: 6px 0 12px 0; border-radius: 0 4px 4px 0; }
+            .template-card {
+                background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+                border: 1px solid #c2d6ff;
+                border-radius: 10px;
+                padding: 16px 20px;
+                margin: 10px 0;
+            }
+            .template-status-ok {
+                color: #2e7d32;
+                font-weight: 600;
+            }
             """
         ) as ui:
             
@@ -49,6 +382,8 @@ class GovernanceFormBuilder:
             with gr.Row():
                 with gr.Column(scale=3, elem_classes=["main-container"]):
                     with gr.Tabs():
+                        with gr.Tab("⚡ Quick Start", id="templates"):
+                            template_components = self._create_template_tab()
                         with gr.Tab("🎯 Scopes", id="scopes"):
                             scope_components = self._create_scope_forms()
                             
@@ -62,9 +397,54 @@ class GovernanceFormBuilder:
                     preview_components = self._create_preview_panel()
             
             # Update handlers
-            self._setup_event_handlers(scope_components, participant_components, policy_components, preview_components, form_state)
+            self._setup_event_handlers(template_components, scope_components, participant_components, policy_components, preview_components, form_state)
             
         return ui
+    
+    def _create_template_tab(self):
+        """Create the Quick Start template tab"""
+        gr.Markdown("## ⚡ Quick Start — Choose a Governance Template")
+        gr.Markdown(
+            "Select a pre-built governance template to get started quickly. "
+            "The template will populate all form fields (Scopes, Participants, Policies) automatically.\n\n"
+            "After applying a template you can **switch to the other tabs to customize** "
+            "any detail — refine participants, add more policies, etc."
+        )
+
+        template_dropdown = gr.Dropdown(
+            label="Choose a Template",
+            choices=list(self.TEMPLATES.keys()),
+            value=None,
+            info="Pick a governance model to auto-fill the form"
+        )
+
+        template_description = gr.Markdown(
+            value="*Select a template above to see its description.*",
+            elem_classes=["template-card"] # Can use template-card as well
+        )
+
+        # TODO: To be implemented with GH/GL support.
+        # Let users customize the project name before applying, potentially sharing repo URL
+        template_project_name = gr.Textbox(
+            label="Project Name (optional override)",
+            placeholder="MyProject",
+            info="If set, replaces the default 'MyProject' name in the template"
+        )
+
+        apply_template_btn = gr.Button(
+            "🚀 Apply Template",
+            variant="primary"
+        )
+
+        template_status = gr.Markdown(value="")
+
+        return {
+            'template_dropdown': template_dropdown,
+            'template_description': template_description,
+            'template_project_name': template_project_name,
+            'apply_template_btn': apply_template_btn,
+            'template_status': template_status,
+        }
     
     def _create_scope_forms(self):
         """Create forms for defining scopes (Projects, Activities, Tasks)"""
@@ -1465,7 +1845,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             'download_file': download_file
         }
     
-    def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
+    def _setup_event_handlers(self, template_components, scope_components, participant_components, policy_components, preview_components, _form_state):
         """Set up event handlers for form interactions"""
         
         # Helper function to validate date format (DD/MM/YYYY)
@@ -1498,6 +1878,81 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 return False, "Year must be between 1900 and 2100"
             
             return True, ""
+        
+        def apply_template(template_name, custom_project_name,
+                   current_projects, current_activities, current_tasks,
+                   current_profiles, current_roles, current_individuals, current_agents,
+                   current_policies, current_composed_policies):
+            """Apply a selected template, replacing all current data."""
+            if not template_name:
+                return (
+                    current_projects, current_activities, current_tasks, 
+                    current_profiles, current_roles, current_individuals, current_agents,
+                    current_policies, current_composed_policies,
+                    self._format_projects_display(current_projects),
+                    self._format_activities_display(current_activities),
+                    self._format_tasks_display(current_tasks),
+                    self._format_profiles_display(current_profiles),
+                    self._format_roles_display(current_roles),
+                    self._format_individuals_display(current_individuals),
+                    self._format_agents_display(current_agents),
+                    self._format_policies_display(current_policies),
+                    self._format_composed_policies_display(current_composed_policies),
+                    "❌ Please select a template first."
+                )
+
+            template = copy.deepcopy(self.TEMPLATES[template_name])
+
+            # If user provided a custom project name, find-and-replace "MyProject".
+            # TODO: this is to be updated with platform-specific project
+            project_name_override = custom_project_name.strip() if custom_project_name else None
+            if project_name_override:
+                # Replace in projects
+                for p in template["projects"]:
+                    if p["name"] == "MyProject":
+                        p["name"] = project_name_override
+                # Replace in policies (scope and participants references)
+                for pol in template["policies"]:
+                    if pol.get("scope") == "MyProject":
+                        pol["scope"] = project_name_override
+                for cp in template["composed_policies"]:
+                    if cp.get("scope") == "MyProject":
+                        cp["scope"] = project_name_override
+
+            # Build return values: data states + display texts + status message
+            projects = template["projects"]
+            activities = template["activities"]
+            tasks = template["tasks"]
+            profiles = template["profiles"]
+            roles = template["roles"]
+            individuals = template["individuals"]
+            agents = template["agents"]
+            policies = template["policies"]
+            composed_policies = template["composed_policies"]
+
+            return (
+                projects, activities, tasks,
+                profiles, roles, individuals, agents,
+                policies, composed_policies,
+                # Display texts for each section
+                self._format_projects_display(projects),
+                self._format_activities_display(activities),
+                self._format_tasks_display(tasks),
+                self._format_profiles_display(profiles),
+                self._format_roles_display(roles),
+                self._format_individuals_display(individuals),
+                self._format_agents_display(agents),
+                self._format_policies_display(policies),
+                self._format_composed_policies_display(composed_policies),
+                # Status
+                f"✅ Template **\"{template_name}\"** applied! Switch to the other tabs to review and customize."
+            )
+        
+        def update_template_description(template_name):
+            """Update the description panel when user selects a template."""
+            if not template_name or template_name not in self.TEMPLATES:
+                return "*Select a template above to see its description.*"
+            return self.TEMPLATES[template_name]["description"]
         
         def add_profile(name, gender, race, language, current_profiles):
             """Add a new profile to the list"""
@@ -2831,6 +3286,70 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     gr.Textbox(value=new_repo_name, visible=is_visible)
                 )
 
+        template_components['template_dropdown'].change(
+            fn=update_template_description,
+            inputs=[template_components['template_dropdown']],
+            outputs=[template_components['template_description']]
+        )
+
+        template_components['apply_template_btn'].click(
+            fn=apply_template,
+            inputs=[
+                template_components['template_dropdown'],
+                template_components['template_project_name'],
+                # Current state components (to return unchanged if no template selected)
+                scope_components['projects_data'],
+                scope_components['activities_data'],
+                scope_components['tasks_data'],
+                participant_components['profiles_data'],
+                participant_components['roles_data'],
+                participant_components['individuals_data'],
+                participant_components['agents_data'],
+                policy_components['policies_data'],
+                policy_components['composed_policies_data'],
+            ],
+            outputs=[
+                # Data states
+                scope_components['projects_data'],
+                scope_components['activities_data'],
+                scope_components['tasks_data'],
+                participant_components['profiles_data'],
+                participant_components['roles_data'],
+                participant_components['individuals_data'],
+                participant_components['agents_data'],
+                policy_components['policies_data'],
+                policy_components['composed_policies_data'],
+                # Display components
+                scope_components['projects_display'],
+                scope_components['activities_display'],
+                scope_components['tasks_display'],
+                participant_components['profiles_display'],
+                participant_components['roles_display'],
+                participant_components['individuals_display'],
+                participant_components['agents_display'],
+                policy_components['policies_display'],
+                policy_components['composed_policies_display'],
+                # Template status
+                template_components['template_status'],
+            ]
+        )
+        # TODO: To be applied if gradio-lite does not auto-update
+        #         .then(
+        #     fn=update_preview,
+        #     inputs=[
+        #         scope_components['projects_data'],
+        #         scope_components['activities_data'],
+        #         scope_components['tasks_data'],
+        #         participant_components['profiles_data'],
+        #         participant_components['roles_data'],
+        #         participant_components['individuals_data'],
+        #         participant_components['agents_data'],
+        #         policy_components['policies_data'],
+        #         policy_components['composed_policies_data'],
+        #     ],
+        #     outputs=[preview_components['preview_code']]
+        # )
+        
         scope_components['add_project_btn'].click(
             fn=add_project_and_clear_form,
             inputs=[

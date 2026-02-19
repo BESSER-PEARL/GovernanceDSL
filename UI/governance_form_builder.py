@@ -359,6 +359,12 @@ class GovernanceFormBuilder:
                 padding: 16px 20px;
                 margin: 10px 0;
             }
+            /* Dark mode override — Gradio adds .dark to <body> */
+            .dark .template-card {
+                background: linear-gradient(135deg, #1e2a45 0%, #1a2035 100%);
+                border: 1px solid #3a5080;
+                color: #e8eaf6 !important;
+            }
             .template-status-ok {
                 color: #2e7d32;
                 font-weight: 600;
@@ -420,7 +426,7 @@ class GovernanceFormBuilder:
 
         template_description = gr.Markdown(
             value="*Select a template above to see its description.*",
-            elem_classes=["template-card"] # Can use template-card as well
+            elem_classes=["template-card"]
         )
 
         # TODO: To be implemented with GH/GL support.

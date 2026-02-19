@@ -432,7 +432,6 @@ class GovernanceFormBuilder:
             elem_classes=["template-card"]
         )
 
-        # TODO: To be implemented with GH/GL support.
         # Let users customize the project name before applying, potentially sharing repo URL
         template_project_name = gr.Textbox(
             label="Project Name (optional override)",
@@ -1987,7 +1986,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             template = copy.deepcopy(self.TEMPLATES[template_name])
 
             # If user provided a custom project name, find-and-replace "MyProject".
-            # TODO: this is to be updated with platform-specific project
             project_name_override = custom_project_name.strip() if custom_project_name else None
             if project_name_override:
                 # Replace in projects

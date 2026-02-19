@@ -1044,8 +1044,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     label="Voting Ratio",
                     value=0.5,
                     step=0.1,
+                    maximum=1.0,
                     visible=True,  # Start visible since MajorityPolicy is default
-                    info="Required ratio of positive votes (1.0 = unanimous)"
+                    info="Required ratio of positive votes (1.0 = unanimous). Default is 0.5."
                 )
             
             with gr.Row():
@@ -1462,8 +1463,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     label="Phase Voting Ratio",
                     value=0.5,
                     step=0.1,
+                    maximum=1.0,
                     visible=True,  # Start visible since MajorityPolicy is default for phases too
-                    info="Required ratio of positive votes (1.0 = unanimous)"
+                    info="Required ratio of positive votes (1.0 = unanimous). Default is 0.5."
                 )
             
             # Phase-specific policy attributes (default/fallback)
@@ -4180,21 +4182,23 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             explicit_project = next((p for p in projects if p['name'] == project_name), None)
             
             if explicit_project and explicit_project['platform']:
-                scope_parts.append(f"        Project {project_name} from {explicit_project['platform']} : {explicit_project['repo']} {{")
+                scope_parts.append(f"        {project_name} from {explicit_project['platform']} : {explicit_project['repo']}")
             else:
-                scope_parts.append(f"        Project {project_name} {{")
+                scope_parts.append(f"        {project_name}")
             
             # Find activities belonging to this project
             project_activities = [a for a in activities if a['parent'] == project_name]
             if project_activities:
-                scope_parts.append("            activities :")
+                scope_parts[-1] += " {"  # Add opening brace to project
+                scope_parts.append("            Activities :")
                 for activity in project_activities:
-                    scope_parts.append(f"                {activity['name']} {{")
+                    scope_parts.append(f"                {activity['name']}")
                     
                     # Find tasks belonging to this activity
                     activity_tasks = [t for t in tasks if t['parent'] == activity['name']]
                     if activity_tasks:
-                        scope_parts.append("                    tasks :")
+                        scope_parts[-1] += " {"  # Add opening brace to activity
+                        scope_parts.append("                    Tasks :")
                         for task in activity_tasks:
                             if task['type'] and task['action']:
                                 scope_parts.append(f"                        {task['name']} : {task['type']} {{")
@@ -4205,9 +4209,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                             else:
                                 scope_parts.append(f"                        {task['name']}")
                     
-                    scope_parts.append("            }")
+                        scope_parts.append("                }")
             
-            scope_parts.append("    }")
+                scope_parts.append("        }")
         
         # Generate root-level Activities (explicit + implicit from task parents)
         root_activities = [a for a in activities if not a['parent']]
@@ -4220,12 +4224,13 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             scope_parts.append("    Activities :")
             for activity in root_activities:
                 activity_name = activity['name']
-                scope_parts.append(f"        {activity_name} {{")
+                scope_parts.append(f"        {activity_name}")
                 
                 # Find tasks belonging to this activity
                 activity_tasks = [t for t in tasks if t['parent'] == activity_name]
                 if activity_tasks:
-                    scope_parts.append("            tasks :")
+                    scope_parts[-1] += " {"  # Add opening brace to activity
+                    scope_parts.append("            Tasks :")
                     for task in activity_tasks:
                         if task['type'] and task['action']:
                             scope_parts.append(f"                {task['name']} : {task['type']} {{")
@@ -4236,7 +4241,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                         else:
                             scope_parts.append(f"                {task['name']}")
                 
-                scope_parts.append("        }")
+                    scope_parts.append("        }")
         
         # Generate root-level Tasks (only tasks with no parent or parent that's a project)
         root_tasks = [t for t in tasks if not t['parent'] or t['parent'] in all_project_names]
@@ -4349,6 +4354,8 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         
         if participants_section:
             dsl_parts.append("Participants:")
+            if participants_section[-1].endswith(","):
+                participants_section[-1] = participants_section[-1][:-1]
             dsl_parts.extend(participants_section)
         
         # Generate Policies section

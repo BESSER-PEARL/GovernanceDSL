@@ -2004,11 +2004,45 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             resolved_platform = None
             resolved_repo = None      # stored as "owner/repo" string
 
-            if repo_link_mode == "Via URL" and repo_url_input and repo_url_input.strip():
+            if repo_link_mode == "Via URL":
+                if not repo_url_input or not repo_url_input.strip():
+                    # URL mode selected but field is empty
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        "❌ Please enter a repository URL, or switch the link mode to 'No'."
+                    )
                 parsed_platform, parsed_owner, parsed_repo_name = self._parse_repo_url(repo_url_input.strip())
-                if parsed_platform:
-                    resolved_platform = parsed_platform
-                    resolved_repo = f"{parsed_owner}/{parsed_repo_name}"
+                if not parsed_platform:
+                    # URL was entered but couldn't be parsed
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        f"❌ Invalid repository URL: `{repo_url_input.strip()}`\n\n"
+                        "Expected format: `https://platform.com/owner/repo`"
+                    )
+                resolved_platform = parsed_platform
+                resolved_repo = f"{parsed_owner}/{parsed_repo_name}"
             elif repo_link_mode == "Manual" and repo_owner and repo_owner.strip() and repo_name and repo_name.strip():
                 resolved_platform = repo_platform if repo_platform else "GitHub"
                 resolved_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
@@ -2037,7 +2071,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             composed_policies = template["composed_policies"]
 
             repo_info = f" (linked to **{resolved_platform}**: `{resolved_repo}`)" if resolved_platform else ""
-            status_msg = f"✅ Template **\"{template_name}\"** applied{repo_info}! Switch to the other tabs to review and customize."
+            status_msg = f"✅ Template **\"{template_name}\"** applied{repo_info}! Switch to the other tabs to further customize your governance setup."
 
             return (
                 projects, activities, tasks,

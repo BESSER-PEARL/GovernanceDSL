@@ -710,61 +710,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             "> **Note:** Names must be unique across all participants (roles, individuals and agents)"
         )
         
-        with gr.Accordion("Profiles", open=False):
-            gr.Markdown("### Define Profiles")
-            with gr.Accordion("ℹ️ What is a Profile?", open=False):
-                gr.Markdown("A **Profile** is a set of diversity attributes (such as gender, race, or language) used to track and promote inclusivity. "
-                "Once defined, profiles can be assigned to **Individuals** to reflect the diverse composition of your project's decision-makers."
-            )
-            
-            with gr.Row():
-                profile_name = gr.Textbox(
-                    label="Profile Name",
-                    placeholder="e.g., female_profile",
-                    info="Unique name for this profile"
-                )
-                
-            with gr.Row():
-                profile_gender = gr.Dropdown(
-                    label="Gender (Optional)",
-                    choices=["", "male", "female", "non-binary", "other"],
-                    value="",
-                    allow_custom_value=False,
-                    info="Leave empty if not applicable"
-                )
-                
-                profile_race = gr.Dropdown(
-                    label="Race/Ethnicity (Optional)", 
-                    choices=["", "asian", "black", "hispanic", "white", "mixed", "other"],
-                    value="",
-                    allow_custom_value=False,
-                    info="Leave empty if not applicable"
-                )
-                
-                profile_language = gr.Dropdown(
-                    label="Language (Optional)",
-                    choices=["", "english", "spanish", "french", "german", "chinese", "japanese", "other"],
-                    value="",
-                    allow_custom_value=True,
-                    info="Leave empty if not applicable"
-                )
-            
-            with gr.Row():
-                add_profile_btn = gr.Button("➕ Add Profile", variant="secondary")
-                clear_profiles_btn = gr.Button("🗑️ Clear All", variant="secondary")
-            
-            # Display added profiles
-            profiles_display = gr.Textbox(
-                label="Added Profiles",
-                lines=4,
-                interactive=False,
-                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, or language).",
-                info="Profiles you've added will appear here"
-            )
-            
-            # Hidden component to store profiles data
-            profiles_data = gr.State([])
-        
         with gr.Accordion("Roles", open=False):
             gr.Markdown("### Define Roles")
             with gr.Accordion("ℹ️ What is a Role?", open=False):
@@ -845,7 +790,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     choices=[],  # Will be populated dynamically from added profiles
                     value=None,
                     allow_custom_value=False,
-                    info="Diversity profile for this individual"
+                    info="Diversity profile for this individual.\n\n ⚠️ Be sure to create profiles first in the Profiles section below if you want to assign them here!"
                 )
                 individual_role = gr.Dropdown(
                     label="Role (Optional)",
@@ -954,6 +899,61 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             # Hidden component to store agents data
             agents_data = gr.State([])
         
+        with gr.Accordion("Profiles", open=False):
+            gr.Markdown("### Define Profiles")
+            with gr.Accordion("ℹ️ What is a Profile?", open=False):
+                gr.Markdown("A **Profile** is a set of diversity attributes (such as gender, race, or language) used to track and promote inclusivity. "
+                "Once defined, profiles can be assigned to **Individuals** to reflect the diverse composition of your project's decision-makers."
+            )
+            
+            with gr.Row():
+                profile_name = gr.Textbox(
+                    label="Profile Name",
+                    placeholder="e.g., female_profile",
+                    info="Unique name for this profile"
+                )
+                
+            with gr.Row():
+                profile_gender = gr.Dropdown(
+                    label="Gender (Optional)",
+                    choices=["", "male", "female", "non-binary", "other"],
+                    value="",
+                    allow_custom_value=False,
+                    info="Leave empty if not applicable"
+                )
+                
+                profile_race = gr.Dropdown(
+                    label="Race/Ethnicity (Optional)", 
+                    choices=["", "asian", "black", "hispanic", "white", "mixed", "other"],
+                    value="",
+                    allow_custom_value=False,
+                    info="Leave empty if not applicable"
+                )
+                
+                profile_language = gr.Dropdown(
+                    label="Language (Optional)",
+                    choices=["", "english", "spanish", "french", "german", "chinese", "japanese", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
+            
+            with gr.Row():
+                add_profile_btn = gr.Button("➕ Add Profile", variant="secondary")
+                clear_profiles_btn = gr.Button("🗑️ Clear All", variant="secondary")
+            
+            # Display added profiles
+            profiles_display = gr.Textbox(
+                label="Added Profiles",
+                lines=4,
+                interactive=False,
+                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, or language).",
+                info="Profiles you've added will appear here"
+            )
+            
+            # Hidden component to store profiles data
+            profiles_data = gr.State([])
+
         return {
             'profile_name': profile_name,
             'profile_gender': profile_gender,

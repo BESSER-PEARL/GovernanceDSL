@@ -503,7 +503,7 @@ class GovernanceFormBuilder:
             "> **Tip:** You only need to create tasks when you need *different* governance at a more granular level. If all code reviews follow the same rules, a single Activity is enough."
         )
         
-        # ── PROJECTS: uses info= parameter for field-level help ──────────────────
+        # PROJECTS
         with gr.Accordion("Projects", open=False):
             gr.Markdown("### Define Projects")
             with gr.Accordion("ℹ️ What is a Project?", open=False):
@@ -518,26 +518,36 @@ class GovernanceFormBuilder:
                     info="A unique identifier for this project (e.g., the name of your open-source  repository). Must be unique across all scopes."
                 )
                 
-                project_platform = gr.Dropdown(
-                    label="Platform (Optional)",
-                    choices=["", "GitHub", "GitLab"],
-                    value="",
-                    info="The hosting platform — set this to link the project to a specific repository"
+                project_repo_mode = gr.Radio(
+                    label="Link to a repository?",
+                    choices=["No", "Via URL", "Manual"],
+                    value="No",
+                    info="Connect this project to a GitHub or GitLab repository"
                 )
-            
+            # Via URL
             with gr.Row():
+                project_repo_url = gr.Textbox(
+                    label="Repository URL",
+                    placeholder="e.g., https://github.com/BESSER-PEARL/governanceDSL",
+                    info="The full URL of the repository (e.g., https://github.com/BESSER-PEARL/governanceDSL)",
+                    visible=False
+                )
+            # Manual
+            with gr.Row(visible=False) as project_manual_repo_row:
+                project_platform = gr.Dropdown(
+                    label="Platform",
+                    choices=["GitHub", "GitLab"],
+                    value="GitHub",
+                )
                 project_repo_owner = gr.Textbox(
                     label="Repository Owner *",
-                    placeholder="e.g., kubernetes, BESSER-PEARL, myorganization",
-                    info="The GitHub/GitLab username or organization that owns the repository",
-                    visible=False
+                    placeholder="e.g., BESSER-PEARL",
+                    info="The GitHub/GitLab username or organization that owns the repository"
                 )
-                
                 project_repo_name = gr.Textbox(
                     label="Repository Name *",
-                    placeholder="e.g., kubernetes, vscode, myproject",
-                    info="The repository name",
-                    visible=False
+                    placeholder="e.g., governanceDSL",
+                    info="The repository name"
                 )
             
             with gr.Row():
@@ -663,6 +673,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         
         return {
             'project_name': project_name,
+            'project_repo_mode': project_repo_mode,
+            'project_repo_url': project_repo_url,
+            'project_manual_repo_row': project_manual_repo_row,
             'project_platform': project_platform,
             'project_repo_owner': project_repo_owner,
             'project_repo_name': project_repo_name,
@@ -2021,7 +2034,23 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     )
                 resolved_platform = parsed_platform
                 resolved_repo = f"{parsed_owner}/{parsed_repo_name}"
-            elif repo_link_mode == "Manual" and repo_owner and repo_owner.strip() and repo_name and repo_name.strip():
+            elif repo_link_mode == "Manual":
+                if not repo_owner or not repo_owner.strip() or not repo_name or not repo_name.strip():
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        f"❌ Please enter both owner and repo name for manual linking."
+                    )
                 resolved_platform = repo_platform if repo_platform else "GitHub"
                 resolved_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
 
@@ -2366,13 +2395,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def clear_projects():
             """Clear all projects"""
             return [], "No projects added yet. Create projects to define your organizational structure."
-        
-        def update_repository_visibility(platform):
-            """Show/hide repository fields based on platform selection"""
-            if platform and platform.strip():
-                return gr.Textbox(visible=True), gr.Textbox(visible=True)
-            else:
-                return gr.Textbox(value="", visible=False), gr.Textbox(value="", visible=False)
         
         def add_activity(name, parent, current_activities, current_projects):
             """Add a new activity to the list"""
@@ -3379,28 +3401,71 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         # removed unused local load_example (can be reintroduced and wired when enabling example loading)
 
         # Scope management handlers - Project-specific helpers
-        def add_project_and_clear_form(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
+        def add_project_and_clear_form(name, repo_mode, repo_url, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
             """Add project and return cleared form with proper repository visibility"""
+            if repo_mode == "No":
+                platform = ""
+                repo_owner = ""
+                repo_name = ""
+            # Resolve platform/owner/name from URL if mode is "Via URL"
+            elif repo_mode == "Via URL":
+                if not repo_url or not repo_url.strip():
+                    display_text = self._format_projects_display(current_projects)
+                    error = f"❌ Please enter a repository URL, or switch to 'No'.\n\n{display_text}" if current_projects else "❌ Please enter a repository URL, or switch to 'No'."
+                    return (
+                        current_projects, error, name,
+                        repo_mode,
+                        gr.Textbox(value="", visible=True),   # project_repo_url stays visible
+                        gr.Row(visible=False),                # project_manual_repo_row
+                        platform, 
+                        repo_owner,
+                        repo_name
+                    )
+                parsed_platform, parsed_owner, parsed_repo_name = self._parse_repo_url(repo_url.strip())
+                if not parsed_platform:
+                    display_text = self._format_projects_display(current_projects)
+                    error = f"❌ Invalid URL: `{repo_url.strip()}`. Expected: `https://github.com/owner/repo` or similar.\n\n{display_text}" if current_projects else f"❌ Invalid URL: `{repo_url.strip()}`.\n\nExpected: `https://github.com/owner/repo`"
+                    return (
+                        current_projects, error, name,
+                        repo_mode,
+                        gr.Textbox(value=repo_url, visible=True),  # keep URL visible for correction
+                        gr.Row(visible=False),
+                        platform, 
+                        repo_owner,
+                        repo_name
+                    )
+                platform = parsed_platform
+                repo_owner = parsed_owner
+                repo_name = parsed_repo_name
+
             # First add the project
             updated_projects, message, new_name, new_platform, new_repo_owner, new_repo_name = add_project(
                 name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks
             )
 
+            
+            is_url_mode = repo_mode == "Via URL"
+            is_manual_mode = repo_mode == "Manual"
             # Check if the addition was successful (no error message)
             if "❌ Error:" not in message:
                 # Success: clear and hide repo fields since platform is cleared
-                return (
-                    updated_projects, message, "", "", 
-                    gr.Textbox(value="", visible=False), 
-                    gr.Textbox(value="", visible=False)
+                return ( # TODO: Check if visibility logic is correct for all modes
+                    updated_projects, message, "", repo_mode, 
+                    gr.Textbox(value="", visible=is_url_mode), 
+                    gr.Row(visible=is_manual_mode),
+                    "GitHub", # platform cleared
+                    "", # repo_owner cleared
+                    "" # repo_name cleared 
                 )
             else:
                 # Error: keep the values and maintain proper visibility of repo fields
-                is_visible = bool(platform and platform.strip())
                 return (
-                    updated_projects, message, new_name, new_platform, 
-                    gr.Textbox(value=new_repo_owner, visible=is_visible), 
-                    gr.Textbox(value=new_repo_name, visible=is_visible)
+                    updated_projects, message, new_name, 
+                    repo_mode,
+                    gr.Textbox(visible=is_url_mode),
+                    gr.Row(visible=is_manual_mode),   
+                    new_platform if new_platform and new_platform.strip() else "GitHub",
+                    new_repo_owner,                                          new_repo_name,
                 )
 
         template_components['template_dropdown'].change(
@@ -3495,6 +3560,8 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             fn=add_project_and_clear_form,
             inputs=[
                 scope_components['project_name'],
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'], 
                 scope_components['project_platform'],
                 scope_components['project_repo_owner'],
                 scope_components['project_repo_name'],
@@ -3505,7 +3572,11 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             outputs=[
                 scope_components['projects_data'],
                 scope_components['projects_display'],
-                scope_components['project_name'],        # Clear name field
+                scope_components['project_name'], 
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+                # TODO: Check if fields are cleared
                 scope_components['project_platform'],    # Clear platform field
                 scope_components['project_repo_owner'],  # Clear and hide repo owner field
                 scope_components['project_repo_name']    # Clear and hide repo name field
@@ -3515,25 +3586,52 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def clear_projects_and_reset_form():
             """Clear all projects and reset form with proper repository visibility"""
             projects_data, display_message = clear_projects()
-            hidden_repo_owner = gr.Textbox(value="", visible=False)
-            hidden_repo_name = gr.Textbox(value="", visible=False)
-            return projects_data, display_message, hidden_repo_owner, hidden_repo_name
+            # TODO: Check returns
+            return (
+                projects_data,
+                display_message,
+                "",
+                "No",
+                gr.Textbox(value="", visible=False),   
+                gr.Row(visible=False),
+                "GitHub",
+                "",
+                ""
+            )
 
         scope_components['clear_projects_btn'].click(
             fn=clear_projects_and_reset_form,
             outputs=[
                 scope_components['projects_data'],
                 scope_components['projects_display'],
-                scope_components['project_repo_owner'],  # Hide repository owner field
-                scope_components['project_repo_name']    # Hide repository name field
+                scope_components['project_name'],
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+                # TODO: Check if needed
+                scope_components['project_platform'],
+                scope_components['project_repo_owner'],  
+                scope_components['project_repo_name']   
             ]
         )
         
         # Show/hide repository fields based on platform selection
-        scope_components['project_platform'].change(
-            fn=update_repository_visibility,
-            inputs=[scope_components['project_platform']],
-            outputs=[scope_components['project_repo_owner'], scope_components['project_repo_name']]
+        scope_components['project_repo_mode'].change(
+            fn=update_repo_link_visibility,
+            inputs=[scope_components['project_repo_mode']],
+            outputs=[
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+            ]
+        )
+        scope_components['project_repo_url'].change(
+            fn=lambda url: autofill_from_url(url)[:3], # To not overwrite project list
+            inputs=[scope_components['project_repo_url']],
+            outputs=[
+                scope_components['project_platform'],
+                scope_components['project_repo_owner'],
+                scope_components['project_repo_name'],
+            ]
         )
         
         # Activity management

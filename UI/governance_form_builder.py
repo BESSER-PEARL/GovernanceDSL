@@ -7,6 +7,10 @@ from typing import Optional
 import os
 from datetime import datetime
 import urllib.parse
+import copy
+import re
+import tempfile
+                
 
 class GovernanceFormBuilder:
     def __init__(self):
@@ -19,6 +23,327 @@ class GovernanceFormBuilder:
         self.current_policy_conditions = []
         # Preview component placeholder (initialized in _create_preview_panel)
         self.preview_code: Optional[gr.Textbox] = None
+
+        self.TEMPLATES = {
+            "Simple Majority Vote": {
+                "description": (
+                    "**Simple Majority Vote** — The most common governance model.\n\n"
+                    "Decisions pass when **more than half** of the participating voters approve.\n\n"
+                    "Best for: Pull request approvals, routine decisions, community votes."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "majority_policy",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Two-Thirds Supermajority": {
+                "description": (
+                    "**Two-Thirds Supermajority** — For high-stakes decisions.\n\n"
+                    "Requires **at least 2/3** of participating voters to approve.\n\n"
+                    "Best for: Constitutional changes, major architecture decisions, removing maintainers."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "supermajority_policy",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.67,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Consensus (Unanimous Agreement)": {
+                "description": (
+                    "**Consensus** — Everyone must agree.\n\n"
+                    "All participants must explicitly approve for a decision to pass. "
+                    "If any member objects, the decision is blocked.\n\n"
+                    "Best for: Small teams, critical security decisions, foundational governance changes."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Member", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "consensus_policy",
+                        "type": "ConsensusPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+            "Lazy Consensus (Silence = Approval)": {
+                "description": (
+                    "**Lazy Consensus** — Silence means approval.\n\n"
+                    "A proposal is assumed approved unless someone explicitly objects within the decision window. "
+                    "If objections arise, the process falls back to a majority vote.\n\n"
+                    "Best for: Low-risk changes, documentation updates, dependency bumps."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Member", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "fallback_vote",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                    {
+                        "name": "lazy_consensus_policy",
+                        "type": "LazyConsensusPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": None,
+                        "fallback_policy": "fallback_vote",
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                ],
+                "composed_policies": [],
+            },
+            "Leader-Driven (with Default Vote Fallback)": {
+                "description": (
+                    "**Leader-Driven** — One person decides, with a safety net.\n\n"
+                    "A designated leader (e.g., Tech Lead, BDFL) makes the call. "
+                    "If the leader is unavailable, the decision falls back to a majority vote among members.\n\n"
+                    "Best for: Fast-moving teams, time-sensitive decisions, benevolent dictator models."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [
+                    {"name": "Leader", "vote_value": None},
+                    {"name": "Member", "vote_value": None},
+                ],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "default_vote",
+                        "type": "MajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Member"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                    {
+                        "name": "leader_policy",
+                        "type": "LeaderDrivenPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Leader"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": None,
+                        "default_decision": "default_vote",
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    },
+                ],
+                "composed_policies": [],
+            },
+            "Absolute Majority": {
+                "description": (
+                    "**Absolute Majority** — Counted against *all* eligible members.\n\n"
+                    "Unlike a simple majority (counted among those who voted), an absolute majority counts "
+                    "against **every eligible participant**, including those who did not vote. "
+                    "Abstentions and no-shows count as 'no'.\n\n"
+                    "Best for: Formal governance bodies, elections, constitutional amendments."
+                ),
+                "projects": [{"name": "MyProject", "platform": None, "repo": None}],
+                "activities": [],
+                "tasks": [],
+                "profiles": [],
+                "roles": [{"name": "Voter", "vote_value": None}],
+                "individuals": [],
+                "agents": [],
+                "policies": [
+                    {
+                        "name": "absolute_majority_policy",
+                        "type": "AbsoluteMajorityPolicy",
+                        "scope": "MyProject",
+                        "participants": ["Voter"],
+                        "decision_type": "BooleanDecision",
+                        "decision_options": None,
+                        "voting_ratio": 0.5,
+                        "default_decision": None,
+                        "fallback_policy": None,
+                        "communication_channel": None,
+                        "added_conditions": None,
+                        "condition_type": None,
+                        "veto_participants": None,
+                        "excluded_participants": None,
+                        "min_participants": None,
+                        "deadline_offset_value": None,
+                        "deadline_offset_unit": None,
+                        "deadline_date": None,
+                        "min_decision_offset_value": None,
+                        "min_decision_offset_unit": None,
+                        "min_decision_date": None,
+                        "label_condition_type": None,
+                        "label_condition_operator": None,
+                        "label_condition_labels": None,
+                    }
+                ],
+                "composed_policies": [],
+            },
+        }
         
     def create_interface(self):
         """Create the main Gradio interface"""
@@ -30,6 +355,23 @@ class GovernanceFormBuilder:
             .form-section { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; margin: 10px 0; }
             .preview-panel { background-color: #f8f9fa; padding: 15px; border-radius: 8px; }
             .scope-hint { font-size: 0.92em; color: #555; background: #f0f4ff; border-left: 3px solid #4a7dff; padding: 8px 12px; margin: 6px 0 12px 0; border-radius: 0 4px 4px 0; }
+            .template-card {
+                background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+                border: 1px solid #c2d6ff;
+                border-radius: 10px;
+                padding: 16px 20px;
+                margin: 10px 0;
+            }
+            /* Dark mode override — Gradio adds .dark to <body> */
+            .dark .template-card {
+                background: linear-gradient(135deg, #1e2a45 0%, #1a2035 100%);
+                border: 1px solid #3a5080;
+                color: #e8eaf6 !important;
+            }
+            .template-status-ok {
+                color: #2e7d32;
+                font-weight: 600;
+            }
             """
         ) as ui:
             
@@ -49,6 +391,8 @@ class GovernanceFormBuilder:
             with gr.Row():
                 with gr.Column(scale=3, elem_classes=["main-container"]):
                     with gr.Tabs():
+                        with gr.Tab("⚡ Quick Start", id="templates"):
+                            template_components = self._create_template_tab()
                         with gr.Tab("🎯 Scopes", id="scopes"):
                             scope_components = self._create_scope_forms()
                             
@@ -62,9 +406,85 @@ class GovernanceFormBuilder:
                     preview_components = self._create_preview_panel()
             
             # Update handlers
-            self._setup_event_handlers(scope_components, participant_components, policy_components, preview_components, form_state)
+            self._setup_event_handlers(template_components, scope_components, participant_components, policy_components, preview_components, form_state)
             
         return ui
+    
+    def _create_template_tab(self):
+        """Create the Quick Start template tab"""
+        gr.Markdown("## ⚡ Quick Start — Choose a Governance Template")
+        gr.Markdown(
+            "Select a pre-built governance template to get started quickly. "
+            "The template will populate all form fields (Scopes, Participants, Policies) automatically.\n\n"
+            "After applying a template you can **switch to the other tabs to customize** "
+            "any detail — refine participants, add more policies, etc."
+        )
+
+        template_dropdown = gr.Dropdown(
+            label="Choose a Template",
+            choices=list(self.TEMPLATES.keys()),
+            value=None,
+            info="Pick a governance model to auto-fill the form"
+        )
+
+        template_description = gr.Markdown(
+            value="*Select a template above to see its description.*",
+            elem_classes=["template-card"]
+        )
+
+        # Let users customize the project platform before applying, potentially sharing repo URL
+        repo_link_mode = gr.Radio(
+            label="Link to a repository? (optional)",
+            choices=["No", "Via URL", "Manual"],
+            value="No",
+            info="Connect the template project to a GitHub or GitLab repository"
+        )
+
+        # Via URL inputs (hidden by default) 
+        repo_url_input = gr.Textbox(
+            label="Repository URL",
+            placeholder="https://github.com/owner/repo  or  https://gitlab.com/owner/repo",
+            info="Paste the full URL of your repository",
+            visible=False
+        )
+
+        # Manual inputs (hidden by default) 
+        with gr.Row(visible=False) as manual_repo_row:
+            repo_platform = gr.Dropdown(
+                label="Platform",
+                choices=["GitHub", "GitLab"],
+                value="GitHub",
+            )
+            repo_owner = gr.Textbox(
+                label="Repository Owner",
+                placeholder="e.g., kubernetes",
+                info="The user or organisation that owns the repository"
+            )
+            repo_name = gr.Textbox(
+                label="Repository Name",
+                placeholder="e.g., kubernetes",
+                info="The repository name"
+            )
+
+        apply_template_btn = gr.Button(
+            "🚀 Apply Template",
+            variant="primary"
+        )
+
+        template_status = gr.Markdown(value="")
+
+        return {
+            'template_dropdown': template_dropdown,
+            'template_description': template_description,
+            'repo_link_mode': repo_link_mode,
+            'repo_url_input': repo_url_input,
+            'manual_repo_row': manual_repo_row,
+            'repo_platform': repo_platform,
+            'repo_owner': repo_owner,
+            'repo_name': repo_name,
+            'apply_template_btn': apply_template_btn,
+            'template_status': template_status,
+        }
     
     def _create_scope_forms(self):
         """Create forms for defining scopes (Projects, Activities, Tasks)"""
@@ -83,7 +503,7 @@ class GovernanceFormBuilder:
             "> **Tip:** You only need to create tasks when you need *different* governance at a more granular level. If all code reviews follow the same rules, a single Activity is enough."
         )
         
-        # ── PROJECTS: uses info= parameter for field-level help ──────────────────
+        # PROJECTS
         with gr.Accordion("Projects", open=False):
             gr.Markdown("### Define Projects")
             with gr.Accordion("ℹ️ What is a Project?", open=False):
@@ -98,26 +518,36 @@ class GovernanceFormBuilder:
                     info="A unique identifier for this project (e.g., the name of your open-source  repository). Must be unique across all scopes."
                 )
                 
-                project_platform = gr.Dropdown(
-                    label="Platform (Optional)",
-                    choices=["", "GitHub", "GitLab"],
-                    value="",
-                    info="The hosting platform — set this to link the project to a specific repository"
+                project_repo_mode = gr.Radio(
+                    label="Link to a repository?",
+                    choices=["No", "Via URL", "Manual"],
+                    value="No",
+                    info="Connect this project to a GitHub or GitLab repository"
                 )
-            
+            # Via URL
             with gr.Row():
+                project_repo_url = gr.Textbox(
+                    label="Repository URL",
+                    placeholder="e.g., https://github.com/BESSER-PEARL/governanceDSL",
+                    info="The full URL of the repository (e.g., https://github.com/BESSER-PEARL/governanceDSL)",
+                    visible=False
+                )
+            # Manual
+            with gr.Row(visible=False) as project_manual_repo_row:
+                project_platform = gr.Dropdown(
+                    label="Platform",
+                    choices=["GitHub", "GitLab"],
+                    value="GitHub",
+                )
                 project_repo_owner = gr.Textbox(
                     label="Repository Owner *",
-                    placeholder="e.g., kubernetes, BESSER-PEARL, myorganization",
-                    info="The GitHub/GitLab username or organization that owns the repository (the first part of the URL path)",
-                    visible=False
+                    placeholder="e.g., BESSER-PEARL",
+                    info="The GitHub/GitLab username or organization that owns the repository"
                 )
-                
                 project_repo_name = gr.Textbox(
                     label="Repository Name *",
-                    placeholder="e.g., kubernetes, vscode, myproject",
-                    info="The repository name (the part after the owner in the URL)",
-                    visible=False
+                    placeholder="e.g., governanceDSL",
+                    info="The repository name"
                 )
             
             with gr.Row():
@@ -135,7 +565,7 @@ class GovernanceFormBuilder:
             # Hidden component to store projects data
             projects_data = gr.State([])
         
-        # ── ACTIVITIES: uses ℹ️ accordion for contextual help ────────────────────
+        # ACTIVITIES: uses ℹ️ accordion for contextual help 
         with gr.Accordion("Activities", open=False):
             gr.Markdown("### Define Activities")
             
@@ -185,7 +615,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             # Hidden component to store activities data
             activities_data = gr.State([])
             
-        # ── TASKS: uses Markdown with tables inside accordions ───────────────────
+        # TASKS: uses Markdown with tables inside accordions 
         with gr.Accordion("Tasks", open=False):
             gr.Markdown("### Define Tasks")
             
@@ -243,6 +673,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         
         return {
             'project_name': project_name,
+            'project_repo_mode': project_repo_mode,
+            'project_repo_url': project_repo_url,
+            'project_manual_repo_row': project_manual_repo_row,
             'project_platform': project_platform,
             'project_repo_owner': project_repo_owner,
             'project_repo_name': project_repo_name,
@@ -664,8 +1097,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     label="Voting Ratio",
                     value=0.5,
                     step=0.1,
+                    maximum=1.0,
                     visible=True,  # Start visible since MajorityPolicy is default
-                    info="Required ratio of positive votes (1.0 = unanimous)"
+                    info="Required ratio of positive votes (1.0 = unanimous). Default is 0.5."
                 )
             
             with gr.Row():
@@ -1082,8 +1516,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     label="Phase Voting Ratio",
                     value=0.5,
                     step=0.1,
+                    maximum=1.0,
                     visible=True,  # Start visible since MajorityPolicy is default for phases too
-                    info="Required ratio of positive votes (1.0 = unanimous)"
+                    info="Required ratio of positive votes (1.0 = unanimous). Default is 0.5."
                 )
             
             # Phase-specific policy attributes (default/fallback)
@@ -1465,7 +1900,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             'download_file': download_file
         }
     
-    def _setup_event_handlers(self, scope_components, participant_components, policy_components, preview_components, _form_state):
+    def _setup_event_handlers(self, template_components, scope_components, participant_components, policy_components, preview_components, _form_state):
         """Set up event handlers for form interactions"""
         
         # Helper function to validate date format (DD/MM/YYYY)
@@ -1474,7 +1909,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             if not date_string or not date_string.strip():
                 return True, ""  # Date is optional
             
-            import re
             date_string = date_string.strip()
             # Check format DD/MM/YYYY
             pattern = r'^(\d{1,2})/(\d{1,2})/(\d{4})$'
@@ -1498,6 +1932,173 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 return False, "Year must be between 1900 and 2100"
             
             return True, ""
+        
+        def update_repo_link_visibility(mode):
+            """Show/hide repository input fields based on the selected mode."""
+            show_url = (mode == "Via URL")
+            show_manual = (mode == "Manual")
+            return (
+                gr.Textbox(visible=show_url), # repo_url_input
+                gr.Row(visible=show_manual),  # manual_repo_row
+            )
+        
+        def autofill_from_url(url: str):
+            """Parse the URL and populate manual fields as a convenience."""
+            if not url or not url.strip():
+                return (
+                    gr.Dropdown(value="GitHub"),
+                    gr.Textbox(value=""),
+                    gr.Textbox(value=""),
+                    ""  # status
+                )
+            platform, owner, name = self._parse_repo_url(url.strip())
+            if platform:
+                status = f"✅ Detected: **{platform}** — `{owner}/{name}`"
+            else:
+                status = "⚠️ Could not parse URL. Check the format: `https://github.com/owner/repo`"
+                platform, owner, name = "GitHub", "", ""
+
+            return (
+                gr.Dropdown(value=platform),
+                gr.Textbox(value=owner),
+                gr.Textbox(value=name),
+                status
+            )
+
+        def apply_template(template_name,
+                   repo_link_mode, repo_url_input,
+                   repo_platform, repo_owner, repo_name,
+                   current_projects, current_activities, current_tasks,
+                   current_profiles, current_roles, current_individuals, current_agents,
+                   current_policies, current_composed_policies):
+            """Apply a selected template, replacing all current data."""
+            if not template_name:
+                return (
+                    current_projects, current_activities, current_tasks, 
+                    current_profiles, current_roles, current_individuals, current_agents,
+                    current_policies, current_composed_policies,
+                    self._format_projects_display(current_projects),
+                    self._format_activities_display(current_activities),
+                    self._format_tasks_display(current_tasks),
+                    self._format_profiles_display(current_profiles),
+                    self._format_roles_display(current_roles),
+                    self._format_individuals_display(current_individuals),
+                    self._format_agents_display(current_agents),
+                    self._format_policies_display(current_policies),
+                    self._format_composed_policies_display(current_composed_policies),
+                    "❌ Please select a template first."
+                )
+
+            template = copy.deepcopy(self.TEMPLATES[template_name])
+            
+            # Resolve repository details 
+            resolved_platform = None
+            resolved_repo = None      # stored as "owner/repo" string
+
+            if repo_link_mode == "Via URL":
+                if not repo_url_input or not repo_url_input.strip():
+                    # URL mode selected but field is empty
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        "❌ Please enter a repository URL, or switch the link mode to 'No'."
+                    )
+                parsed_platform, parsed_owner, parsed_repo_name = self._parse_repo_url(repo_url_input.strip())
+                if not parsed_platform:
+                    # URL was entered but couldn't be parsed
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        f"❌ Invalid repository URL: `{repo_url_input.strip()}`\n\n"
+                        "Expected format: `https://platform.com/owner/repo`"
+                    )
+                resolved_platform = parsed_platform
+                resolved_repo = f"{parsed_owner}/{parsed_repo_name}"
+            elif repo_link_mode == "Manual":
+                if not repo_owner or not repo_owner.strip() or not repo_name or not repo_name.strip():
+                    return (
+                        current_projects, current_activities, current_tasks,
+                        current_profiles, current_roles, current_individuals, current_agents,
+                        current_policies, current_composed_policies,
+                        self._format_projects_display(current_projects),
+                        self._format_activities_display(current_activities),
+                        self._format_tasks_display(current_tasks),
+                        self._format_profiles_display(current_profiles),
+                        self._format_roles_display(current_roles),
+                        self._format_individuals_display(current_individuals),
+                        self._format_agents_display(current_agents),
+                        self._format_policies_display(current_policies),
+                        self._format_composed_policies_display(current_composed_policies),
+                        f"❌ Please enter both owner and repo name for manual linking."
+                    )
+                resolved_platform = repo_platform if repo_platform else "GitHub"
+                resolved_repo = f"{repo_owner.strip()}/{repo_name.strip()}"
+
+            # Inject platform + repo into the first project of the template
+            if resolved_platform and resolved_repo:
+                project_name_in_template = template["projects"][0]["name"] if template["projects"] else "MyProject"
+                for p in template["projects"]:
+                    if p["name"] == project_name_in_template:
+                        p["platform"] = resolved_platform
+                        p["repo"] = resolved_repo
+
+            # Build return values: data states + display texts + status message
+            projects = template["projects"]
+            activities = template["activities"]
+            tasks = template["tasks"]
+            profiles = template["profiles"]
+            roles = template["roles"]
+            individuals = template["individuals"]
+            agents = template["agents"]
+            policies = template["policies"]
+            composed_policies = template["composed_policies"]
+
+            repo_info = f" (linked to **{resolved_platform}**: `{resolved_repo}`)" if resolved_platform else ""
+            status_msg = f"✅ Template **\"{template_name}\"** applied{repo_info}! Switch to the other tabs to further customize your governance setup."
+
+            return (
+                projects, activities, tasks,
+                profiles, roles, individuals, agents,
+                policies, composed_policies,
+                # Display texts for each section
+                self._format_projects_display(projects),
+                self._format_activities_display(activities),
+                self._format_tasks_display(tasks),
+                self._format_profiles_display(profiles),
+                self._format_roles_display(roles),
+                self._format_individuals_display(individuals),
+                self._format_agents_display(agents),
+                self._format_policies_display(policies),
+                self._format_composed_policies_display(composed_policies),
+                # Status
+                status_msg
+            )
+        
+        def update_template_description(template_name):
+            """Update the description panel when user selects a template."""
+            if not template_name or template_name not in self.TEMPLATES:
+                return "*Select a template above to see its description.*"
+            return self.TEMPLATES[template_name]["description"]
         
         def add_profile(name, gender, race, language, current_profiles):
             """Add a new profile to the list"""
@@ -1794,13 +2395,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def clear_projects():
             """Clear all projects"""
             return [], "No projects added yet. Create projects to define your organizational structure."
-        
-        def update_repository_visibility(platform):
-            """Show/hide repository fields based on platform selection"""
-            if platform and platform.strip():
-                return gr.Textbox(visible=True), gr.Textbox(visible=True)
-            else:
-                return gr.Textbox(value="", visible=False), gr.Textbox(value="", visible=False)
         
         def add_activity(name, parent, current_activities, current_projects):
             """Add a new activity to the list"""
@@ -2807,34 +3401,167 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         # removed unused local load_example (can be reintroduced and wired when enabling example loading)
 
         # Scope management handlers - Project-specific helpers
-        def add_project_and_clear_form(name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
+        def add_project_and_clear_form(name, repo_mode, repo_url, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks):
             """Add project and return cleared form with proper repository visibility"""
+            if repo_mode == "No":
+                platform = ""
+                repo_owner = ""
+                repo_name = ""
+            # Resolve platform/owner/name from URL if mode is "Via URL"
+            elif repo_mode == "Via URL":
+                if not repo_url or not repo_url.strip():
+                    display_text = self._format_projects_display(current_projects)
+                    error = f"❌ Please enter a repository URL, or switch to 'No'.\n\n{display_text}" if current_projects else "❌ Please enter a repository URL, or switch to 'No'."
+                    return (
+                        current_projects, error, name,
+                        repo_mode,
+                        gr.Textbox(value="", visible=True),   # project_repo_url stays visible
+                        gr.Row(visible=False),                # project_manual_repo_row
+                        platform, 
+                        repo_owner,
+                        repo_name
+                    )
+                parsed_platform, parsed_owner, parsed_repo_name = self._parse_repo_url(repo_url.strip())
+                if not parsed_platform:
+                    display_text = self._format_projects_display(current_projects)
+                    error = f"❌ Invalid URL: `{repo_url.strip()}`. Expected: `https://github.com/owner/repo` or similar.\n\n{display_text}" if current_projects else f"❌ Invalid URL: `{repo_url.strip()}`.\n\nExpected: `https://github.com/owner/repo`"
+                    return (
+                        current_projects, error, name,
+                        repo_mode,
+                        gr.Textbox(value=repo_url, visible=True),  # keep URL visible for correction
+                        gr.Row(visible=False),
+                        platform, 
+                        repo_owner,
+                        repo_name
+                    )
+                platform = parsed_platform
+                repo_owner = parsed_owner
+                repo_name = parsed_repo_name
+
             # First add the project
             updated_projects, message, new_name, new_platform, new_repo_owner, new_repo_name = add_project(
                 name, platform, repo_owner, repo_name, current_projects, current_activities, current_tasks
             )
 
+            
+            is_url_mode = repo_mode == "Via URL"
+            is_manual_mode = repo_mode == "Manual"
             # Check if the addition was successful (no error message)
             if "❌ Error:" not in message:
                 # Success: clear and hide repo fields since platform is cleared
-                return (
-                    updated_projects, message, "", "", 
-                    gr.Textbox(value="", visible=False), 
-                    gr.Textbox(value="", visible=False)
+                return ( # TODO: Check if visibility logic is correct for all modes
+                    updated_projects, message, "", repo_mode, 
+                    gr.Textbox(value="", visible=is_url_mode), 
+                    gr.Row(visible=is_manual_mode),
+                    "GitHub", # platform cleared
+                    "", # repo_owner cleared
+                    "" # repo_name cleared 
                 )
             else:
                 # Error: keep the values and maintain proper visibility of repo fields
-                is_visible = bool(platform and platform.strip())
                 return (
-                    updated_projects, message, new_name, new_platform, 
-                    gr.Textbox(value=new_repo_owner, visible=is_visible), 
-                    gr.Textbox(value=new_repo_name, visible=is_visible)
+                    updated_projects, message, new_name, 
+                    repo_mode,
+                    gr.Textbox(visible=is_url_mode),
+                    gr.Row(visible=is_manual_mode),   
+                    new_platform if new_platform and new_platform.strip() else "GitHub",
+                    new_repo_owner,                                          new_repo_name,
                 )
 
+        template_components['template_dropdown'].change(
+            fn=update_template_description,
+            inputs=[template_components['template_dropdown']],
+            outputs=[template_components['template_description']]
+        )
+
+        template_components['repo_link_mode'].change(
+            fn=update_repo_link_visibility,
+            inputs=[template_components['repo_link_mode']],
+            outputs=[
+                template_components['repo_url_input'],
+                template_components['manual_repo_row'],
+            ]
+        )
+
+        template_components['repo_url_input'].change(
+            fn=autofill_from_url,
+            inputs=[template_components['repo_url_input']],
+            outputs=[
+                template_components['repo_platform'],
+                template_components['repo_owner'],
+                template_components['repo_name'],
+                template_components['template_status'],
+            ]
+        )
+
+        template_components['apply_template_btn'].click(
+            fn=apply_template,
+            inputs=[
+                template_components['template_dropdown'],
+                template_components['repo_link_mode'],
+                template_components['repo_url_input'],
+                template_components['repo_platform'],
+                template_components['repo_owner'],
+                template_components['repo_name'],
+                # Current state components (to return unchanged if no template selected)
+                scope_components['projects_data'],
+                scope_components['activities_data'],
+                scope_components['tasks_data'],
+                participant_components['profiles_data'],
+                participant_components['roles_data'],
+                participant_components['individuals_data'],
+                participant_components['agents_data'],
+                policy_components['policies_data'],
+                policy_components['composed_policies_data'],
+            ],
+            outputs=[
+                # Data states
+                scope_components['projects_data'],
+                scope_components['activities_data'],
+                scope_components['tasks_data'],
+                participant_components['profiles_data'],
+                participant_components['roles_data'],
+                participant_components['individuals_data'],
+                participant_components['agents_data'],
+                policy_components['policies_data'],
+                policy_components['composed_policies_data'],
+                # Display components
+                scope_components['projects_display'],
+                scope_components['activities_display'],
+                scope_components['tasks_display'],
+                participant_components['profiles_display'],
+                participant_components['roles_display'],
+                participant_components['individuals_display'],
+                participant_components['agents_display'],
+                policy_components['policies_display'],
+                policy_components['composed_policies_display'],
+                # Template status
+                template_components['template_status'],
+            ]
+        )
+        # TODO: To be applied if gradio-lite does not auto-update
+        #         .then(
+        #     fn=update_preview,
+        #     inputs=[
+        #         scope_components['projects_data'],
+        #         scope_components['activities_data'],
+        #         scope_components['tasks_data'],
+        #         participant_components['profiles_data'],
+        #         participant_components['roles_data'],
+        #         participant_components['individuals_data'],
+        #         participant_components['agents_data'],
+        #         policy_components['policies_data'],
+        #         policy_components['composed_policies_data'],
+        #     ],
+        #     outputs=[preview_components['preview_code']]
+        # )
+        
         scope_components['add_project_btn'].click(
             fn=add_project_and_clear_form,
             inputs=[
                 scope_components['project_name'],
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'], 
                 scope_components['project_platform'],
                 scope_components['project_repo_owner'],
                 scope_components['project_repo_name'],
@@ -2845,7 +3572,11 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             outputs=[
                 scope_components['projects_data'],
                 scope_components['projects_display'],
-                scope_components['project_name'],        # Clear name field
+                scope_components['project_name'], 
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+                # TODO: Check if fields are cleared
                 scope_components['project_platform'],    # Clear platform field
                 scope_components['project_repo_owner'],  # Clear and hide repo owner field
                 scope_components['project_repo_name']    # Clear and hide repo name field
@@ -2855,25 +3586,52 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         def clear_projects_and_reset_form():
             """Clear all projects and reset form with proper repository visibility"""
             projects_data, display_message = clear_projects()
-            hidden_repo_owner = gr.Textbox(value="", visible=False)
-            hidden_repo_name = gr.Textbox(value="", visible=False)
-            return projects_data, display_message, hidden_repo_owner, hidden_repo_name
+            # TODO: Check returns
+            return (
+                projects_data,
+                display_message,
+                "",
+                "No",
+                gr.Textbox(value="", visible=False),   
+                gr.Row(visible=False),
+                "GitHub",
+                "",
+                ""
+            )
 
         scope_components['clear_projects_btn'].click(
             fn=clear_projects_and_reset_form,
             outputs=[
                 scope_components['projects_data'],
                 scope_components['projects_display'],
-                scope_components['project_repo_owner'],  # Hide repository owner field
-                scope_components['project_repo_name']    # Hide repository name field
+                scope_components['project_name'],
+                scope_components['project_repo_mode'],
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+                # TODO: Check if needed
+                scope_components['project_platform'],
+                scope_components['project_repo_owner'],  
+                scope_components['project_repo_name']   
             ]
         )
         
         # Show/hide repository fields based on platform selection
-        scope_components['project_platform'].change(
-            fn=update_repository_visibility,
-            inputs=[scope_components['project_platform']],
-            outputs=[scope_components['project_repo_owner'], scope_components['project_repo_name']]
+        scope_components['project_repo_mode'].change(
+            fn=update_repo_link_visibility,
+            inputs=[scope_components['project_repo_mode']],
+            outputs=[
+                scope_components['project_repo_url'],
+                scope_components['project_manual_repo_row'],
+            ]
+        )
+        scope_components['project_repo_url'].change(
+            fn=lambda url: autofill_from_url(url)[:3], # To not overwrite project list
+            inputs=[scope_components['project_repo_url']],
+            outputs=[
+                scope_components['project_platform'],
+                scope_components['project_repo_owner'],
+                scope_components['project_repo_name'],
+            ]
         )
         
         # Activity management
@@ -3581,9 +4339,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             
             # Write to a temporary file with the proper name
             try:
-                import tempfile
-                import os
-                
                 # Get temp directory
                 temp_dir = tempfile.gettempdir()
                 if not temp_dir or temp_dir == '/':
@@ -3596,7 +4351,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 
                 # Return just the file path
                 return temp_path
-            except Exception as e:
+            except Exception:
                 # If file creation fails, try in current directory
                 try:
                     with open(filename, 'w') as f:
@@ -3623,6 +4378,37 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             return f"{int(float_val)}.0"
         else:
             return str(float_val)
+    
+    def _parse_repo_url(self, url: str):
+        """
+        Parse a GitHub or GitLab URL into (platform, owner, repo_name).
+        Returns (None, None, None) if the URL is not recognisable.
+
+        Supported patterns:
+            https://github.com/owner/repo
+            https://github.com/owner/repo.git
+            https://github.com/owner/repo/tree/main
+            https://gitlab.com/owner/repo
+            https://gitlab.com/group/subgroup/repo  (returns group/subgroup as owner)
+        """
+        url = url.strip().rstrip('/')
+
+        github_pattern = re.compile(
+            r'https?://github\.com/([^/]+)/([^/\s]+?)(?:\.git)?(?:/.*)?$'
+        )
+        gitlab_pattern = re.compile(
+            r'https?://gitlab\.com/(.+)/([^/\s]+?)(?:\.git)?(?:/.*)?$'
+        )
+
+        m = github_pattern.match(url)
+        if m:
+            return "GitHub", m.group(1), m.group(2)
+
+        m = gitlab_pattern.match(url)
+        if m:
+            return "GitLab", m.group(1), m.group(2)
+
+        return None, None, None
     
     def _generate_dsl_from_form(self, *form_values):
         """Generate DSL code from form inputs"""
@@ -3661,21 +4447,23 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             explicit_project = next((p for p in projects if p['name'] == project_name), None)
             
             if explicit_project and explicit_project['platform']:
-                scope_parts.append(f"        Project {project_name} from {explicit_project['platform']} : {explicit_project['repo']} {{")
+                scope_parts.append(f"        {project_name} from {explicit_project['platform']} : {explicit_project['repo']}")
             else:
-                scope_parts.append(f"        Project {project_name} {{")
+                scope_parts.append(f"        {project_name}")
             
             # Find activities belonging to this project
             project_activities = [a for a in activities if a['parent'] == project_name]
             if project_activities:
-                scope_parts.append("            activities :")
+                scope_parts[-1] += " {"  # Add opening brace to project
+                scope_parts.append("            Activities :")
                 for activity in project_activities:
-                    scope_parts.append(f"                {activity['name']} {{")
+                    scope_parts.append(f"                {activity['name']}")
                     
                     # Find tasks belonging to this activity
                     activity_tasks = [t for t in tasks if t['parent'] == activity['name']]
                     if activity_tasks:
-                        scope_parts.append("                    tasks :")
+                        scope_parts[-1] += " {"  # Add opening brace to activity
+                        scope_parts.append("                    Tasks :")
                         for task in activity_tasks:
                             if task['type'] and task['action']:
                                 scope_parts.append(f"                        {task['name']} : {task['type']} {{")
@@ -3686,9 +4474,9 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                             else:
                                 scope_parts.append(f"                        {task['name']}")
                     
-                    scope_parts.append("            }")
+                        scope_parts.append("                }")
             
-            scope_parts.append("    }")
+                scope_parts.append("        }")
         
         # Generate root-level Activities (explicit + implicit from task parents)
         root_activities = [a for a in activities if not a['parent']]
@@ -3701,12 +4489,13 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             scope_parts.append("    Activities :")
             for activity in root_activities:
                 activity_name = activity['name']
-                scope_parts.append(f"        {activity_name} {{")
+                scope_parts.append(f"        {activity_name}")
                 
                 # Find tasks belonging to this activity
                 activity_tasks = [t for t in tasks if t['parent'] == activity_name]
                 if activity_tasks:
-                    scope_parts.append("            tasks :")
+                    scope_parts[-1] += " {"  # Add opening brace to activity
+                    scope_parts.append("            Tasks :")
                     for task in activity_tasks:
                         if task['type'] and task['action']:
                             scope_parts.append(f"                {task['name']} : {task['type']} {{")
@@ -3717,7 +4506,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                         else:
                             scope_parts.append(f"                {task['name']}")
                 
-                scope_parts.append("        }")
+                    scope_parts.append("        }")
         
         # Generate root-level Tasks (only tasks with no parent or parent that's a project)
         root_tasks = [t for t in tasks if not t['parent'] or t['parent'] in all_project_names]
@@ -3830,6 +4619,8 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         
         if participants_section:
             dsl_parts.append("Participants:")
+            if participants_section[-1].endswith(","):
+                participants_section[-1] = participants_section[-1][:-1]
             dsl_parts.extend(participants_section)
         
         # Generate Policies section

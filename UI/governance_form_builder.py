@@ -432,13 +432,7 @@ class GovernanceFormBuilder:
             elem_classes=["template-card"]
         )
 
-        # Let users customize the project name before applying, potentially sharing repo URL
-        template_project_name = gr.Textbox(
-            label="Project Name (optional override)",
-            placeholder="MyProject",
-            info="If set, replaces the default 'MyProject' name in the template"
-        )
-
+        # Let users customize the project platform before applying, potentially sharing repo URL
         repo_link_mode = gr.Radio(
             label="Link to a repository? (optional)",
             choices=["No", "Via URL", "Manual"],
@@ -469,7 +463,7 @@ class GovernanceFormBuilder:
             repo_name = gr.Textbox(
                 label="Repository Name",
                 placeholder="e.g., kubernetes",
-                info="The repository name (after the owner in the URL)"
+                info="The repository name"
             )
 
         apply_template_btn = gr.Button(
@@ -482,7 +476,6 @@ class GovernanceFormBuilder:
         return {
             'template_dropdown': template_dropdown,
             'template_description': template_description,
-            'template_project_name': template_project_name,
             'repo_link_mode': repo_link_mode,
             'repo_url_input': repo_url_input,
             'manual_repo_row': manual_repo_row,
@@ -536,14 +529,14 @@ class GovernanceFormBuilder:
                 project_repo_owner = gr.Textbox(
                     label="Repository Owner *",
                     placeholder="e.g., kubernetes, BESSER-PEARL, myorganization",
-                    info="The GitHub/GitLab username or organization that owns the repository (the first part of the URL path)",
+                    info="The GitHub/GitLab username or organization that owns the repository",
                     visible=False
                 )
                 
                 project_repo_name = gr.Textbox(
                     label="Repository Name *",
                     placeholder="e.g., kubernetes, vscode, myproject",
-                    info="The repository name (the part after the owner in the URL)",
+                    info="The repository name",
                     visible=False
                 )
             
@@ -1959,7 +1952,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 status
             )
 
-        def apply_template(template_name, custom_project_name,
+        def apply_template(template_name,
                    repo_link_mode, repo_url_input,
                    repo_platform, repo_owner, repo_name,
                    current_projects, current_activities, current_tasks,
@@ -1984,21 +1977,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 )
 
             template = copy.deepcopy(self.TEMPLATES[template_name])
-
-            # If user provided a custom project name, find-and-replace "MyProject".
-            project_name_override = custom_project_name.strip() if custom_project_name else None
-            if project_name_override:
-                # Replace in projects
-                for p in template["projects"]:
-                    if p["name"] == "MyProject":
-                        p["name"] = project_name_override
-                # Replace in policies (scope and participants references)
-                for pol in template["policies"]:
-                    if pol.get("scope") == "MyProject":
-                        pol["scope"] = project_name_override
-                for cp in template["composed_policies"]:
-                    if cp.get("scope") == "MyProject":
-                        cp["scope"] = project_name_override
             
             # Resolve repository details 
             resolved_platform = None
@@ -2049,11 +2027,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
 
             # Inject platform + repo into the first project of the template
             if resolved_platform and resolved_repo:
-                project_name_in_template = (
-                    project_name_override
-                    if project_name_override
-                    else (template["projects"][0]["name"] if template["projects"] else "MyProject")
-                )
+                project_name_in_template = template["projects"][0]["name"] if template["projects"] else "MyProject"
                 for p in template["projects"]:
                     if p["name"] == project_name_in_template:
                         p["platform"] = resolved_platform
@@ -3459,7 +3433,6 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             fn=apply_template,
             inputs=[
                 template_components['template_dropdown'],
-                template_components['template_project_name'],
                 template_components['repo_link_mode'],
                 template_components['repo_url_input'],
                 template_components['repo_platform'],

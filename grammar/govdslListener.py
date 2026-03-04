@@ -494,6 +494,42 @@ class govdslListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by govdslParser#ethnicity.
+    def enterEthnicity(self, ctx:govdslParser.EthnicityContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#ethnicity.
+    def exitEthnicity(self, ctx:govdslParser.EthnicityContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#disability.
+    def enterDisability(self, ctx:govdslParser.DisabilityContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#disability.
+    def exitDisability(self, ctx:govdslParser.DisabilityContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#religion.
+    def enterReligion(self, ctx:govdslParser.ReligionContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#religion.
+    def exitReligion(self, ctx:govdslParser.ReligionContext):
+        pass
+
+
+    # Enter a parse tree produced by govdslParser#age.
+    def enterAge(self, ctx:govdslParser.AgeContext):
+        pass
+
+    # Exit a parse tree produced by govdslParser#age.
+    def exitAge(self, ctx:govdslParser.AgeContext):
+        pass
+
+
     # Enter a parse tree produced by govdslParser#policyParticipants.
     def enterPolicyParticipants(self, ctx:govdslParser.PolicyParticipantsContext):
         pass

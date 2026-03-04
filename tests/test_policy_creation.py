@@ -272,6 +272,10 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(profile.gender, "male")
             self.assertEqual(profile.race, "hispanic")
             self.assertEqual(profile.language, "english")
+            self.assertEqual(profile.ethnicity, "caribbean")
+            self.assertEqual(profile.disability, "epilepsy")
+            self.assertEqual(profile.religion, "muslim")
+            self.assertEqual(profile.age, 27)
 
             agent = next((ind for ind in individuals if ind.name == "mike"), None)
             self.assertIsNotNone(agent, "mike not found")

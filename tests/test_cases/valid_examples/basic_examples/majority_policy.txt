@@ -19,6 +19,10 @@ Participants:
             gender : male
             race : hispanic
             language : english
+            age : 27
+            ethnicity : caribbean
+            religion : muslim
+            disability : epilepsy
         }
     Roles : maintainer { vote value : 1.5}, reviewer, owner 
     Individuals : 

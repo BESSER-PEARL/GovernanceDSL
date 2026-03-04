@@ -145,11 +145,15 @@ class Participant(Element):
         return hash(self.name)
     
 class Profile(Element):
-    def __init__(self, name: str, gender: str, race: str, language: str):
+    def __init__(self, name: str, gender: str, age: int, race: str, ethnicity: str, language: str, disability: str, religion: str):
         self.name = name
         self.gender = gender
+        self.age = age
         self.race = race
+        self.ethnicity = ethnicity
         self.language = language
+        self.disability = disability
+        self.religion = religion
 
     @property
     def name(self) -> str:
@@ -168,12 +172,30 @@ class Profile(Element):
         self.__gender = gender
 
     @property
+    def age(self) -> int:
+        return self.__age
+    
+    @age.setter
+    def age(self, age: int):
+        if age is not None and (age < 0 or age > 120):
+            raise InvalidValueException("age", age, max_value=120)
+        self.__age = age
+
+    @property
     def race(self) -> str:
         return self.__race
     
     @race.setter
     def race(self, race: str):
         self.__race = race
+
+    @property
+    def ethnicity(self) -> str:
+        return self.__ethnicity
+    
+    @ethnicity.setter
+    def ethnicity(self, ethnicity: str):
+        self.__ethnicity = ethnicity
     
     @property
     def language(self) -> str:
@@ -182,6 +204,22 @@ class Profile(Element):
     @language.setter
     def language(self, language: str):
         self.__language = language
+
+    @property
+    def disability(self) -> str:
+        return self.__disability
+    
+    @disability.setter
+    def disability(self, disability: str):
+        self.__disability = disability
+
+    @property
+    def religion(self) -> str:
+        return self.__religion
+    
+    @religion.setter
+    def religion(self, religion: str):
+        self.__religion = religion
 
 class Individual(Participant):
     def __init__(self, name: str, vote_value: float = 1.0, roles: set['Role'] = None):

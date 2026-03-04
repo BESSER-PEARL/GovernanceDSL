@@ -834,6 +834,11 @@ class PolicyCreationListener(govdslListener):
         gender = None
         race = None
         language = None
+        ethnicity = None
+        age = None
+        religion = None
+        disability = None
+
         seen_attrs = set()
         profile_name = ctx.ID().getText()
         
@@ -854,16 +859,39 @@ class PolicyCreationListener(govdslListener):
                     raise DuplicateAttributeException("profile", profile_name, "language")
                 seen_attrs.add('language')
                 language = attr.language().ID().getText()
-        
+            elif attr.ethnicity():
+                if 'ethnicity' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "ethnicity")
+                seen_attrs.add('ethnicity')
+                ethnicity = attr.ethnicity().ID().getText()
+            elif attr.disability():
+                if 'disability' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "disability")
+                seen_attrs.add('disability')
+                disability = attr.disability().ID().getText()
+            elif attr.religion():
+                if 'religion' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "religion")
+                seen_attrs.add('religion')
+                religion = attr.religion().ID().getText()
+            elif attr.age():
+                if 'age' in seen_attrs:
+                    raise DuplicateAttributeException("profile", profile_name, "age")
+                seen_attrs.add('age')
+                age = int(attr.age().SIGNED_INT().getText())
         # Validate that at least one attribute is provided
-        if not (gender or race or language):
+        if not (gender or race or language or ethnicity or disability or religion or age):
             raise UndefinedAttributeException("profile", 
-                message=f"Profile '{profile_name}' must have at least one attribute (gender, race, or language)")
+                message=f"Profile '{profile_name}' must have at least one attribute (gender, race, language, ethnicity, disability, religion, or age)")
         
         profile = Profile(name=profile_name,
                             gender=gender,
+                            age=age,
                             race=race,
-                            language=language)
+                            ethnicity=ethnicity,
+                            language=language,
+                            disability=disability,
+                            religion=religion)
         self.__profiles_map[profile.name] = profile
 
     def enterAgent(self, ctx:govdslParser.AgentContext):

@@ -902,7 +902,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
         with gr.Accordion("Profiles", open=False):
             gr.Markdown("### Define Profiles")
             with gr.Accordion("ℹ️ What is a Profile?", open=False):
-                gr.Markdown("A **Profile** is a set of diversity attributes (such as gender, race, or language) used to track and promote inclusivity. "
+                gr.Markdown("A **Profile** is a set of diversity attributes (such as gender, race, language, age, ethnicity, disability, or religion) used to track and promote inclusivity. "
                 "Once defined, profiles can be assigned to **Individuals** to reflect the diverse composition of your project's decision-makers."
             )
             
@@ -923,7 +923,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 )
                 
                 profile_race = gr.Dropdown(
-                    label="Race/Ethnicity (Optional)", 
+                    label="Race (Optional)", 
                     choices=["", "asian", "black", "hispanic", "white", "mixed", "other"],
                     value="",
                     allow_custom_value=False,
@@ -933,6 +933,37 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 profile_language = gr.Dropdown(
                     label="Language (Optional)",
                     choices=["", "english", "spanish", "french", "german", "chinese", "japanese", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
+
+            with gr.Row():
+                profile_age = gr.Textbox(
+                    label="Age (Optional)",
+                    placeholder="e.g., 27",
+                    info="Integer between 0 and 120; leave empty if not applicable"
+                )
+
+                profile_ethnicity = gr.Dropdown(
+                    label="Ethnicity (Optional)",
+                    choices=["", "african", "caribbean", "east-asian", "hispanic", "jewish", "latino", "middle-eastern", "native-american", "pacific-islander", "south-asian", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
+
+                profile_disability = gr.Dropdown(
+                    label="Disability (Optional)",
+                    choices=["", "blind", "deaf", "epilepsy", "mobility-impaired", "cognitive", "chronic-illness", "mental-health", "other"],
+                    value="",
+                    allow_custom_value=True,
+                    info="Leave empty if not applicable"
+                )
+
+                profile_religion = gr.Dropdown(
+                    label="Religion (Optional)",
+                    choices=["", "atheist", "agnostic", "buddhist", "christian", "hindu", "jewish", "muslim", "secular", "sikh", "other"],
                     value="",
                     allow_custom_value=True,
                     info="Leave empty if not applicable"
@@ -947,7 +978,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 label="Added Profiles",
                 lines=4,
                 interactive=False,
-                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, or language).",
+                placeholder="No profiles added yet. Remember: profiles must have at least one attribute (gender, race, language, age, ethnicity, disability, or religion).",
                 info="Profiles you've added will appear here"
             )
             
@@ -959,6 +990,10 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             'profile_gender': profile_gender,
             'profile_race': profile_race,
             'profile_language': profile_language,
+            'profile_age': profile_age,
+            'profile_ethnicity': profile_ethnicity,
+            'profile_disability': profile_disability,
+            'profile_religion': profile_religion,
             'add_profile_btn': add_profile_btn,
             'clear_profiles_btn': clear_profiles_btn,
             'profiles_display': profiles_display,
@@ -2100,37 +2135,56 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 return "*Select a template above to see its description.*"
             return self.TEMPLATES[template_name]["description"]
         
-        def add_profile(name, gender, race, language, current_profiles):
+        def add_profile(name, gender, race, language, age, ethnicity, disability, religion, current_profiles):
             """Add a new profile to the list"""
+            _empty = lambda v: v is None or (isinstance(v, str) and not v.strip())
             if not name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Please enter a profile name\n\n{display_text}" if current_profiles else "❌ Error: Please enter a profile name"
-                return current_profiles, error_message, name, gender, race, language, None
+                return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
             
             # Validate no spaces in name
             if ' ' in name.strip():
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')\n\n{display_text}" if current_profiles else "❌ Error: Profile name cannot contain spaces (use underscores instead, e.g., 'my_profile')"
-                return current_profiles, error_message, name, gender, race, language, None
+                return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
             
             # Check if profile already exists
             if any(p['name'] == name.strip() for p in current_profiles):
                 display_text = self._format_profiles_display(current_profiles)
                 error_message = f"❌ Error: Profile name already exists\n\n{display_text}" if current_profiles else "❌ Error: Profile name already exists"
-                return current_profiles, error_message, name, gender, race, language, None
+                return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
             
+            # Parse age: empty string → None, otherwise validate integer
+            parsed_age = None
+            if not _empty(age):
+                try:
+                    parsed_age = int(str(age).strip())
+                    if parsed_age < 0 or parsed_age > 120:
+                        display_text = self._format_profiles_display(current_profiles)
+                        error_message = f"❌ Error: Age must be between 0 and 120\n\n{display_text}" if current_profiles else "❌ Error: Age must be between 0 and 120"
+                        return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
+                except ValueError:
+                    display_text = self._format_profiles_display(current_profiles)
+                    error_message = f"❌ Error: Age must be a whole number\n\n{display_text}" if current_profiles else "❌ Error: Age must be a whole number"
+                    return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
+
             # Validate that at least one attribute is provided
-            if not gender and not race and not language:
+            if _empty(gender) and _empty(race) and _empty(language) and parsed_age is None and _empty(ethnicity) and _empty(disability) and _empty(religion):
                 display_text = self._format_profiles_display(current_profiles)
-                error_message = f"❌ Error: Profiles must have at least one attribute (gender, race, or language)\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have at least one attribute (gender, race, or language)"
-                return current_profiles, error_message, name, gender, race, language, None
+                error_message = f"❌ Error: Profiles must have at least one attribute (gender, race, language, age, ethnicity, disability, or religion)\n\n{display_text}" if current_profiles else "❌ Error: Profiles must have at least one attribute (gender, race, language, age, ethnicity, disability, or religion)"
+                return current_profiles, error_message, name, gender, race, language, age, ethnicity, disability, religion, None
             
             # Create new profile
             new_profile = {
                 'name': name.strip(),
-                'gender': gender if gender else None,
-                'race': race if race else None,
-                'language': language if language else None
+                'gender': gender if not _empty(gender) else None,
+                'race': race if not _empty(race) else None,
+                'language': language if not _empty(language) else None,
+                'age': parsed_age,
+                'ethnicity': ethnicity.strip() if not _empty(ethnicity) else None,
+                'disability': disability.strip() if not _empty(disability) else None,
+                'religion': religion.strip() if not _empty(religion) else None,
             }
             
             updated_profiles = current_profiles + [new_profile]
@@ -2139,7 +2193,7 @@ follows the same rules. A policy on an activity applies to all its child tasks u
             display_text = self._format_profiles_display(updated_profiles)
             success_message = f"✅ Profile '{new_profile['name']}' added successfully!\n\n{display_text}"
             
-            return updated_profiles, success_message, "", "", "", "", None  # Clear individual profile selection
+            return updated_profiles, success_message, "", "", "", "", None, "", "", "", None  # Clear fields + individual profile selection
         
         def clear_profiles():
             """Clear all profiles"""
@@ -3717,6 +3771,10 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 participant_components['profile_gender'],
                 participant_components['profile_race'],
                 participant_components['profile_language'],
+                participant_components['profile_age'],
+                participant_components['profile_ethnicity'],
+                participant_components['profile_disability'],
+                participant_components['profile_religion'],
                 participant_components['profiles_data']
             ],
             outputs=[
@@ -3726,6 +3784,10 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 participant_components['profile_gender'],      # Clear gender field
                 participant_components['profile_race'],        # Clear race field
                 participant_components['profile_language'],    # Clear language field
+                participant_components['profile_age'],         # Clear age field
+                participant_components['profile_ethnicity'],   # Clear ethnicity field
+                participant_components['profile_disability'],  # Clear disability field
+                participant_components['profile_religion'],    # Clear religion field
                 participant_components['individual_profile']   # Update individual profile dropdown
             ]
         )
@@ -4541,6 +4603,14 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                     participants_section.append(f"            race : {profile['race']}")
                 if profile.get('language'):
                     participants_section.append(f"            language : {profile['language']}")
+                if profile.get('age') is not None:
+                    participants_section.append(f"            age : {profile['age']}")
+                if profile.get('ethnicity'):
+                    participants_section.append(f"            ethnicity : {profile['ethnicity']}")
+                if profile.get('disability'):
+                    participants_section.append(f"            disability : {profile['disability']}")
+                if profile.get('religion'):
+                    participants_section.append(f"            religion : {profile['religion']}")
                 participants_section.append("        }")
         
         # Add Roles section
@@ -5130,6 +5200,14 @@ follows the same rules. A policy on an activity applies to all its child tasks u
                 attributes.append(f"🌍 race: {profile['race']}")
             if profile.get('language'):
                 attributes.append(f"🌐 language: {profile['language']}")
+            if profile.get('age') is not None:
+                attributes.append(f"🎂 age: {profile['age']}")
+            if profile.get('ethnicity'):
+                attributes.append(f"🧬 ethnicity: {profile['ethnicity']}")
+            if profile.get('disability'):
+                attributes.append(f"♿ disability: {profile['disability']}")
+            if profile.get('religion'):
+                attributes.append(f"🕌 religion: {profile['religion']}")
             
             if attributes:
                 line += f" → {', '.join(attributes)}"

@@ -1,0 +1,72 @@
+Scopes:
+    Projects:
+        Playground from GitHub : BESSER-PEARL/GovernancePlayground {
+            Activities :
+                Fix {
+                    Tasks :
+                        BugFix : Pull request {
+                            Action : merge
+                            Labels: bug, code
+                        }
+
+                        DocFix : Pull request {
+                            Action : merge
+                            Labels: bug, docs
+                        }
+                }
+
+                Enhance {
+                    Tasks :
+                        Feature : Pull request {
+                            Action : merge
+                            Labels: proposal, code
+                        }
+
+                        Documentation : Pull request {
+                            Action : merge
+                            Labels: proposal, docs
+                        }
+                }
+        }
+Participants:
+    Roles : Maintainers, Reviewers
+    Individuals : (Agent) besser-bot { role: Reviewers },
+    gwendal-jouneaux { role: Reviewers, Maintainers },
+    ademait { role: Reviewers, Maintainers },
+    jcabot { role: Reviewers, Maintainers }
+
+ConsensusPolicy NewFeature {
+    Scope: Feature
+    DecisionType as BooleanDecision
+    Participant list : Maintainers, Reviewers
+    Conditions :
+        Deadline feature_deadline : 60 days
+}
+
+LazyConsensusPolicy NewDocumentation {
+    Scope: Documentation
+    DecisionType as BooleanDecision
+    Participant list : Maintainers, Reviewers
+    Conditions :
+        Deadline feature_deadline : 60 days
+}
+
+AbsoluteMajorityPolicy FixingBugs {
+    Scope: BugFix
+    DecisionType as BooleanDecision
+    Participant list : Maintainers, Reviewers
+    Conditions :
+        Deadline feature_deadline : 60 days
+    Parameters:
+        ratio : 0.5
+}
+
+MajorityPolicy FixingDocs {
+    Scope: DocFix
+    DecisionType as BooleanDecision
+    Participant list : Maintainers, Reviewers
+    Conditions :
+        Deadline feature_deadline : 60 days
+    Parameters:
+        ratio : 0.5
+}

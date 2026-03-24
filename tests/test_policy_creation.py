@@ -1123,7 +1123,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(len(self.error_listener.symbol), 0)
             
     def test_custom_example(self):
-        with open(self.test_cases_path / "valid_examples/basic_examples/custom_example.txt") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/custom_example_v2.txt") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1133,8 +1133,8 @@ class testPolicyCreation(unittest.TestCase):
             policy = listener.get_policies()[0]
 
             # Assertions
-            self.assertIsInstance(policy, MajorityPolicy)
-            self.assertEqual(policy.name, "testPolicy")
+            self.assertIsInstance(policy, ConsensusPolicy)
+            self.assertEqual(policy.name, "NewFeature")
 
             # DecisionType (BooleanDecision)
             self.assertIsNotNone(policy.decision_type)
@@ -1145,74 +1145,54 @@ class testPolicyCreation(unittest.TestCase):
             self.assertIsNotNone(policy.scope)
             scope = policy.scope
             self.assertIsInstance(scope, Patch)
-            self.assertEqual(scope.name, "testTask")
+            self.assertEqual(scope.name, "Feature")
             self.assertEqual(scope.action, PatchAction.MERGE)
             activity_scope = scope.activity
             self.assertIsInstance(activity_scope, Activity)
-            self.assertEqual(activity_scope.name, "testActivity")
+            self.assertEqual(activity_scope.name, "Enhance")
             project_scope = activity_scope.project
             self.assertIsInstance(project_scope, Repository)
-            self.assertEqual(project_scope.name, "testProjectGH")
-            self.assertEqual(project_scope.repo_id, "owner/repo")
+            self.assertEqual(project_scope.name, "Playground")
+            self.assertEqual(project_scope.repo_id, "BESSER-PEARL/GovernancePlayground")
 
             # Test participants
             self.assertEqual(len(policy.participants), 2)
             individuals = [p for p in policy.participants if isinstance(p, Individual)]
             roles = [p for p in policy.participants if isinstance(p, Role)]
-            self.assertEqual(len(individuals), 1)
-            self.assertEqual(len(roles), 1)
-            individual = individuals[0]
-            self.assertEqual(individual.name, "zoe")
-            self.assertEqual(individual.vote_value, 0.7)
-            self.assertIsNotNone(individual.role_assignement)
-            self.assertEqual(individual.role_assignement.name, "zoe_maintainer")
-            role = roles[0]
-            self.assertEqual(role.name, "maintainer")
-            
-            # Test individuals with roles attribute (alice and bob)
-            # These individuals are composed in the maintainer role
-            self.assertIsNotNone(role.individuals, "maintainer role should have individuals")
-            self.assertEqual(len(role.individuals), 2, "maintainer should have 2 individuals (alice and bob)")
-            
-            # Check individual members of the maintainer role
-            individuals_names = {ind.name for ind in role.individuals}
-            self.assertIn("alice", individuals_names, "alice should be in maintainer role")
-            self.assertIn("bob", individuals_names, "bob should be in maintainer role")
-            
-            # Get alice and bob from all individuals in the listener
-            alice = next((ind for ind in role.individuals if ind.name == "alice"), None)
-            bob = next((ind for ind in role.individuals if ind.name == "bob"), None)
-            
-            self.assertIsNotNone(alice, "alice not found")
-            self.assertIsNotNone(bob, "bob not found")
-            
-            # Test alice's roles attribute
-            self.assertIsNotNone(alice.roles, "alice should have roles")
-            self.assertIsInstance(alice.roles, set)
-            self.assertEqual(len(alice.roles), 1)
-            alice_role = next(iter(alice.roles))
-            self.assertEqual(alice_role.name, "maintainer")
-            # Check bidirectional relationship
-            self.assertIn(alice, alice_role.individuals)
-            
-            # Test bob's roles attribute
-            self.assertIsNotNone(bob.roles, "bob should have roles")
-            self.assertIsInstance(bob.roles, set)
-            self.assertEqual(len(bob.roles), 1)
-            bob_role = next(iter(bob.roles))
-            self.assertEqual(bob_role.name, "maintainer")
-            # Check bidirectional relationship
-            self.assertIn(bob, bob_role.individuals)
+            self.assertEqual(len(individuals), 0)
+            self.assertEqual(len(roles), 2)
+
+            role_names = {r.name for r in roles}
+            self.assertIn("Maintainers", role_names)
+            self.assertIn("Reviewers", role_names)
+
+            maintainers = next((r for r in roles if r.name == "Maintainers"), None)
+            reviewers = next((r for r in roles if r.name == "Reviewers"), None)
+            self.assertIsNotNone(maintainers)
+            self.assertIsNotNone(reviewers)
+
+            # Individuals assigned through role attributes in Participants section
+            self.assertIsNotNone(maintainers.individuals)
+            self.assertEqual(len(maintainers.individuals), 3)
+            maintainer_names = {ind.name for ind in maintainers.individuals}
+            self.assertIn("gwendal-jouneaux", maintainer_names)
+            self.assertIn("ademait", maintainer_names)
+            self.assertIn("jcabot", maintainer_names)
+
+            self.assertIsNotNone(reviewers.individuals)
+            self.assertEqual(len(reviewers.individuals), 4)
+            reviewer_names = {ind.name for ind in reviewers.individuals}
+            self.assertIn("besser-bot", reviewer_names)
+            self.assertIn("gwendal-jouneaux", reviewer_names)
+            self.assertIn("ademait", reviewer_names)
+            self.assertIn("jcabot", reviewer_names)
 
             # Test conditions
             self.assertEqual(len(policy.conditions), 1)
             deadline = next(iter(policy.conditions))
             self.assertIsInstance(deadline, Deadline)
-            self.assertEqual(deadline.name, "reviewDeadline")
-            self.assertEqual(deadline.offset, timedelta(days=14))
-
-            # Test voting parameters
-            self.assertEqual(policy.ratio, 0.5)
+            self.assertEqual(deadline.name, "feature_deadline")
+            self.assertEqual(deadline.offset, timedelta(days=60))
 
             # Check parser errors
             self.assertEqual(len(self.error_listener.symbol), 0)

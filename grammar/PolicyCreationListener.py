@@ -583,7 +583,7 @@ class PolicyCreationListener(govdslListener):
                                     label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
                                     labels = set()
                                     for i in range(label_count):
-                                        l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                        l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().ID(i).getText()
                                         labels.add(Label(name=l_id))
                                 
                                 # Create the appropriate CHP element based on task type
@@ -659,7 +659,7 @@ class PolicyCreationListener(govdslListener):
                                 label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
                                 labels = set()
                                 for i in range(label_count):
-                                    l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                                    l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().ID(i).getText()
                                     labels.add(Label(name=l_id))
                             
                             # Create the appropriate CHP element based on task type
@@ -726,7 +726,7 @@ class PolicyCreationListener(govdslListener):
                         label_count = len(t.patchTask().patchTaskContent().actionWithLabels().labels().ID())
                         labels = set()
                         for i in range(label_count):
-                            l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().LABEL(i).getText()
+                            l_id = t.patchTask().patchTaskContent().actionWithLabels().labels().ID(i).getText()
                             labels.add(Label(name=l_id))
 
                     # Create the appropriate CHP element based on task type

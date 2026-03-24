@@ -82,7 +82,7 @@ deadline            : 'Deadline' deadlineID? ':' ( offset | date | (offset ',' d
 minDecisionTime     : 'MinDecisionTime' ID? ':' ( offset | date | (offset ',' date) ) ;
 offset              : SIGNED_INT timeUnit ;
 deadlineID          : ID ; // This allows the code to be more explainable in the listener
-timeUnit            : 'days' | 'weeks' | 'months' | 'years' ;
+timeUnit            : 'days' | 'weeks' | 'months' | 'years' ; // Should allow singular form
 date                : SIGNED_INT '/' SIGNED_INT '/' SIGNED_INT ; // DD/MM/YYYY; This can be improved with a lexer rule
 participantExclusion: 'ParticipantExclusion' ':' ID (',' ID)* ; // TODO: ID | 'PRAuthor' | 'RepoOwner' 
 minParticipant      : 'MinParticipants' ':' SIGNED_INT ;

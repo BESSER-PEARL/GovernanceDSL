@@ -7,7 +7,7 @@ from utils.exceptions import (
     UndefinedAttributeException, DuplicateAttributeException
 )
 from utils.chp_extension import (
-    Label, PullRequest, Repository,
+    Label, PullRequest, Repository, Issue,
     CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
 from utils.attribute_converters import (
@@ -589,8 +589,8 @@ class PolicyCreationListener(govdslListener):
                                 # Create the appropriate CHP element based on task type
                                 if task_type_str == "pull request":
                                     chp_element = PullRequest(name=task_name, labels=labels)
-                                # elif task_type_str == "issue":
-                                #     chp_element = Issue(name=task_name, labels=labels)
+                                elif task_type_str == "issue":
+                                    chp_element = Issue(name=task_name, labels=labels)
                                 
                                 # Extract action for Patch
                                 action = None
@@ -665,8 +665,8 @@ class PolicyCreationListener(govdslListener):
                             # Create the appropriate CHP element based on task type
                             if task_type_str == "pull request":
                                 chp_element = PullRequest(name=task_name, labels=labels)
-                            # elif task_type_str == "issue":
-                            #     chp_element = Issue(name=task_name, labels=labels)
+                            elif task_type_str == "issue":
+                                chp_element = Issue(name=task_name, labels=labels)
                             
                             # Extract action for Patch
                             action = None
@@ -732,8 +732,8 @@ class PolicyCreationListener(govdslListener):
                     # Create the appropriate CHP element based on task type
                     if task_type_str == "pull request":
                         chp_element = PullRequest(name=task_name, labels=labels)
-                    # elif task_type_str == "issue":
-                    #     chp_element = Issue(name=task_name, labels=labels)
+                    elif task_type_str == "issue":
+                        chp_element = Issue(name=task_name, labels=labels)
                     
                     # Extract action for Patch
                     action = None

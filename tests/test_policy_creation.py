@@ -48,7 +48,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_num_votes(self):
         """Test the creation of a policy with a majority rule having negative votes."""
-        with open(self.test_cases_path / "invalid_examples/invalid_num_votes.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/invalid_num_votes.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -64,7 +64,7 @@ class testPolicyCreation(unittest.TestCase):
                 
     def test_invalid_vote_value(self):
         """Test the creation of a policy with an individual having vote value outside allowed range."""
-        with open(self.test_cases_path / "invalid_examples/invalid_vote_value.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/invalid_vote_value.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -80,7 +80,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_consensus_with_parameters(self):
         """Test the creation of a consensus policy having parameters."""
-        with open(self.test_cases_path / "invalid_examples/consensus_with_parameters.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/consensus_with_parameters.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -96,7 +96,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_element_list(self):
         """Test MajorityPolicy with DecisionType as ElementList referencing undefined individuals."""
-        with open(self.test_cases_path / "invalid_examples/invalid_element_list.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/invalid_element_list.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -109,7 +109,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_default_scope(self):
         """Test LeaderDrivenPolicy with referenced default policy having inconsistent scope."""
-        with open(self.test_cases_path / "invalid_examples/leader_driven_referenced_different_scope.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/leader_driven_referenced_different_scope.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -122,7 +122,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_appeal_bad_reference(self):
         """AppealRight referencing an undefined policy should raise."""
-        with open(self.test_cases_path / "invalid_examples/invalid_appeal_bad_reference.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/invalid_appeal_bad_reference.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -134,7 +134,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_appeal_inline_missing_blocks(self):
         """Inline AppealRight policy without required blocks should not parse cleanly."""
-        with open(self.test_cases_path / "invalid_examples/invalid_appeal_inline_formatting.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/invalid_appeal_inline_formatting.gov", "r") as file:
             text = file.read()
             # We can have two ways of validating this:
             # 1. Prefer failing at grammar stage
@@ -156,7 +156,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_participant_exclusion_unknown_participant(self):
         """ParticipantExclusion with an unknown participant should raise UndefinedAttributeException."""
-        with open(self.test_cases_path / "invalid_examples/participant_exclusion_unknown_participant.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/participant_exclusion_unknown_participant.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -168,7 +168,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_invalid_participant_exclusion_wrong_scope(self):
         """ParticipantExclusion with incompatible scope should raise InvalidScopeException."""
-        with open(self.test_cases_path / "invalid_examples/participant_exclusion_wrong_scope.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/participant_exclusion_wrong_scope.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -180,7 +180,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_duplicate_profile_attribute(self):
         """Test profile with duplicate attribute should raise DuplicateAttributeException."""
-        with open(self.test_cases_path / "invalid_examples/duplicate_profile_attribute.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/duplicate_profile_attribute.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -198,7 +198,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_individual_undefined_role(self):
         """Test individual with undefined role should raise UndefinedAttributeException."""
-        with open(self.test_cases_path / "invalid_examples/individual_undefined_role.txt", "r") as file:
+        with open(self.test_cases_path / "invalid_examples/individual_undefined_role.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -215,7 +215,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_majority_policy_creation(self):
         """Test the creation of a policy with majority voting parameters."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/majority_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/majority_policy.gov", "r") as file:
             text = file.read()
             
             # Setup parser and create model
@@ -420,7 +420,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_majority_policy_with_veto_right_creation(self):
         """Test the creation of a policy with a veto right condition."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/maj_with_veto_right.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/maj_with_veto_right.gov", "r") as file:
             text = file.read()
             
             # Setup parser and create model
@@ -511,7 +511,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_absolute_majority_policy_creation(self):
         """Test the creation of a policy with an absolute majority policy."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/absolute_majority_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/absolute_majority_policy.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -576,7 +576,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_leader_driven_policy_creation(self):
         """Test the creation of a policy with a leader driven policy."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_policy.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -641,7 +641,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_leader_driven_no_default_policy_creation(self):
         """Test the creation of a policy with a leader driven policy without a default policy."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_no_default.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_no_default.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -682,7 +682,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_leader_driven_and_consensus_referenced_default_creation(self):
         """Test the creation of a policy with a leader driven policy with a referenced default policy."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_and_consensus_referenced_default.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/leader_driven_and_consensus_referenced_default.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -785,7 +785,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_composed_policy_creation(self):
         """Test the creation of a composed policy. Based on the HFC governance policy."""
-        with open(self.test_cases_path / "valid_examples/real_world/hfc_governance.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/real_world/hfc_governance.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -941,7 +941,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_lazy_consensus_policy_creation(self):
         """Test the creation of a policy with a lazy consensus process."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/lazy_consensus_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/lazy_consensus_policy.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1006,7 +1006,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_consensus_policy_creation(self):
         """Test the creation of a policy with a consensus process."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/consensus_no_fallback.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/consensus_no_fallback.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1047,7 +1047,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_multi_policy_creation(self):
         """Test the creation of a policy with multiple policies."""
-        with open(self.test_cases_path / "valid_examples/basic_examples/multi_policy.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/multi_policy.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1123,7 +1123,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(len(self.error_listener.symbol), 0)
             
     def test_custom_example(self):
-        with open(self.test_cases_path / "valid_examples/basic_examples/custom_example_v2.txt") as file:
+        with open(self.test_cases_path / "valid_examples/basic_examples/custom_example_v2.gov") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1199,7 +1199,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_kubernetes_pr_merge_composed_policy(self):
         """Test the creation of a composed policy based on the Kubernetes PR merge governance."""
-        with open(self.test_cases_path / "valid_examples/real_world/kubernetes_pr_merge.txt", "r") as file:
+        with open(self.test_cases_path / "valid_examples/real_world/kubernetes_pr_merge.gov", "r") as file:
             text = file.read()
             parser = self.setup_parser(text)
             tree = parser.governance()
@@ -1336,7 +1336,7 @@ class testPolicyCreation(unittest.TestCase):
 
     def test_generic(self):
         """Generic test: parses the specified file and checks policies are created."""
-        file_path = self.test_cases_path / "valid_examples/real_world/ethicalsourcedev_governance.txt" 
+        file_path = self.test_cases_path / "valid_examples/real_world/ethicalsourcedev_governance.gov" 
         with open(file_path, "r") as file:
             text = file.read()
             parser = self.setup_parser(text)

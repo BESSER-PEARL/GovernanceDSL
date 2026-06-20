@@ -1,0 +1,7 @@
+[project]
+name = "governancedsl"
+version = "0.1.0"
+dependencies = ["antlr4-python3-runtime"]
+
+[tool.setuptools]
+packages = ["grammar", "metamodel", "utils"]

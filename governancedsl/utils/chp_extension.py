@@ -1,8 +1,8 @@
 from datetime import timedelta
 from enum import Enum
 from besser.BUML.metamodel.structural import Element
-from metamodel.governance import Task, StatusEnum, Project, Condition, EvaluationMode
-from utils.exceptions import InvalidTimeConditionException
+from governancedsl.metamodel.governance import Task, StatusEnum, Project, Condition, EvaluationMode
+from governancedsl.utils.exceptions import InvalidTimeConditionException
 
 class PatchAction(Enum):
     MERGE = 1

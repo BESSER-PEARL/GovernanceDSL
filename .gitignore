@@ -19,3 +19,7 @@ grammar/prints_listener_regex.txt
 # local folders
 .pytest_cache/
 .vscode/
+.venv/
+
+# Setuptools build metadata
+*.egg-info/

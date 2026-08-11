@@ -8,22 +8,22 @@ from antlr4 import (
 )
 from antlr4.error.ErrorStrategy import BailErrorStrategy
 from antlr4.error.Errors import ParseCancellationException
-from grammar.govdslLexer import govdslLexer
-from grammar.govdslParser import govdslParser
-from grammar.PolicyCreationListener import PolicyCreationListener
-from grammar.govErrorListener import govErrorListener
-from utils.exceptions import (
+from governancedsl.grammar.govdslLexer import govdslLexer
+from governancedsl.grammar.govdslParser import govdslParser
+from governancedsl.grammar.PolicyCreationListener import PolicyCreationListener
+from governancedsl.grammar.govErrorListener import govErrorListener
+from governancedsl.utils.exceptions import (
     EmptySetException, InvalidParticipantException, InvalidScopeException, UndefinedAttributeException, 
     InvalidValueException, DuplicateAttributeException
 )
-from metamodel.governance import (
+from governancedsl.metamodel.governance import (
     AppealRight, ConsensusPolicy, MinDecisionTime, Role, Deadline, MajorityPolicy, Task,
     Individual, ComposedPolicy, Project, Agent,
     AbsoluteMajorityPolicy, LeaderDrivenPolicy, ParticipantExclusion, EvaluationMode,
     LazyConsensusPolicy, MinimumParticipant, VetoRight, 
     Activity, BooleanDecision, StringList, ElementList
 )
-from utils.chp_extension import (
+from governancedsl.utils.chp_extension import (
     PatchAction, MemberAction, PullRequest, Repository, Patch, CheckCiCd,
     LabelCondition, MinTime, MemberLifecycle
 )

@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import timedelta, datetime  
 from besser.BUML.metamodel.structural import Element
-from utils.exceptions import (
+from governancedsl.utils.exceptions import (
     InvalidParticipantException, EmptySetException, InvalidScopeException,
     InvalidValueException, InvalidTimeConditionException,
     UndefinedAttributeException

@@ -3,7 +3,7 @@ from antlr4 import *
 if "." in __name__:
     from .govdslParser import govdslParser
 else:
-    from govdslParser import govdslParser
+    from governancedsl.grammar.govdslParser import govdslParser
 
 # This class defines a complete listener for a parse tree produced by govdslParser.
 class govdslListener(ParseTreeListener):

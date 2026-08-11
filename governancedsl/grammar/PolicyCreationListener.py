@@ -2,18 +2,18 @@ from datetime import datetime
 # from besser.BUML.metamodel.structural import (
 #     StringType, IntegerType, FloatType, TimeDeltaType
 # ) # TODO: Check if necessary (for attr type validation)
-from utils.policy_tree import PolicyNode
-from utils.exceptions import (
+from governancedsl.utils.policy_tree import PolicyNode
+from governancedsl.utils.exceptions import (
     UndefinedAttributeException, DuplicateAttributeException
 )
-from utils.chp_extension import (
+from governancedsl.utils.chp_extension import (
     Label, PullRequest, Repository, Issue,
     CheckCiCd, LabelCondition, MinTime, MemberLifecycle, Patch
 )
-from utils.attribute_converters import (
+from governancedsl.utils.attribute_converters import (
     str_to_status_enum, str_to_action_enum, deadline_to_timedelta, str_to_member_action_enum
 )
-from metamodel.governance import (
+from governancedsl.metamodel.governance import (
     AppealRight, CommunicationChannel, Human, MinDecisionTime, SinglePolicy, Project, Activity, Task, Role, Individual,
     Deadline, MajorityPolicy, AbsoluteMajorityPolicy, LeaderDrivenPolicy,
     ComposedPolicy, hasRole, ParticipantExclusion, LazyConsensusPolicy,

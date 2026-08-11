@@ -7,14 +7,15 @@ The DSL provides a form-based editor, available [here](https://besser-pearl.gith
 ## Contents
 
 The repository structure is divided in five folders:
-* `grammar/`: This folder contains the definition of the grammar, or concrete syntax, of our DSL. We used [ANTLR](https://www.antlr.org/) to define our concrete syntax, see [`govdsl.g4`](grammar/govdsl.g4) for the implementation.
-* `metamodel/`: This folder contains the metamodel of the abstract syntax of our DSL:
+* `governancedsl/grammar/`: This folder contains the definition of the grammar, or concrete syntax, of our DSL. We used [ANTLR](https://www.antlr.org/) to define our concrete syntax, see [`govdsl.g4`](grammar/govdsl.g4) for the implementation.
+* `governancedsl/metamodel/`: This folder contains the metamodel of the abstract syntax of our DSL:
     - [`metamodel.py`](metamodel/governance.py): The implementation of the abstract syntax metamodel as Python classes.
     - [ocl_constraints.ocl](metamodel/ocl_constraints.ocl): Set of OCL constraints applied to the metamodel (OCL constraints are also included in the BESSER diagrams).
     - Since the metamodel has been created using the [BESSER Web Modeling Editor](https://editor.besser-pearl.org/) we provide several files under `metamodel/besser_models/` folder:
         - `.json` files: The JSON representation that can be used to open the metamodel in the editor.
         - `.svg` and `.png` files: The SVG and PNG representation for visual purposes.
         - `.drawio.png` files: We also provide the metamodel embedded in a PNG file that can be opened in the [draw.io](https://app.diagrams.net/?src=about) editor.
+* `governancedsl/utils/`: This folder contains additional support for the definitions of exceptions, extensions of our metamodel (e.g., code-hosting platform extension), and data structure support for the parser.
 * `UI/`: This folder contains a Gradio-based form editor for creating governance policies interactively:
     - See [`UI/README.md`](UI/README.md) for detailed information.
     - The form-based editor is available [here](https://besser-pearl.github.io/GovernanceDSL/).
@@ -22,7 +23,7 @@ The repository structure is divided in five folders:
     - `invalid_examples/`: Here we define with our DSL different invalid policies (e.g., the required number of votes is negative).
     - `NL_examples`: Here we define the examples in natural language, which can come from existing repositories (`NL_examples/real-world/` folder) or created from us (`NL_examples/artifical/`).
     - `valid_examples`: Here we define with our DSL different valid policies, which can also come from `NL_examples/`.
-* `utils/`: This folder contains additional support for the definitions of exceptions, extensions of our metamodel (e.g., code-hosting platform extension), and data structure support for the parser.
+
 
 ## Tests
 

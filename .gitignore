@@ -20,6 +20,7 @@ grammar/prints_listener_regex.txt
 .pytest_cache/
 .vscode/
 .venv/
+.claude/
 
 # Setuptools build metadata
 *.egg-info/

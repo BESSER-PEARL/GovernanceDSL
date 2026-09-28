@@ -1111,7 +1111,7 @@ class PolicyCreationListener(govdslListener):
     def enterCheckCiCd(self, ctx:govdslParser.CheckCiCdContext):
         
         if ctx.booleanValue().getText().lower() == "true":
-            evaluation_mode = None
+            evaluation_mode = EvaluationMode.CONCURRENT
             if ctx.evaluationMode():
                 evaluation_mode = ctx.evaluationMode().getText()
                 match evaluation_mode:
@@ -1131,7 +1131,7 @@ class PolicyCreationListener(govdslListener):
         time_unit = ctx.offset().timeUnit().getText()
         offset = deadline_to_timedelta(value=offset_amount, unit=time_unit)
 
-        evaluation_mode = None
+        evaluation_mode = EvaluationMode.CONCURRENT
         if ctx.evaluationMode():
             evaluation_mode = ctx.evaluationMode().getText()
             match evaluation_mode:

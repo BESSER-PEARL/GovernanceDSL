@@ -377,6 +377,7 @@ class testPolicyCreation(unittest.TestCase):
             self.assertEqual(len(appeal_conditions), 1)
             appeal = next(iter(appeal_conditions))
             self.assertEqual(appeal.name, "AppealRightCondition")
+            self.assertIsNone(appeal.evaluation_mode)
 
             # inline appeal policy
             self.assertIsNotNone(appeal.policy)

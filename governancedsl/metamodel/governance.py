@@ -435,7 +435,7 @@ class MinDecisionTime(Condition):
 
 class ParticipantExclusion(Condition):
     def __init__(self, name: str, excluded: set[Individual]): # TODO: Individual or Participant?
-        super().__init__(name)
+        super().__init__(name, EvaluationMode.CONCURRENT)
         self.excluded = excluded
     
     @property
@@ -450,7 +450,7 @@ class ParticipantExclusion(Condition):
 
 class MinimumParticipant(Condition):
     def __init__(self, name: str, min_participants: int):
-        super().__init__(name)
+        super().__init__(name, EvaluationMode.CONCURRENT)
         self.min_participants = min_participants
     
     @property
@@ -465,7 +465,7 @@ class MinimumParticipant(Condition):
 
 class VetoRight(Condition):
     def __init__(self, name: str, vetoers: set[Participant]):
-        super().__init__(name)
+        super().__init__(name, EvaluationMode.CONCURRENT)
         self.vetoers = vetoers
     
     @property
